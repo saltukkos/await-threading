@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AwaitThreading.Core", "AwaitThreading.Core\AwaitThreading.Core.csproj", "{C8B3B39E-3F96-4282-8807-890E39E5EA3E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AwaitThreading.Enumerable", "AwaitThreading.Enumerable\AwaitThreading.Enumerable.csproj", "{8584C4C2-609B-4EDA-B09E-4C72FADFC608}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Samples", "Samples\Samples.csproj", "{570AFD1C-86BE-404B-B0A2-8182920FFFBB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C8B3B39E-3F96-4282-8807-890E39E5EA3E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8B3B39E-3F96-4282-8807-890E39E5EA3E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8B3B39E-3F96-4282-8807-890E39E5EA3E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8B3B39E-3F96-4282-8807-890E39E5EA3E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8584C4C2-609B-4EDA-B09E-4C72FADFC608}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8584C4C2-609B-4EDA-B09E-4C72FADFC608}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8584C4C2-609B-4EDA-B09E-4C72FADFC608}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8584C4C2-609B-4EDA-B09E-4C72FADFC608}.Release|Any CPU.Build.0 = Release|Any CPU
+		{570AFD1C-86BE-404B-B0A2-8182920FFFBB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{570AFD1C-86BE-404B-B0A2-8182920FFFBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{570AFD1C-86BE-404B-B0A2-8182920FFFBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{570AFD1C-86BE-404B-B0A2-8182920FFFBB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
