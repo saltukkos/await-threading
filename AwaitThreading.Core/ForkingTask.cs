@@ -28,7 +28,7 @@ public sealed class ForkingTask
                 {
                     ParallelContext.PushContext(new ParallelContext(id));
                     continuation.Invoke();
-                });
+                }); //TODO exception handling
             }
         }
 

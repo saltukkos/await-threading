@@ -6,30 +6,13 @@ using AwaitThreading.Core;
 
 namespace AwaitThreading.Enumerable;
 
-public sealed class ParallelAsyncEnumerable2<T>
-{
-    private readonly List<T> _list;
-    private readonly int _threadsCount;
-
-    public ParallelAsyncEnumerable2(List<T> list, int threadsCount)
-    {
-        _list = list;
-        _threadsCount = threadsCount;
-    }
-    
-    public ParallelAsyncEnumerator2<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
-    {
-        return new ParallelAsyncEnumerator2<T>(_list, _threadsCount);
-    }
-}
-
-public readonly struct ParallelAsyncEnumerator2<T>
+public readonly struct ParallelLazyAsyncEnumerator<T>
 {
     private readonly List<T> _list;
     private readonly int _threadsCount;
     private readonly ThreadLocal<IEnumerator<T>> _threadLocal = new ();
 
-    public ParallelAsyncEnumerator2(List<T> list, int threadsCount)
+    public ParallelLazyAsyncEnumerator(List<T> list, int threadsCount)
     {
         _threadsCount = threadsCount;
         _list = list;
@@ -42,7 +25,6 @@ public readonly struct ParallelAsyncEnumerator2<T>
             return _threadLocal.Value!.MoveNext();
         }
 
-        //await Task.Yield();
         await new ForkingTask(_threadsCount);
         var context = ParallelContext.GetCurrentContext();
         var id = context!.Value.Id;
@@ -75,15 +57,7 @@ public readonly struct ParallelAsyncEnumerator2<T>
 
     public JoiningTask DisposeAsync()
     {
-//        _threadLocal.Dispose();
+//        _threadLocal.Dispose(); TODO implement
         return new JoiningTask();
-    }
-}
-
-public static class ListExtensions2
-{
-    public static ParallelAsyncEnumerable2<T> AsParallel<T>(this List<T> list, int threadsCount)
-    {
-        return new ParallelAsyncEnumerable2<T>(list, threadsCount);
     }
 }
