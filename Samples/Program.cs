@@ -16,7 +16,7 @@ public class Program
         Foreach2().GetResult();
     }
 
-    private static async ParallelTask<int> ForkAndJoin()
+    private static async ParallelTask ForkAndJoin()
     {
         Console.Out.WriteLine($"Before fork: thread={Thread.CurrentThread.ManagedThreadId}");
         await new ForkingTask(2);
@@ -27,25 +27,21 @@ public class Program
         Console.Out.WriteLine($"After join twice: thread={Thread.CurrentThread.ManagedThreadId}");
         await new JoiningTask();
         Console.Out.WriteLine($"After last join: thread={Thread.CurrentThread.ManagedThreadId}");
-
-        return default;
     }
     
-    private static async ParallelTask<int> ForkTwice()
+    private static async ParallelTask ForkTwice()
     {
         await new ForkingTask(3);
         await new ForkingTask(2);
-
-        return default;
     }
 
-    private static async Task JoinTwice()
+    private static async ParallelTask JoinTwice()
     {
         await new JoiningTask();
         await new JoiningTask();
     }
 
-    private static async ParallelTask<int> Foreach()
+    private static async ParallelTask Foreach()
     {
         var a = new List<int> {1, 2, 3, 4, 5, 6, 7, 8, 9};
         
@@ -58,10 +54,9 @@ public class Program
         }
         
         Console.Out.WriteLine($"After foreach: thread={Thread.CurrentThread.ManagedThreadId}");
-        return default;
     }
 
-    private static async ParallelTask<int> Foreach2()
+    private static async ParallelTask Foreach2()
     {
         var a = new List<int> {1, 2, 3, 4, 5, 6, 7, 8, 9};
         
@@ -74,6 +69,5 @@ public class Program
         }
         
         Console.Out.WriteLine($"After foreach: thread={Thread.CurrentThread.ManagedThreadId}");
-        return default; //TODO to Task<void>
     }
 }

@@ -1,30 +1,30 @@
-//MIT License
-//Copyright (c) 2023 Saltuk Konstantin
-//See the LICENSE file in the project root for more information.
+// MIT License
+// Copyright (c) 2023 Saltuk Konstantin
+// See the LICENSE file in the project root for more information.
 
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 
 namespace AwaitThreading.Core;
 
-[AsyncMethodBuilder(typeof(ParallelTaskMethodBuilder<>))]
-public sealed class ParallelTask<T>
+[AsyncMethodBuilder(typeof(ParallelTaskMethodBuilder))]
+public sealed class ParallelTask //TODO copy-paste?
 {
     private Action? _continuation;
-    private readonly BlockingCollection<T> _results = new();
+    private readonly BlockingCollection<Unit> _results = new();
 
-    internal void SetResult(T result)
+    internal void SetResult()
     {
-        _results.Add(result);
+        _results.Add(default);
         _continuation?.Invoke();
     }
 
-    public T GetResult()
+    public void GetResult()
     {
-        return _results.Take();
+        _results.Take();
     }
 
-    public ParallelTaskAwaiter<T> GetAwaiter() => new(this);
+    public ParallelTaskAwaiter GetAwaiter() => new(this);
 
     public void SetContinuation(Action continuation)
     {

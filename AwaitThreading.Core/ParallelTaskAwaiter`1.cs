@@ -1,16 +1,16 @@
-// MIT License
-// Copyright (c) 2023 Saltuk Konstantin
-// See the LICENSE file in the project root for more information.
+//MIT License
+//Copyright (c) 2023 Saltuk Konstantin
+//See the LICENSE file in the project root for more information.
 
 using System.Runtime.CompilerServices;
 
 namespace AwaitThreading.Core;
 
-public readonly struct ParallelTaskAwaiter : ICriticalNotifyCompletion
+public readonly struct ParallelTaskAwaiter<T> : ICriticalNotifyCompletion
 {
-    private readonly ParallelTask _task;
+    private readonly ParallelTask<T> _task;
 
-    public ParallelTaskAwaiter(in ParallelTask task)
+    public ParallelTaskAwaiter(in ParallelTask<T> task)
     {
         _task = task;
     }
@@ -27,5 +27,5 @@ public readonly struct ParallelTaskAwaiter : ICriticalNotifyCompletion
         _task.SetContinuation(continuation);
     }
 
-    public void GetResult() => _task.GetResult();
+    public T GetResult() => _task.GetResult();
 }

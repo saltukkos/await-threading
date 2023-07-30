@@ -1,21 +1,21 @@
-// MIT License
-// Copyright (c) 2023 Saltuk Konstantin
-// See the LICENSE file in the project root for more information.
+//MIT License
+//Copyright (c) 2023 Saltuk Konstantin
+//See the LICENSE file in the project root for more information.
 
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace AwaitThreading.Core;
 
-public readonly struct ParallelTaskMethodBuilder
+public readonly struct ParallelTaskMethodBuilder<T>
 {
     public ParallelTaskMethodBuilder()
     {
     }
 
-    public static ParallelTaskMethodBuilder Create() => new();
+    public static ParallelTaskMethodBuilder<T> Create() => new();
 
-    public ParallelTask Task { [MethodImpl(MethodImplOptions.AggressiveInlining)] get; } = new();
+    public ParallelTask<T> Task { [MethodImpl(MethodImplOptions.AggressiveInlining)] get; } = new();
 
     [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -34,7 +34,11 @@ public readonly struct ParallelTaskMethodBuilder
         where TStateMachine : IAsyncStateMachine
     {
         var stateMachineLocal = MakeCopy(stateMachine);
-        awaiter.OnCompleted(() => { MakeCopy(stateMachineLocal).MoveNext(); });
+        awaiter.OnCompleted(() =>
+        {
+            
+            MakeCopy(stateMachineLocal).MoveNext();
+        });
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -47,7 +51,10 @@ public readonly struct ParallelTaskMethodBuilder
         awaiter.UnsafeOnCompleted(() => MakeCopy(stateMachineLocal).MoveNext());
     }
 
-    public void SetResult() => Task.SetResult();
+    public void SetResult(T result)
+    {
+        Task.SetResult(result);
+    }
 
     public void SetException(Exception exception) => throw new NotImplementedException();
     
