@@ -6,7 +6,7 @@ namespace AwaitThreading.Core;
 
 public readonly struct ParallelContext
 {
-    private static readonly AsyncLocal<Stack<ParallelContext>> ParallelContexts = new();
+    private static readonly AsyncLocal<Stack<ParallelContext>> ParallelContexts = new(); //TODO still unreliable, `ForkAndJoin()` could fail if one thread finishes early and run another task
 
     public ParallelContext(int id)
     {

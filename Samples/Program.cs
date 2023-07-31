@@ -18,12 +18,16 @@ public class Program
 
     private static async ParallelTask ForkAndJoin()
     {
+        var random = new Random(Seed: 42);
         Console.Out.WriteLine($"Before fork: thread={Thread.CurrentThread.ManagedThreadId}");
         await new ForkingTask(2);
+        Thread.Sleep(random.Next() % 100);
         Console.Out.WriteLine($"After fork: thread={Thread.CurrentThread.ManagedThreadId}");
         await ForkTwice();
+        Thread.Sleep(random.Next() % 100);
         Console.Out.WriteLine($"After fork twice: thread={Thread.CurrentThread.ManagedThreadId}");
         await JoinTwice();
+        Thread.Sleep(random.Next() % 100);
         Console.Out.WriteLine($"After join twice: thread={Thread.CurrentThread.ManagedThreadId}");
         await new JoiningTask();
         Console.Out.WriteLine($"After last join: thread={Thread.CurrentThread.ManagedThreadId}");
