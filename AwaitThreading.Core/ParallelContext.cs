@@ -2,32 +2,71 @@
 //Copyright (c) 2023 Saltuk Konstantin
 //See the LICENSE file in the project root for more information.
 
+using System.Collections.Immutable;
+
 namespace AwaitThreading.Core;
+
+public readonly struct ParallelFrame
+{
+    public readonly int Id;
+    public readonly int Count;
+
+    public ParallelFrame(int id, int count)
+    {
+        Id = id;
+        Count = count;
+    }
+}
 
 public readonly struct ParallelContext
 {
-    private static readonly AsyncLocal<Stack<ParallelContext>> ParallelContexts = new(); //TODO still unreliable, `ForkAndJoin()` could fail if one thread finishes early and run another task
+    private readonly ImmutableStack<ParallelFrame>? _stack;
 
-    public ParallelContext(int id)
+    private static readonly ThreadLocal<ParallelContext> CurrentThreadContext = new();
+
+    private ParallelContext(ImmutableStack<ParallelFrame> stack)
     {
-        Id = id;
+        _stack = stack;
     }
 
-    public int Id { get; }
-
-    public static ParallelContext? GetCurrentContext()
+    public static ParallelContext CaptureParallelContext()
     {
-        return ParallelContexts.Value?.Peek();
+        return CurrentThreadContext.Value;
     }
 
-    public static void PushContext(ParallelContext context)
+    public static void SetParallelContext(ParallelContext value)
     {
-        ParallelContexts.Value ??= new Stack<ParallelContext>();
-        ParallelContexts.Value.Push(context);
+        CurrentThreadContext.Value = value;
     }
 
-    public static ParallelContext PopContext()
+    public static ParallelFrame GetCurrentFrame()
     {
-        return ParallelContexts.Value!.Pop();
+        return CurrentThreadContext.Value._stack.Peek();
+    }
+
+    public static void PushFrame(ParallelFrame frame)
+    {
+        var currentContext = CurrentThreadContext.Value;
+        var newStack = (currentContext._stack ?? ImmutableStack<ParallelFrame>.Empty).Push(frame);
+        CurrentThreadContext.Value = new ParallelContext(newStack);
+    }
+
+    public static ParallelFrame PopFrame()
+    {
+        var currentContext = CurrentThreadContext.Value;
+        var newStack = currentContext._stack.Pop(out var poppedFrame);
+        CurrentThreadContext.Value = new ParallelContext(newStack);
+        return poppedFrame;
+    }
+
+    public static string GetCurrentContexts()
+    {
+        var stack = CurrentThreadContext.Value._stack;
+        if (stack is null)
+        {
+            return "empty";
+        }
+
+        return string.Join(", ", stack.Select(t => $"({t.Id} out of {t.Count})"));
     }
 }

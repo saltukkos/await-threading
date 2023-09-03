@@ -8,7 +8,7 @@ namespace AwaitThreading.Core;
 
 public sealed class JoiningTask
 {
-    public readonly struct JoiningTaskAwaiter : ICriticalNotifyCompletion
+    public readonly struct JoiningTaskAwaiter : ICriticalNotifyCompletion, IParallelContextHandler
     {
         public JoiningTaskAwaiter()
         {
@@ -18,7 +18,7 @@ public sealed class JoiningTask
     
         public void OnCompleted(Action continuation)
         {
-            var context = ParallelContext.PopContext();
+            var context = ParallelContext.PopFrame();
             if (context.Id == 0)
             {
                 continuation.Invoke();

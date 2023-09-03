@@ -10,9 +10,13 @@ public static class ListExtensions
 {
     public static async ParallelTask<ParallelAsyncEnumerable<T>> AsParallelAsync<T>(this List<T> list, int threadsCount)
     {
+        Console.Out.WriteLine(
+            $"inside AsParallelAsync before await thread={Thread.CurrentThread.ManagedThreadId} stack: {ParallelContext.GetCurrentContexts()}");
         await new ForkingTask(threadsCount);
-        var context = ParallelContext.GetCurrentContext();
-        var id = context!.Value.Id;
+        Console.Out.WriteLine(
+            $"inside AsParallelAsync after await thread={Thread.CurrentThread.ManagedThreadId} stack: {ParallelContext.GetCurrentContexts()}");
+        var context = ParallelContext.GetCurrentFrame();
+        var id = context.Id;
         var chunkSize = (list.Count + threadsCount - 1) / threadsCount;
         var start = chunkSize * id;
         var end = chunkSize * (id + 1);

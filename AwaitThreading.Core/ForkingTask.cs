@@ -8,7 +8,7 @@ namespace AwaitThreading.Core;
 
 public sealed class ForkingTask
 {
-    public readonly struct ForkingAwaiter : ICriticalNotifyCompletion
+    public readonly struct ForkingAwaiter : ICriticalNotifyCompletion, IParallelContextHandler
     {
         private readonly int _threadsCount;
 
@@ -21,12 +21,15 @@ public sealed class ForkingTask
     
         public void OnCompleted(Action continuation)
         {
-            for (var i = 0; i < _threadsCount; ++i)
+            var threadsCount = _threadsCount;
+            var currentContext = ParallelContext.CaptureParallelContext();
+            for (var i = 0; i < threadsCount; ++i)
             {
                 var id = i;
                 Task.Run(() =>
                 {
-                    ParallelContext.PushContext(new ParallelContext(id));
+                    ParallelContext.SetParallelContext(currentContext);
+                    ParallelContext.PushFrame(new (id, threadsCount));
                     continuation.Invoke();
                 }); //TODO exception handling
             }

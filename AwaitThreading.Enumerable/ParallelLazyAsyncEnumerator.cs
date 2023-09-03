@@ -26,8 +26,8 @@ public readonly struct ParallelLazyAsyncEnumerator<T>
         }
 
         await new ForkingTask(_threadsCount);
-        var context = ParallelContext.GetCurrentContext();
-        var id = context!.Value.Id;
+        var context = ParallelContext.GetCurrentFrame();
+        var id = context.Id;
         var chunkSize = (_list.Count + _threadsCount - 1) / _threadsCount;
         var start = chunkSize * id;
         var end = chunkSize * (id + 1);
@@ -55,7 +55,7 @@ public readonly struct ParallelLazyAsyncEnumerator<T>
         }
     }
 
-    public async ValueTask DisposeAsync()
+    public async ParallelTask DisposeAsync()
     {
         await new JoiningTask();
         //TODO: not reliable, we need to wait all other threads to finish or they could get ObjectDisposedException inside `MoveNextAsync`

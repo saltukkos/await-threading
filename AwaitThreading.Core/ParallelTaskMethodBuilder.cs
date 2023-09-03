@@ -34,7 +34,19 @@ public readonly struct ParallelTaskMethodBuilder
         where TStateMachine : IAsyncStateMachine
     {
         var stateMachineLocal = MakeCopy(stateMachine);
-        awaiter.OnCompleted(() => { MakeCopy(stateMachineLocal).MoveNext(); });
+        if (awaiter is IParallelContextHandler)
+        {
+            awaiter.OnCompleted(() => MakeCopy(stateMachineLocal).MoveNext());
+        }
+        else
+        {
+            var currentContext = ParallelContext.CaptureParallelContext();
+            awaiter.OnCompleted(() =>
+            {
+                ParallelContext.SetParallelContext(currentContext);
+                MakeCopy(stateMachineLocal).MoveNext();
+            });
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -44,7 +56,19 @@ public readonly struct ParallelTaskMethodBuilder
         where TStateMachine : IAsyncStateMachine
     {
         var stateMachineLocal = MakeCopy(stateMachine);
-        awaiter.UnsafeOnCompleted(() => MakeCopy(stateMachineLocal).MoveNext());
+        if (awaiter is IParallelContextHandler)
+        {
+            awaiter.OnCompleted(() => MakeCopy(stateMachineLocal).MoveNext());
+        }
+        else
+        {
+            var currentContext = ParallelContext.CaptureParallelContext();
+            awaiter.OnCompleted(() =>
+            {
+                ParallelContext.SetParallelContext(currentContext);
+                MakeCopy(stateMachineLocal).MoveNext();
+            });
+        }
     }
 
     public void SetResult() => Task.SetResult();

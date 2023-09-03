@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 namespace AwaitThreading.Core;
 
-public readonly struct ParallelTaskAwaiter : ICriticalNotifyCompletion
+public readonly struct ParallelTaskAwaiter : ICriticalNotifyCompletion, IParallelContextHandler
 {
     private readonly ParallelTask _task;
 
