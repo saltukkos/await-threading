@@ -33,19 +33,31 @@ public readonly struct ParallelTaskMethodBuilder
         where TAwaiter : INotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
-        var stateMachineLocal = MakeCopy(stateMachine);
-        if (awaiter is IParallelContextHandler)
+        if (awaiter is IParallelNotifyCompletion parallelAwaiter)
         {
-            awaiter.OnCompleted(() => MakeCopy(stateMachineLocal).MoveNext());
+            var stateMachineLocal = MakeCopy(stateMachine);
+            parallelAwaiter.ParallelOnCompleted(() =>
+            {
+                MakeCopy(stateMachineLocal).MoveNext();
+            });
         }
         else
         {
-            var currentContext = ParallelContext.CaptureParallelContext();
-            awaiter.OnCompleted(() =>
+            var stateMachineLocal = stateMachine;
+            var executionContext = ExecutionContext.Capture();
+
+            if (executionContext is null)
             {
-                ParallelContext.SetParallelContext(currentContext);
-                MakeCopy(stateMachineLocal).MoveNext();
-            });
+                awaiter.OnCompleted(() => { stateMachineLocal.MoveNext(); });
+            }
+            else
+            {
+                awaiter.OnCompleted(() =>
+                {
+                    ExecutionContext.Restore(executionContext);
+                    MakeCopy(stateMachineLocal).MoveNext();
+                });
+            }
         }
     }
 
@@ -55,26 +67,42 @@ public readonly struct ParallelTaskMethodBuilder
         where TAwaiter : ICriticalNotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
-        var stateMachineLocal = MakeCopy(stateMachine);
-        if (awaiter is IParallelContextHandler)
+        if (awaiter is IParallelNotifyCompletion parallelAwaiter)
         {
-            awaiter.OnCompleted(() => MakeCopy(stateMachineLocal).MoveNext());
+            var stateMachineLocal = MakeCopy(stateMachine);
+            parallelAwaiter.ParallelOnCompleted(() =>
+            {
+                MakeCopy(stateMachineLocal).MoveNext();
+            });
         }
         else
         {
-            var currentContext = ParallelContext.CaptureParallelContext();
-            awaiter.OnCompleted(() =>
+            var stateMachineLocal = stateMachine;
+            var executionContext = ExecutionContext.Capture();
+
+            if (executionContext is null)
             {
-                ParallelContext.SetParallelContext(currentContext);
-                MakeCopy(stateMachineLocal).MoveNext();
-            });
+                awaiter.OnCompleted(() => { stateMachineLocal.MoveNext(); });
+            }
+            else
+            {
+                awaiter.OnCompleted(() =>
+                {
+                    ExecutionContext.Restore(executionContext);
+                    MakeCopy(stateMachineLocal).MoveNext();
+                });
+            }
         }
     }
 
     public void SetResult() => Task.SetResult();
 
-    public void SetException(Exception exception) => throw new NotImplementedException();
-    
+    public void SetException(Exception exception)
+    {
+        Debugger.Break();
+        throw new NotImplementedException();
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static TStateMachine MakeCopy<TStateMachine>(TStateMachine stateMachine)
         where TStateMachine : IAsyncStateMachine

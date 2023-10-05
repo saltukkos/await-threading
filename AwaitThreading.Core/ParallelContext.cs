@@ -22,7 +22,7 @@ public readonly struct ParallelContext
 {
     private readonly ImmutableStack<ParallelFrame>? _stack;
 
-    private static readonly ThreadLocal<ParallelContext> CurrentThreadContext = new();
+    private static readonly AsyncLocal<ParallelContext> CurrentThreadContext = new();
 
     private ParallelContext(ImmutableStack<ParallelFrame> stack)
     {
@@ -41,7 +41,11 @@ public readonly struct ParallelContext
 
     public static ParallelFrame GetCurrentFrame()
     {
-        return CurrentThreadContext.Value._stack.Peek();
+        var currentContextStack = CurrentThreadContext.Value._stack;
+        if (currentContextStack is null) 
+            throw new InvalidOperationException("Stack is empty");
+
+        return currentContextStack.Peek();
     }
 
     public static void PushFrame(ParallelFrame frame)
@@ -54,7 +58,11 @@ public readonly struct ParallelContext
     public static ParallelFrame PopFrame()
     {
         var currentContext = CurrentThreadContext.Value;
-        var newStack = currentContext._stack.Pop(out var poppedFrame);
+        var currentContextStack = currentContext._stack;
+        if (currentContextStack is null) 
+            throw new InvalidOperationException("Stack is empty");
+
+        var newStack = currentContextStack.Pop(out var poppedFrame);
         CurrentThreadContext.Value = new ParallelContext(newStack);
         return poppedFrame;
     }

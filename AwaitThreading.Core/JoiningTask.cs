@@ -8,21 +8,26 @@ namespace AwaitThreading.Core;
 
 public sealed class JoiningTask
 {
-    public readonly struct JoiningTaskAwaiter : ICriticalNotifyCompletion, IParallelContextHandler
+    public readonly struct JoiningTaskAwaiter : ICriticalNotifyCompletion, IParallelNotifyCompletion
     {
         public JoiningTaskAwaiter()
         {
         }
 
         public bool IsCompleted => false;
-    
-        public void OnCompleted(Action continuation)
+
+        public void ParallelOnCompleted(Action continuation)
         {
             var context = ParallelContext.PopFrame();
             if (context.Id == 0)
             {
                 continuation.Invoke();
             }
+        }
+
+        public void OnCompleted(Action continuation)
+        {
+            throw new NotSupportedException("Only ParallelTask methods are supported");
         }
 
         public void UnsafeOnCompleted(Action continuation)

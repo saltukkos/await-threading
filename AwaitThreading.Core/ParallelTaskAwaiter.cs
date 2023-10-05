@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 namespace AwaitThreading.Core;
 
-public readonly struct ParallelTaskAwaiter : ICriticalNotifyCompletion, IParallelContextHandler
+public readonly struct ParallelTaskAwaiter : ICriticalNotifyCompletion, IParallelNotifyCompletion
 {
     private readonly ParallelTask _task;
 
@@ -16,15 +16,20 @@ public readonly struct ParallelTaskAwaiter : ICriticalNotifyCompletion, IParalle
     }
 
     public bool IsCompleted => false;
-    
-    public void OnCompleted(Action continuation)
+
+    public void ParallelOnCompleted(Action continuation)
     {
         _task.SetContinuation(continuation);
     }
 
+    public void OnCompleted(Action continuation)
+    {
+        throw new NotSupportedException("Only ParallelTask methods are supported");
+    }
+
     public void UnsafeOnCompleted(Action continuation)
     {
-        _task.SetContinuation(continuation);
+        throw new NotSupportedException("Only ParallelTask methods are supported");
     }
 
     public void GetResult() => _task.GetResult();

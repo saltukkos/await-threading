@@ -4,6 +4,7 @@
 
 namespace AwaitThreading.Core;
 
-public interface IParallelContextHandler
+public interface IParallelNotifyCompletion
 {
+    void ParallelOnCompleted(Action continuation);
 }

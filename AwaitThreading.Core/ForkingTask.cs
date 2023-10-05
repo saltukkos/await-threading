@@ -8,7 +8,7 @@ namespace AwaitThreading.Core;
 
 public sealed class ForkingTask
 {
-    public readonly struct ForkingAwaiter : ICriticalNotifyCompletion, IParallelContextHandler
+    public readonly struct ForkingAwaiter : ICriticalNotifyCompletion, IParallelNotifyCompletion
     {
         private readonly int _threadsCount;
 
@@ -18,21 +18,30 @@ public sealed class ForkingTask
         }
 
         public bool IsCompleted => false;
-    
-        public void OnCompleted(Action continuation)
+
+        public void ParallelOnCompleted(Action continuation)
         {
             var threadsCount = _threadsCount;
-            var currentContext = ParallelContext.CaptureParallelContext();
+            var currentContext = ExecutionContext.Capture();
             for (var i = 0; i < threadsCount; ++i)
             {
                 var id = i;
                 Task.Run(() =>
                 {
-                    ParallelContext.SetParallelContext(currentContext);
+                    if (currentContext is not null)
+                    {
+                        ExecutionContext.Restore(currentContext);
+                    }
+
                     ParallelContext.PushFrame(new (id, threadsCount));
                     continuation.Invoke();
                 }); //TODO exception handling
             }
+        }
+
+        public void OnCompleted(Action continuation)
+        {
+            throw new NotSupportedException("Only ParallelTask methods are supported");
         }
 
         public void UnsafeOnCompleted(Action continuation)

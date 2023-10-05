@@ -11,7 +11,8 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        ForkAndJoin().GetResult();
+//        ForkAndJoin().GetResult();
+        ForkAndJoinWithAwaits().GetResult();
         Foreach().GetResult();
         Foreach2().GetResult();
         Console.Out.WriteLine(
@@ -20,6 +21,9 @@ public class Program
 
     private static async ParallelTask ForkAndJoin()
     {
+        await new ForkingTask(2);
+        await new JoiningTask();
+        
         var random = new Random(Seed: 42);
         Console.Out.WriteLine($"Before fork: thread={Thread.CurrentThread.ManagedThreadId}, stack: {ParallelContext.GetCurrentContexts()}");
         await new ForkingTask(2);
@@ -30,6 +34,29 @@ public class Program
         Console.Out.WriteLine($"After fork twice: thread={Thread.CurrentThread.ManagedThreadId}, stack: {ParallelContext.GetCurrentContexts()}");
         await JoinTwice();
         Thread.Sleep(random.Next() % 100);
+        Console.Out.WriteLine($"After join twice: thread={Thread.CurrentThread.ManagedThreadId}, stack: {ParallelContext.GetCurrentContexts()}");
+        await new JoiningTask();
+        Console.Out.WriteLine($"After last join: thread={Thread.CurrentThread.ManagedThreadId}, stack: {ParallelContext.GetCurrentContexts()}");
+    }
+
+    private static async ParallelTask ForkAndJoinWithAwaits()
+    {
+        var random = new Random(Seed: 4242);
+        Console.Out.WriteLine($"Before fork: thread={Thread.CurrentThread.ManagedThreadId}, stack: {ParallelContext.GetCurrentContexts()}");
+        await new ForkingTask(2);
+
+        Console.Out.WriteLine($"After fork (before delay): thread={Thread.CurrentThread.ManagedThreadId}, stack: {ParallelContext.GetCurrentContexts()}");
+        await Task.Delay(random.Next() % 100);
+        Console.Out.WriteLine($"After fork (after delay): thread={Thread.CurrentThread.ManagedThreadId}, stack: {ParallelContext.GetCurrentContexts()}");
+        
+        await ForkTwice();
+        
+        Console.Out.WriteLine($"After fork twice (before delay): thread={Thread.CurrentThread.ManagedThreadId}, stack: {ParallelContext.GetCurrentContexts()}");
+        await Task.Delay(random.Next() % 100);
+        Console.Out.WriteLine($"After fork twice (after delay): thread={Thread.CurrentThread.ManagedThreadId}, stack: {ParallelContext.GetCurrentContexts()}");
+        
+        await JoinTwice();
+        await Task.Delay(random.Next() % 100);
         Console.Out.WriteLine($"After join twice: thread={Thread.CurrentThread.ManagedThreadId}, stack: {ParallelContext.GetCurrentContexts()}");
         await new JoiningTask();
         Console.Out.WriteLine($"After last join: thread={Thread.CurrentThread.ManagedThreadId}, stack: {ParallelContext.GetCurrentContexts()}");
