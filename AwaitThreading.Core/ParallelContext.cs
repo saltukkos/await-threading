@@ -29,16 +29,6 @@ public readonly struct ParallelContext
         _stack = stack;
     }
 
-    public static ParallelContext CaptureParallelContext()
-    {
-        return CurrentThreadContext.Value;
-    }
-
-    public static void SetParallelContext(ParallelContext value)
-    {
-        CurrentThreadContext.Value = value;
-    }
-
     public static ParallelFrame GetCurrentFrame()
     {
         var currentContextStack = CurrentThreadContext.Value._stack;
