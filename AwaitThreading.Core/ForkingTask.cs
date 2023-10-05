@@ -23,6 +23,7 @@ public sealed class ForkingTask
         {
             var threadsCount = _threadsCount;
             var currentContext = ExecutionContext.Capture();
+            var barrier = new Barrier(threadsCount);
             for (var i = 0; i < threadsCount; ++i)
             {
                 var id = i;
@@ -33,7 +34,7 @@ public sealed class ForkingTask
                         ExecutionContext.Restore(currentContext);
                     }
 
-                    ParallelContext.PushFrame(new (id, threadsCount));
+                    ParallelContext.PushFrame(new (id, threadsCount, barrier));
                     continuation.Invoke();
                 }); //TODO exception handling
             }

@@ -10,11 +10,13 @@ public readonly struct ParallelFrame
 {
     public readonly int Id;
     public readonly int Count;
+    public readonly Barrier JoinBarrier;
 
-    public ParallelFrame(int id, int count)
+    public ParallelFrame(int id, int count, Barrier joinBarrier)
     {
         Id = id;
         Count = count;
+        JoinBarrier = joinBarrier;
     }
 }
 

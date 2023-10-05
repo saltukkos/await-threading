@@ -58,7 +58,6 @@ public readonly struct ParallelLazyAsyncEnumerator<T>
     public async ParallelTask DisposeAsync()
     {
         await new JoiningTask();
-        //TODO: not reliable, we need to wait all other threads to finish or they could get ObjectDisposedException inside `MoveNextAsync`
         _threadLocal.Dispose();
     }
 }
