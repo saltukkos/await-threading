@@ -35,6 +35,9 @@ public readonly struct ParallelTaskMethodBuilder<T>
     {
         if (awaiter is IParallelNotifyCompletion parallelAwaiter)
         {
+            if (parallelAwaiter.RequireContinuationToBeSetBeforeResult)
+                Task.RequireContinuationToBeSetBeforeResult = true;
+
             var stateMachineLocal = MakeCopy(stateMachine);
             parallelAwaiter.ParallelOnCompleted(() =>
             {
@@ -69,6 +72,9 @@ public readonly struct ParallelTaskMethodBuilder<T>
     {
         if (awaiter is IParallelNotifyCompletion parallelAwaiter)
         {
+            if (parallelAwaiter.RequireContinuationToBeSetBeforeResult)
+                Task.RequireContinuationToBeSetBeforeResult = true;
+
             var stateMachineLocal = MakeCopy(stateMachine);
             parallelAwaiter.ParallelOnCompleted(() =>
             {

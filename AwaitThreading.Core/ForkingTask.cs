@@ -2,6 +2,7 @@
 //Copyright (c) 2023 Saltuk Konstantin
 //See the LICENSE file in the project root for more information.
 
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace AwaitThreading.Core;
@@ -19,16 +20,28 @@ public sealed class ForkingTask
 
         public bool IsCompleted => false;
 
+        public bool RequireContinuationToBeSetBeforeResult => true;
+
         public void ParallelOnCompleted(Action continuation)
         {
             var threadsCount = _threadsCount;
             var currentContext = ExecutionContext.Capture();
-            var barrier = new Barrier(threadsCount);
+            var barrier = new MyBarrier(threadsCount);
             for (var i = 0; i < threadsCount; ++i)
             {
                 var id = i;
-                Task.Run(() =>
+                Console.Out.WriteLine($"Schedule running of {id}");
+                var stopwatch = Stopwatch.StartNew();
+                //Task.Run(() =>
+                Task.Factory.StartNew(() =>
                 {
+                    // Console.Out.WriteLine($"Actually run of {id} (took {stopwatch.Elapsed.TotalMilliseconds})");
+
+                    if (stopwatch.Elapsed.TotalMilliseconds > 100)
+                    {
+                        Console.Out.WriteLine($"$ACHTUNG!!!!!!!!!!!!!!!!!!!!!!! {stopwatch.Elapsed.TotalMilliseconds} to start a task {id}");
+                    }
+                    
                     if (currentContext is not null)
                     {
                         ExecutionContext.Restore(currentContext);
@@ -36,18 +49,19 @@ public sealed class ForkingTask
 
                     ParallelContext.PushFrame(new (id, threadsCount, barrier));
                     continuation.Invoke();
-                }); //TODO exception handling
+                // }); //TODO exception handling
+                }); 
             }
         }
 
         public void OnCompleted(Action continuation)
         {
-            throw new NotSupportedException("Only ParallelTask methods are supported");
+            Assertion.ThrowInvalidTaskIsUsed();
         }
 
         public void UnsafeOnCompleted(Action continuation)
         {
-            OnCompleted(continuation);
+            Assertion.ThrowInvalidTaskIsUsed();
         }
 
         public void GetResult()

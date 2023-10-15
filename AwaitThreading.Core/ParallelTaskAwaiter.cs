@@ -17,6 +17,8 @@ public readonly struct ParallelTaskAwaiter : ICriticalNotifyCompletion, IParalle
 
     public bool IsCompleted => false;
 
+    public bool RequireContinuationToBeSetBeforeResult => _task.RequireContinuationToBeSetBeforeResult;
+
     public void ParallelOnCompleted(Action continuation)
     {
         _task.SetContinuation(continuation);
@@ -24,13 +26,14 @@ public readonly struct ParallelTaskAwaiter : ICriticalNotifyCompletion, IParalle
 
     public void OnCompleted(Action continuation)
     {
-        throw new NotSupportedException("Only ParallelTask methods are supported");
+        Assertion.ThrowInvalidTaskIsUsed();
     }
 
     public void UnsafeOnCompleted(Action continuation)
     {
-        throw new NotSupportedException("Only ParallelTask methods are supported");
+        Assertion.ThrowInvalidTaskIsUsed();
     }
 
     public void GetResult() => _task.GetResult();
+    // public void GetResult([CallerMemberName] string? c = null, [CallerLineNumber] int callerLine = 0) => _task.GetResult($"{c}:{callerLine}");
 }

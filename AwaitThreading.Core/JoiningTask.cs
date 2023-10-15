@@ -19,23 +19,28 @@ public sealed class JoiningTask
         public void ParallelOnCompleted(Action continuation)
         {
             var context = ParallelContext.PopFrame();
-            context.JoinBarrier.SignalAndWait(); //TODO do not block threads with id != 0
+            // context.JoinBarrier.SignalAndWait(); //TODO do not block threads with id != 0
 
             if (context.Id == 0)
             {
-                context.JoinBarrier.Dispose();
+                context.JoinBarrier.SignalAndWait();
+//                context.JoinBarrier.Dispose();
                 continuation.Invoke();
+            }
+            else
+            {
+                context.JoinBarrier.Signal();
             }
         }
 
         public void OnCompleted(Action continuation)
         {
-            throw new NotSupportedException("Only ParallelTask methods are supported");
+            Assertion.ThrowInvalidTaskIsUsed();
         }
 
         public void UnsafeOnCompleted(Action continuation)
         {
-            OnCompleted(continuation);
+            Assertion.ThrowInvalidTaskIsUsed();
         }
 
         public void GetResult()
