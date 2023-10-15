@@ -33,6 +33,8 @@ public readonly struct ParallelTaskMethodBuilder
         where TAwaiter : INotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
+        Task.ReturnSynchronously = false;
+        
         if (awaiter is IParallelNotifyCompletion parallelAwaiter)
         {
             var stateMachineLocal = MakeCopy(stateMachine);
@@ -67,6 +69,8 @@ public readonly struct ParallelTaskMethodBuilder
         where TAwaiter : ICriticalNotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
+        Task.ReturnSynchronously = false;
+
         if (awaiter is IParallelNotifyCompletion parallelAwaiter)
         {
             var stateMachineLocal = MakeCopy(stateMachine);

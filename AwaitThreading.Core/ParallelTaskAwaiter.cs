@@ -12,10 +12,11 @@ public readonly struct ParallelTaskAwaiter : ICriticalNotifyCompletion, IParalle
 
     public ParallelTaskAwaiter(in ParallelTask task)
     {
+        Task.FromResult(42);
         _task = task;
     }
 
-    public bool IsCompleted => false;
+    public bool IsCompleted => _task.ReturnSynchronously;
 
     public void ParallelOnCompleted(Action continuation)
     {
@@ -24,12 +25,12 @@ public readonly struct ParallelTaskAwaiter : ICriticalNotifyCompletion, IParalle
 
     public void OnCompleted(Action continuation)
     {
-        throw new NotSupportedException("Only ParallelTask methods are supported");
+        Assertion.ThrowInvalidTaskIsUsed();
     }
 
     public void UnsafeOnCompleted(Action continuation)
     {
-        throw new NotSupportedException("Only ParallelTask methods are supported");
+        Assertion.ThrowInvalidTaskIsUsed();
     }
 
     public void GetResult() => _task.GetResult();

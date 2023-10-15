@@ -11,6 +11,11 @@ public class Program
 {
     public static void Main(string[] args)
     {
+        Console.Out.WriteLine(JustGiveMeAValueAsyncWrapper().GetResult());
+        
+        Foreach3().GetResult();
+        Foreach3().GetResult();
+
 //        ForkAndJoin().GetResult();
         ForkAndJoinWithAwaits().GetResult();
         Foreach().GetResult();
@@ -19,6 +24,17 @@ public class Program
             $"Finish thread={Thread.CurrentThread.ManagedThreadId} stack: {ParallelContext.GetCurrentContexts()}");
     }
 
+    private static async ParallelTask<int> JustGiveMeAValueAsyncWrapper()
+    {
+        return await JustGiveMeAValueAsync();
+    }
+
+    
+    private static async ParallelTask<int> JustGiveMeAValueAsync()
+    {
+        return 42;
+    }
+    
     private static async ParallelTask ForkAndJoin()
     {
         await new ForkingTask(2);
@@ -78,29 +94,44 @@ public class Program
     {
         var a = new List<int> {1, 2, 3, 4, 5, 6, 7, 8, 9};
         
-        Console.Out.WriteLine($"Before foreach: thread={Thread.CurrentThread.ManagedThreadId} stack: {ParallelContext.GetCurrentContexts()}");
+        Console.Out.WriteLine($"Before foreach 1: thread={Thread.CurrentThread.ManagedThreadId} stack: {ParallelContext.GetCurrentContexts()}");
         
         await foreach (var n in await a.AsParallelAsync(3))
         {
-            Console.Out.WriteLine($"Inside foreach: thread={Thread.CurrentThread.ManagedThreadId}, value={n} stack: {ParallelContext.GetCurrentContexts()}");
+            Console.Out.WriteLine($"Inside foreach 1: thread={Thread.CurrentThread.ManagedThreadId}, value={n} stack: {ParallelContext.GetCurrentContexts()}");
             Thread.Sleep(1);
         }
         
-        Console.Out.WriteLine($"After foreach: thread={Thread.CurrentThread.ManagedThreadId} stack: {ParallelContext.GetCurrentContexts()}");
+        Console.Out.WriteLine($"After foreach 1: thread={Thread.CurrentThread.ManagedThreadId} stack: {ParallelContext.GetCurrentContexts()}");
     }
 
     private static async ParallelTask Foreach2()
     {
         var a = new List<int> {1, 2, 3, 4, 5, 6, 7, 8, 9};
         
-        Console.Out.WriteLine($"Before foreach: thread={Thread.CurrentThread.ManagedThreadId}");
+        Console.Out.WriteLine($"Before foreach 2: thread={Thread.CurrentThread.ManagedThreadId}");
         
         await foreach (var n in a.AsParallel(3))
         {
-            Console.Out.WriteLine($"Inside foreach: thread={Thread.CurrentThread.ManagedThreadId}, value={n}");
+            Console.Out.WriteLine($"Inside foreach 2: thread={Thread.CurrentThread.ManagedThreadId}, value={n}");
             Thread.Sleep(1);
         }
         
-        Console.Out.WriteLine($"After foreach: thread={Thread.CurrentThread.ManagedThreadId}");
+        Console.Out.WriteLine($"After foreach 2: thread={Thread.CurrentThread.ManagedThreadId}");
+    }
+
+    private static async ParallelTask Foreach3()
+    {
+        var a = new List<int> {1, 2, 3, 4, 5, 6, 7, 8, 9};
+        
+        Console.Out.WriteLine($"Before foreach 3: thread={Thread.CurrentThread.ManagedThreadId}");
+        
+        await foreach (var n in a.AsParallel(3))
+        {
+            Console.Out.WriteLine($"Inside foreach 3: thread={Thread.CurrentThread.ManagedThreadId}, value={n}");
+            //await Task.Delay(1).ConfigureAwait(false);
+        }
+        
+        Console.Out.WriteLine($"After foreach 3 s: thread={Thread.CurrentThread.ManagedThreadId}");
     }
 }

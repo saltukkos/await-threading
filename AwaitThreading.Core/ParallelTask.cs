@@ -10,13 +10,25 @@ namespace AwaitThreading.Core;
 [AsyncMethodBuilder(typeof(ParallelTaskMethodBuilder))]
 public sealed class ParallelTask //TODO copy-paste?
 {
-    private Action? _continuation;
+    //TODO disposing?
     private readonly BlockingCollection<Unit> _results = new();
+    private readonly ManualResetEvent _waitHandle = new(false);
+    private Action? _continuation;
 
+    public bool ReturnSynchronously { get; internal set; }
+    
     internal void SetResult()
     {
         _results.Add(default);
-        _continuation?.Invoke();
+        
+        Console.Out.WriteLine($"Start waiting handle for {_waitHandle.GetHashCode()} thread {Thread.CurrentThread.ManagedThreadId}");
+        if (ReturnSynchronously)
+        {
+            return;
+        }
+
+        _waitHandle.WaitOne(); // JoiningTask всё ещё приходит сюда, хотя как бы синхронно. Делать новое проперти в awaiter'е?
+        _continuation!.Invoke();
     }
 
     public void GetResult()
@@ -28,10 +40,13 @@ public sealed class ParallelTask //TODO copy-paste?
 
     public void SetContinuation(Action continuation)
     {
-        _continuation = continuation;
-        if (_results.Count > 0) //TODO is it even possible?
+        if (ReturnSynchronously)
         {
-            continuation.Invoke();
+            throw new InvalidOperationException("Expect caller to run synchronously");
         }
+        
+        _continuation = continuation;
+        _waitHandle.Set();
+        Console.Out.WriteLine($"Set wait handle for {_waitHandle.GetHashCode()} thread {Thread.CurrentThread.ManagedThreadId}");
     }
 }

@@ -42,12 +42,12 @@ public sealed class ForkingTask
 
         public void OnCompleted(Action continuation)
         {
-            throw new NotSupportedException("Only ParallelTask methods are supported");
+            Assertion.ThrowInvalidTaskIsUsed();
         }
 
         public void UnsafeOnCompleted(Action continuation)
         {
-            OnCompleted(continuation);
+            Assertion.ThrowInvalidTaskIsUsed();
         }
 
         public void GetResult()

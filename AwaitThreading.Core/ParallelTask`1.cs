@@ -10,13 +10,25 @@ namespace AwaitThreading.Core;
 [AsyncMethodBuilder(typeof(ParallelTaskMethodBuilder<>))]
 public sealed class ParallelTask<T>
 {
-    private Action? _continuation;
+    //TODO disposing?
     private readonly BlockingCollection<T> _results = new();
+    private readonly ManualResetEvent _waitHandle = new(false);
+    private Action? _continuation;
 
+    public bool ReturnSynchronously { get; internal set; } = true;
+    
     internal void SetResult(T result)
     {
         _results.Add(result);
-        _continuation?.Invoke();
+        
+        Console.Out.WriteLine($"Start waiting handle for {_waitHandle.GetHashCode()} thread {Thread.CurrentThread.ManagedThreadId}");
+        if (ReturnSynchronously)
+        {
+            return;
+        }
+
+        _waitHandle.WaitOne();
+        _continuation!.Invoke();
     }
 
     public T GetResult()
@@ -28,10 +40,13 @@ public sealed class ParallelTask<T>
 
     public void SetContinuation(Action continuation)
     {
-        _continuation = continuation;
-        if (_results.Count > 0) //TODO is it even possible?
+        if (ReturnSynchronously)
         {
-            continuation.Invoke();
+            throw new InvalidOperationException("Expect caller to run synchronously");
         }
+        
+        _continuation = continuation;
+        _waitHandle.Set();
+        Console.Out.WriteLine($"Set wait handle for {_waitHandle.GetHashCode()} thread {Thread.CurrentThread.ManagedThreadId}");
     }
 }

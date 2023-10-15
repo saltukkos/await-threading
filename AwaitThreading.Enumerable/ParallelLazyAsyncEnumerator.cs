@@ -10,7 +10,11 @@ public readonly struct ParallelLazyAsyncEnumerator<T>
 {
     private readonly List<T> _list;
     private readonly int _threadsCount;
-    private readonly ThreadLocal<IEnumerator<T>> _threadLocal = new ();
+    
+    // In ideal world we would be able to store enumerator for our chunk in struct field,
+    // but any changes to the state of this struct will be lost since async methods are
+    // executed on the copy of a struct, so we have to store the data somewhere else.
+    private readonly AsyncLocal<IEnumerator<T>> _chunkEnumerator = new (); //TODO array? But then we will have to reevaluate context.Id every time
 
     public ParallelLazyAsyncEnumerator(List<T> list, int threadsCount)
     {
@@ -18,11 +22,12 @@ public readonly struct ParallelLazyAsyncEnumerator<T>
         _list = list;
     }
 
-    public async ParallelTask<bool> MoveNextAsync()
+    public async ParallelTask<bool> MoveNextAsync() //TODO allocation every time is expensive.
     {
-        if (_threadLocal.IsValueCreated)
+        if (_chunkEnumerator.Value is { } chunkEnumerator)
         {
-            return _threadLocal.Value!.MoveNext();
+            Console.Out.WriteLine($"Set result for existing enumerator thread {Thread.CurrentThread.ManagedThreadId}");
+            return chunkEnumerator.MoveNext();
         }
 
         await new ForkingTask(_threadsCount);
@@ -37,7 +42,9 @@ public readonly struct ParallelLazyAsyncEnumerator<T>
         }
 
         var enumerator = _list.Skip(start).Take(end - start).GetEnumerator();
-        _threadLocal.Value = enumerator;
+        _chunkEnumerator.Value = enumerator;
+        
+        Console.Out.WriteLine($"Set result for new created enumerator thread {Thread.CurrentThread.ManagedThreadId}");
         return enumerator.MoveNext();
     }
 
@@ -45,7 +52,7 @@ public readonly struct ParallelLazyAsyncEnumerator<T>
     {
         get
         {
-            var enumerator = _threadLocal.Value;
+            var enumerator = _chunkEnumerator.Value;
             if (enumerator is null)
             {
                 return default!;
@@ -57,7 +64,8 @@ public readonly struct ParallelLazyAsyncEnumerator<T>
 
     public async ParallelTask DisposeAsync()
     {
+        _chunkEnumerator.Value?.Dispose();
         await new JoiningTask();
-        _threadLocal.Dispose();
+        //_chunkEnumerator.Dispose();
     }
 }
