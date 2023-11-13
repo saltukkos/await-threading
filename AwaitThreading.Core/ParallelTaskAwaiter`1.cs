@@ -15,8 +15,10 @@ public readonly struct ParallelTaskAwaiter<T> : ICriticalNotifyCompletion, IPara
         _task = task;
     }
 
-    public bool IsCompleted => _task.ReturnSynchronously;
-    
+    public bool IsCompleted => false;
+
+    public bool RequireContinuationToBeSetBeforeResult => _task.RequireContinuationToBeSetBeforeResult;
+
     public void ParallelOnCompleted(Action continuation)
     {
         _task.SetContinuation(continuation);
@@ -33,4 +35,6 @@ public readonly struct ParallelTaskAwaiter<T> : ICriticalNotifyCompletion, IPara
     }
 
     public T GetResult() => _task.GetResult();
+    // public T GetResult([CallerMemberName] string? c = null, [CallerLineNumber] int callerLine = 0) => _task.GetResult($"{c}:{callerLine}");
+
 }

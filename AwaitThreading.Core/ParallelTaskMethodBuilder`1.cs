@@ -33,10 +33,11 @@ public readonly struct ParallelTaskMethodBuilder<T>
         where TAwaiter : INotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
-        Task.ReturnSynchronously = false;
-        
         if (awaiter is IParallelNotifyCompletion parallelAwaiter)
         {
+            if (parallelAwaiter.RequireContinuationToBeSetBeforeResult)
+                Task.RequireContinuationToBeSetBeforeResult = true;
+
             var stateMachineLocal = MakeCopy(stateMachine);
             parallelAwaiter.ParallelOnCompleted(() =>
             {
@@ -69,10 +70,11 @@ public readonly struct ParallelTaskMethodBuilder<T>
         where TAwaiter : ICriticalNotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
-        Task.ReturnSynchronously = false;
-        
         if (awaiter is IParallelNotifyCompletion parallelAwaiter)
         {
+            if (parallelAwaiter.RequireContinuationToBeSetBeforeResult)
+                Task.RequireContinuationToBeSetBeforeResult = true;
+
             var stateMachineLocal = MakeCopy(stateMachine);
             parallelAwaiter.ParallelOnCompleted(() =>
             {

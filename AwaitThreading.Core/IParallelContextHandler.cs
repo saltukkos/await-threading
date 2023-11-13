@@ -7,4 +7,6 @@ namespace AwaitThreading.Core;
 public interface IParallelNotifyCompletion
 {
     void ParallelOnCompleted(Action continuation);
+
+    bool RequireContinuationToBeSetBeforeResult => false;
 }

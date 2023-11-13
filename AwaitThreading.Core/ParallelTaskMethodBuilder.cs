@@ -33,10 +33,11 @@ public readonly struct ParallelTaskMethodBuilder
         where TAwaiter : INotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
-        Task.ReturnSynchronously = false;
-        
         if (awaiter is IParallelNotifyCompletion parallelAwaiter)
         {
+            if (parallelAwaiter.RequireContinuationToBeSetBeforeResult)
+                Task.RequireContinuationToBeSetBeforeResult = true;
+
             var stateMachineLocal = MakeCopy(stateMachine);
             parallelAwaiter.ParallelOnCompleted(() =>
             {
@@ -69,29 +70,48 @@ public readonly struct ParallelTaskMethodBuilder
         where TAwaiter : ICriticalNotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
-        Task.ReturnSynchronously = false;
-
+        Console.Out.WriteLine($"{Tim.Er} unsafe on completed start:");
         if (awaiter is IParallelNotifyCompletion parallelAwaiter)
         {
+            if (parallelAwaiter.RequireContinuationToBeSetBeforeResult)
+                Task.RequireContinuationToBeSetBeforeResult = true;
+
             var stateMachineLocal = MakeCopy(stateMachine);
+            
+            Console.Out.WriteLine($"{Tim.Er} schedule parallel completion:");
             parallelAwaiter.ParallelOnCompleted(() =>
             {
+                Console.Out.WriteLine($"{Tim.Er} Continuation started to execute (parallel)");
                 MakeCopy(stateMachineLocal).MoveNext();
             });
         }
         else
         {
+            Console.Out.WriteLine($"{Tim.Er} capturing context:");
             var stateMachineLocal = stateMachine;
             var executionContext = ExecutionContext.Capture();
 
+            Console.Out.WriteLine($"{Tim.Er} Schedule continuation on normal task");
+            
             if (executionContext is null)
-            {
-                awaiter.OnCompleted(() => { stateMachineLocal.MoveNext(); });
-            }
-            else
             {
                 awaiter.OnCompleted(() =>
                 {
+                    Console.Out.WriteLine($"{Tim.Er} Continuation started to execute (no context)");
+                    stateMachineLocal.MoveNext();
+                });
+            }
+            else
+            {
+                var startNew = Stopwatch.StartNew();
+                awaiter.OnCompleted(() =>
+                {
+                    var elapsed = startNew.ElapsedMilliseconds;
+                    if (elapsed > 500)
+                    {
+                        //Debugger.Break();
+                    }
+                    Console.Out.WriteLine($"{Tim.Er} Continuation started to execute (has context)");
                     ExecutionContext.Restore(executionContext);
                     MakeCopy(stateMachineLocal).MoveNext();
                 });

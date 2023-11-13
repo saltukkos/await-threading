@@ -6,13 +6,54 @@ using System.Collections.Immutable;
 
 namespace AwaitThreading.Core;
 
+public class MyBarrier
+{
+    private int _count;
+
+    public MyBarrier(int count)
+    {
+        _count = count;
+    }
+
+    public void Signal()
+    {
+        lock (this)
+        {
+            _count--;
+            if (_count < 0)
+            {
+                throw new InvalidOperationException("Too many threads signaled");
+            }
+            
+            Monitor.PulseAll(this);
+        }
+    }
+    
+    public void SignalAndWait()
+    {
+        lock (this)
+        {
+            _count--;
+            if (_count < 0)
+            {
+                throw new InvalidOperationException("Too many threads signaled");
+            }
+
+            while (_count != 0)
+            {
+                Monitor.Wait(this);
+            }
+        }
+    }
+}
+
 public readonly struct ParallelFrame
 {
     public readonly int Id;
     public readonly int Count;
-    public readonly Barrier JoinBarrier;
+    public readonly MyBarrier JoinBarrier;
 
-    public ParallelFrame(int id, int count, Barrier joinBarrier)
+    public ParallelFrame(int id, int count, MyBarrier joinBarrier)
     {
         Id = id;
         Count = count;
