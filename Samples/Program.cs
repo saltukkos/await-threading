@@ -9,28 +9,29 @@ namespace Samples;
 
 public class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
 
         // ThreadPool.SetMinThreads(5, 100);
         Console.Out.WriteLine($"{Tim.Er} start!");
-        MinimalRepro().GetResult();
+        await MinimalRepro().WaitAsync();
         // return;
         
         
         // Console.Out.WriteLine($"{Tim.Er}");
-        Console.Out.WriteLine(JustGiveMeAValueAsyncWrapper().GetResult());
+        Console.Out.WriteLine(await JustGiveMeAValueAsyncWrapper().WaitAsync());
         //
-        Foreach3().GetResult();
-        Foreach3().GetResult();
+        await Foreach3().WaitAsync();
+        await Foreach3().WaitAsync();
         //
-        ForkAndJoin().GetResult();
-        ForkAndJoinWithAwaits().GetResult();
-        Foreach().GetResult();
-        Foreach().GetResult();
-        Foreach2().GetResult();
+        await ForkAndJoin().WaitAsync();
+        await ForkAndJoinWithAwaits().WaitAsync();
+        await Foreach().WaitAsync();
+        await Foreach().WaitAsync();
+        await Foreach2().WaitAsync();
         Console.Out.WriteLine(
             $"{Tim.Er}Finish thread={Thread.CurrentThread.ManagedThreadId} stack: {ParallelContext.GetCurrentContexts()}");
+        Console.Out.WriteLine("");
     }
 
     private static async ParallelTask MinimalRepro()
