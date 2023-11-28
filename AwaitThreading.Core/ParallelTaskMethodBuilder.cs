@@ -38,29 +38,11 @@ public readonly struct ParallelTaskMethodBuilder
             if (parallelAwaiter.RequireContinuationToBeSetBeforeResult)
                 Task.RequireContinuationToBeSetBeforeResult = true;
 
-            var stateMachineLocal = MakeCopy(stateMachine);
-            parallelAwaiter.ParallelOnCompleted(() =>
-            {
-                MakeCopy(stateMachineLocal).MoveNext();
-            });
+            ParallelTaskMethodBuilderImpl.ParallelOnCompleted(stateMachine, parallelAwaiter);
         }
         else
         {
-            var stateMachineLocal = stateMachine;
-            var executionContext = ExecutionContext.Capture();
-
-            if (executionContext is null)
-            {
-                awaiter.OnCompleted(() => { stateMachineLocal.MoveNext(); });
-            }
-            else
-            {
-                awaiter.OnCompleted(() =>
-                {
-                    ExecutionContext.Restore(executionContext);
-                    MakeCopy(stateMachineLocal).MoveNext();
-                });
-            }
+            ParallelTaskMethodBuilderImpl.OnCompleted(awaiter, stateMachine);
         }
     }
 
@@ -70,52 +52,16 @@ public readonly struct ParallelTaskMethodBuilder
         where TAwaiter : ICriticalNotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
-        Console.Out.WriteLine($"{Tim.Er} unsafe on completed start:");
         if (awaiter is IParallelNotifyCompletion parallelAwaiter)
         {
             if (parallelAwaiter.RequireContinuationToBeSetBeforeResult)
                 Task.RequireContinuationToBeSetBeforeResult = true;
 
-            var stateMachineLocal = MakeCopy(stateMachine);
-            
-            Console.Out.WriteLine($"{Tim.Er} schedule parallel completion:");
-            parallelAwaiter.ParallelOnCompleted(() =>
-            {
-                Console.Out.WriteLine($"{Tim.Er} Continuation started to execute (parallel)");
-                MakeCopy(stateMachineLocal).MoveNext();
-            });
+            ParallelTaskMethodBuilderImpl.ParallelOnCompleted(stateMachine, parallelAwaiter);
         }
         else
         {
-            Console.Out.WriteLine($"{Tim.Er} capturing context:");
-            var stateMachineLocal = stateMachine;
-            var executionContext = ExecutionContext.Capture();
-
-            Console.Out.WriteLine($"{Tim.Er} Schedule continuation on normal task");
-            
-            if (executionContext is null)
-            {
-                awaiter.OnCompleted(() =>
-                {
-                    Console.Out.WriteLine($"{Tim.Er} Continuation started to execute (no context)");
-                    stateMachineLocal.MoveNext();
-                });
-            }
-            else
-            {
-                var startNew = Stopwatch.StartNew();
-                awaiter.OnCompleted(() =>
-                {
-                    var elapsed = startNew.ElapsedMilliseconds;
-                    if (elapsed > 500)
-                    {
-                        //Debugger.Break();
-                    }
-                    Console.Out.WriteLine($"{Tim.Er} Continuation started to execute (has context)");
-                    ExecutionContext.Restore(executionContext);
-                    MakeCopy(stateMachineLocal).MoveNext();
-                });
-            }
+            ParallelTaskMethodBuilderImpl.OnCompleted(awaiter, stateMachine);
         }
     }
 
@@ -125,17 +71,5 @@ public readonly struct ParallelTaskMethodBuilder
     {
         Debugger.Break();
         throw new NotImplementedException();
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static TStateMachine MakeCopy<TStateMachine>(TStateMachine stateMachine)
-        where TStateMachine : IAsyncStateMachine
-    {
-        if (typeof(TStateMachine).IsValueType)
-        {
-            return stateMachine;
-        }
-
-        return (TStateMachine) stateMachine.Copy();
     }
 }

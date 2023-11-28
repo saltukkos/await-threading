@@ -38,29 +38,11 @@ public readonly struct ParallelTaskMethodBuilder<T>
             if (parallelAwaiter.RequireContinuationToBeSetBeforeResult)
                 Task.RequireContinuationToBeSetBeforeResult = true;
 
-            var stateMachineLocal = MakeCopy(stateMachine);
-            parallelAwaiter.ParallelOnCompleted(() =>
-            {
-                MakeCopy(stateMachineLocal).MoveNext();
-            });
+            ParallelTaskMethodBuilderImpl.ParallelOnCompleted(stateMachine, parallelAwaiter);
         }
         else
         {
-            var stateMachineLocal = stateMachine;
-            var executionContext = ExecutionContext.Capture();
-
-            if (executionContext is null)
-            {
-                awaiter.OnCompleted(() => { stateMachineLocal.MoveNext(); });
-            }
-            else
-            {
-                awaiter.OnCompleted(() =>
-                {
-                    ExecutionContext.Restore(executionContext);
-                    MakeCopy(stateMachineLocal).MoveNext();
-                });
-            }
+            ParallelTaskMethodBuilderImpl.OnCompleted(awaiter, stateMachine);
         }
     }
 
@@ -75,29 +57,11 @@ public readonly struct ParallelTaskMethodBuilder<T>
             if (parallelAwaiter.RequireContinuationToBeSetBeforeResult)
                 Task.RequireContinuationToBeSetBeforeResult = true;
 
-            var stateMachineLocal = MakeCopy(stateMachine);
-            parallelAwaiter.ParallelOnCompleted(() =>
-            {
-                MakeCopy(stateMachineLocal).MoveNext();
-            });
+            ParallelTaskMethodBuilderImpl.ParallelOnCompleted(stateMachine, parallelAwaiter);
         }
         else
         {
-            var stateMachineLocal = stateMachine;
-            var executionContext = ExecutionContext.Capture();
-
-            if (executionContext is null)
-            {
-                awaiter.OnCompleted(() => { stateMachineLocal.MoveNext(); });
-            }
-            else
-            {
-                awaiter.OnCompleted(() =>
-                {
-                    ExecutionContext.Restore(executionContext);
-                    MakeCopy(stateMachineLocal).MoveNext();
-                });
-            }
+            ParallelTaskMethodBuilderImpl.OnCompleted(awaiter, stateMachine);
         }
     }
 

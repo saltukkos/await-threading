@@ -35,6 +35,4 @@ public readonly struct ParallelTaskAwaiter<T> : ICriticalNotifyCompletion, IPara
     }
 
     public T GetResult() => _task.GetResult();
-    // public T GetResult([CallerMemberName] string? c = null, [CallerLineNumber] int callerLine = 0) => _task.GetResult($"{c}:{callerLine}");
-
 }
