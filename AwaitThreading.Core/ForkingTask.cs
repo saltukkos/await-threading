@@ -32,10 +32,9 @@ public sealed class ForkingTask
                 var id = i;
                 Console.Out.WriteLine($"Schedule running of {id}");
                 var stopwatch = Stopwatch.StartNew();
-                //Task.Run(() =>
-                Task.Factory.StartNew(() =>
+                Task.Run(() =>
                 {
-                    // Console.Out.WriteLine($"Actually run of {id} (took {stopwatch.Elapsed.TotalMilliseconds})");
+                    Console.Out.WriteLine($"Actually run of {id} (took {stopwatch.Elapsed.TotalMilliseconds})");
 
                     if (stopwatch.Elapsed.TotalMilliseconds > 100)
                     {
@@ -49,8 +48,7 @@ public sealed class ForkingTask
 
                     ParallelContext.PushFrame(new (id, threadsCount, barrier));
                     continuation.Invoke();
-                // }); //TODO exception handling
-                }); 
+                }); //TODO exception handling
             }
         }
 
