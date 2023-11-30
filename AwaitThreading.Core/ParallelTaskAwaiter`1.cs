@@ -8,31 +8,23 @@ namespace AwaitThreading.Core;
 
 public readonly struct ParallelTaskAwaiter<T> : ICriticalNotifyCompletion, IParallelNotifyCompletion
 {
-    private readonly ParallelTask<T> _task;
+    private readonly ParallelTaskImpl<T> _taskImpl;
 
-    public ParallelTaskAwaiter(in ParallelTask<T> task)
+    internal ParallelTaskAwaiter(ParallelTaskImpl<T> taskImpl)
     {
-        _task = task;
+        _taskImpl = taskImpl;
     }
 
+    //TODO: Am I sure? Why not with result and !RequireContinuationToBeSetBeforeResult?
     public bool IsCompleted => false;
 
-    public bool RequireContinuationToBeSetBeforeResult => _task.RequireContinuationToBeSetBeforeResult;
+    public bool RequireContinuationToBeSetBeforeResult => _taskImpl.RequireContinuationToBeSetBeforeResult;
 
-    public void ParallelOnCompleted(Action continuation)
-    {
-        _task.SetContinuation(continuation);
-    }
-    
-    public void OnCompleted(Action continuation)
-    {
-        Assertion.ThrowInvalidTaskIsUsed();
-    }
+    public void ParallelOnCompleted(Action continuation) => _taskImpl.SetContinuation(continuation);
 
-    public void UnsafeOnCompleted(Action continuation)
-    {
-        Assertion.ThrowInvalidTaskIsUsed();
-    }
+    public void OnCompleted(Action continuation) => Assertion.ThrowInvalidTaskIsUsed();
 
-    public T GetResult() => _task.GetResult();
+    public void UnsafeOnCompleted(Action continuation) => Assertion.ThrowInvalidTaskIsUsed();
+
+    public T GetResult() => _taskImpl.GetResult();
 }

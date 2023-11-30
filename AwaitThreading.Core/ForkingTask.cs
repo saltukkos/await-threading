@@ -2,7 +2,6 @@
 //Copyright (c) 2023 Saltuk Konstantin
 //See the LICENSE file in the project root for more information.
 
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace AwaitThreading.Core;
@@ -26,27 +25,18 @@ public sealed class ForkingTask
         {
             var threadsCount = _threadsCount;
             var currentContext = ExecutionContext.Capture();
-            var barrier = new MyBarrier(threadsCount);
+            var barrier = new Barrier(threadsCount);
             for (var i = 0; i < threadsCount; ++i)
             {
                 var id = i;
-                Console.Out.WriteLine($"Schedule running of {id}");
-                var stopwatch = Stopwatch.StartNew();
                 Task.Run(() =>
                 {
-                    Console.Out.WriteLine($"Actually run of {id} (took {stopwatch.Elapsed.TotalMilliseconds})");
-
-                    if (stopwatch.Elapsed.TotalMilliseconds > 100)
-                    {
-                        Console.Out.WriteLine($"$ACHTUNG!!!!!!!!!!!!!!!!!!!!!!! {stopwatch.Elapsed.TotalMilliseconds} to start a task {id}");
-                    }
-                    
                     if (currentContext is not null)
                     {
                         ExecutionContext.Restore(currentContext);
                     }
 
-                    ParallelContext.PushFrame(new (id, threadsCount, barrier));
+                    ParallelContext.PushFrame(new ParallelFrame(id, threadsCount, barrier));
                     continuation.Invoke();
                 }); //TODO exception handling
             }
