@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace AwaitThreading.Core;
 
-public static class ObjectExtensions
+internal static class ObjectExtensions
 {
     private static readonly MethodInfo CloneMethod =
         typeof(object).GetMethod("MemberwiseClone", BindingFlags.NonPublic | BindingFlags.Instance)!;

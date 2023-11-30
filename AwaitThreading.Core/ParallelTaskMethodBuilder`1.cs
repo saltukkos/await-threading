@@ -36,7 +36,7 @@ public readonly struct ParallelTaskMethodBuilder<T>
         if (awaiter is IParallelNotifyCompletion parallelAwaiter)
         {
             if (parallelAwaiter.RequireContinuationToBeSetBeforeResult)
-                Task.RequireContinuationToBeSetBeforeResult = true;
+                Task.MarkAsRequireContinuationToBeSetBeforeResult();
 
             ParallelTaskMethodBuilderImpl.ParallelOnCompleted(stateMachine, parallelAwaiter);
         }
@@ -55,7 +55,7 @@ public readonly struct ParallelTaskMethodBuilder<T>
         if (awaiter is IParallelNotifyCompletion parallelAwaiter)
         {
             if (parallelAwaiter.RequireContinuationToBeSetBeforeResult)
-                Task.RequireContinuationToBeSetBeforeResult = true;
+                Task.MarkAsRequireContinuationToBeSetBeforeResult();
 
             ParallelTaskMethodBuilderImpl.ParallelOnCompleted(stateMachine, parallelAwaiter);
         }
