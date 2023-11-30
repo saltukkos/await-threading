@@ -14,7 +14,7 @@ public readonly struct ParallelLazyAsyncEnumerator<T>
     // In ideal world we would be able to store enumerator for our chunk in struct field,
     // but any changes to the state of this struct will be lost since async methods are
     // executed on the copy of a struct, so we have to store the data somewhere else.
-    private readonly AsyncLocal<IEnumerator<T>> _chunkEnumerator = new (); //TODO array? But then we will have to reevaluate context.Id every time
+    private readonly AsyncLocal<IEnumerator<T>> _chunkEnumerator = new ();
 
     public ParallelLazyAsyncEnumerator(List<T> list, int threadsCount)
     {
@@ -26,7 +26,7 @@ public readonly struct ParallelLazyAsyncEnumerator<T>
     {
         if (_chunkEnumerator.Value is { } chunkEnumerator)
         {
-            Console.Out.WriteLine($"Set result for existing enumerator thread {Thread.CurrentThread.ManagedThreadId}");
+            Logger.Log("Set result for existing enumerator");
             return chunkEnumerator.MoveNext();
         }
 
@@ -44,7 +44,7 @@ public readonly struct ParallelLazyAsyncEnumerator<T>
         var enumerator = _list.Skip(start).Take(end - start).GetEnumerator();
         _chunkEnumerator.Value = enumerator;
         
-        Console.Out.WriteLine($"Set result for new created enumerator thread {Thread.CurrentThread.ManagedThreadId}");
+        Logger.Log("Set result for new created enumerator thread");
         return enumerator.MoveNext();
     }
 
@@ -66,6 +66,5 @@ public readonly struct ParallelLazyAsyncEnumerator<T>
     {
         _chunkEnumerator.Value?.Dispose();
         await new JoiningTask();
-        //_chunkEnumerator.Dispose();
     }
 }
