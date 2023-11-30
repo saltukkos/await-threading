@@ -13,13 +13,11 @@ public class Program
     {
 
         // ThreadPool.SetMinThreads(5, 100);
-        Console.Out.WriteLine($"{Tim.Er} start!");
+        Logger.Log("Start!");
         await MinimalRepro().WaitAsync();
         // return;
-        
-        
-        // Console.Out.WriteLine($"{Tim.Er}");
-        Console.Out.WriteLine(await JustGiveMeAValueAsyncWrapper().WaitAsync());
+        var result = await JustGiveMeAValueAsyncWrapper().WaitAsync();
+        Logger.Log(result.ToString());
         //
         await Foreach3().WaitAsync();
         await Foreach3().WaitAsync();
@@ -29,9 +27,8 @@ public class Program
         await Foreach().WaitAsync();
         await Foreach().WaitAsync();
         await Foreach2().WaitAsync();
-        Console.Out.WriteLine(
-            $"{Tim.Er}Finish thread={Thread.CurrentThread.ManagedThreadId} stack: {ParallelContext.GetCurrentContexts()}");
-        Console.Out.WriteLine("");
+
+        Logger.Log("Finish");
     }
 
     private static async ParallelTask MinimalRepro()
@@ -39,11 +36,11 @@ public class Program
         // for (int i = 0; i < 1; ++i)
         {
             await new ForkingTask(100);
-            Console.Out.WriteLine($"{Tim.Er} Forked! {ParallelContext.GetCurrentContexts()} at thread {Thread.CurrentThread.ManagedThreadId}");
+            Logger.Log("Forked!");
             //await Task.Delay(1);
-            // Console.Out.WriteLine($"{Tim.Er} Delayed! {Thread.CurrentThread.ManagedThreadId}");
+            // Logger.Log(" Delayed! {Thread.CurrentThread.ManagedThreadId}");
             await JoinOnce();
-            Console.Out.WriteLine($"{Tim.Er} Joined! {Thread.CurrentThread.ManagedThreadId}");
+            Logger.Log("Joined!");
         }
 
     }
@@ -66,43 +63,43 @@ public class Program
         
         var random = new Random(Seed: 42);
         
-        Console.Out.WriteLine($"{Tim.Er}After fork twice (before delay): thread={Thread.CurrentThread.ManagedThreadId}, stack: {ParallelContext.GetCurrentContexts()}");
+        Logger.Log("After fork twice (before delay)");
         await Task.Yield();
-        Console.Out.WriteLine($"{Tim.Er}After fork twice (after delay): thread={Thread.CurrentThread.ManagedThreadId}, stack: {ParallelContext.GetCurrentContexts()}");
+        Logger.Log("After fork twice (after delay)");
 
-        Console.Out.WriteLine($"{Tim.Er}Before fork: thread={Thread.CurrentThread.ManagedThreadId}, stack: {ParallelContext.GetCurrentContexts()}");
+        Logger.Log("Before fork");
         await new ForkingTask(2);
         Thread.Sleep(random.Next() % 10);
-        Console.Out.WriteLine($"{Tim.Er}After fork: thread={Thread.CurrentThread.ManagedThreadId}, stack: {ParallelContext.GetCurrentContexts()}");
+        Logger.Log("After fork");
         await ForkTwice();
         Thread.Sleep(random.Next() % 10);
-        Console.Out.WriteLine($"{Tim.Er}After fork twice: thread={Thread.CurrentThread.ManagedThreadId}, stack: {ParallelContext.GetCurrentContexts()}");
+        Logger.Log("After fork twice");
         await JoinTwice();
         Thread.Sleep(random.Next() % 10);
-        Console.Out.WriteLine($"{Tim.Er}After join twice: thread={Thread.CurrentThread.ManagedThreadId}, stack: {ParallelContext.GetCurrentContexts()}");
+        Logger.Log("After join twice");
         await new JoiningTask();
-        Console.Out.WriteLine($"{Tim.Er}After last join: thread={Thread.CurrentThread.ManagedThreadId}, stack: {ParallelContext.GetCurrentContexts()}");
+        Logger.Log("After last join");
     }
 
     private static async ParallelTask ForkAndJoinWithAwaits()
     {
         var random = new Random(Seed: 4242);
-        Console.Out.WriteLine($"{Tim.Er}Before fork: thread={Thread.CurrentThread.ManagedThreadId}, stack: {ParallelContext.GetCurrentContexts()}");
+        Logger.Log("Before fork");
         await new ForkingTask(2);
 
-        Console.Out.WriteLine($"{Tim.Er}After fork (before delay 1): thread={Thread.CurrentThread.ManagedThreadId}, stack: {ParallelContext.GetCurrentContexts()}");
+        Logger.Log("After fork (before delay 1)");
         // await Task.Delay(random.Next() % 10);
         await Task.Yield();
-        Console.Out.WriteLine($"{Tim.Er}After fork (after delay 1): thread={Thread.CurrentThread.ManagedThreadId}, stack: {ParallelContext.GetCurrentContexts()}");
+        Logger.Log("After fork (after delay 1)");
         
         // await ForkTwice();
         await new ForkingTask(2);
         await new ForkingTask(3);
         
-        Console.Out.WriteLine($"{Tim.Er}After fork twice (before delay 2): thread={Thread.CurrentThread.ManagedThreadId}, stack: {ParallelContext.GetCurrentContexts()}");
+        Logger.Log("After fork twice (before delay 2)");
         // await Task.Delay(random.Next() % 10);
         await Task.Yield();
-        Console.Out.WriteLine($"{Tim.Er}After fork twice (after delay 2): thread={Thread.CurrentThread.ManagedThreadId}, stack: {ParallelContext.GetCurrentContexts()}");
+        Logger.Log("After fork twice (after delay 2)");
 
         await JoinOnce();
         await JoinOnce();
@@ -111,9 +108,9 @@ public class Program
         // await new JoiningTask();
 
         await Task.Delay(random.Next() % 10);
-        Console.Out.WriteLine($"{Tim.Er}After join twice: thread={Thread.CurrentThread.ManagedThreadId}, stack: {ParallelContext.GetCurrentContexts()}");
+        Logger.Log("After join twice");
         await new JoiningTask();
-        Console.Out.WriteLine($"{Tim.Er}After last join: thread={Thread.CurrentThread.ManagedThreadId}, stack: {ParallelContext.GetCurrentContexts()}");
+        Logger.Log("After last join");
     }
     
     private static async ParallelTask ForkTwice()
@@ -137,45 +134,44 @@ public class Program
     {
         var a = new List<int> {1, 2, 3, 4, 5, 6, 7, 8, 9};
         
-        Console.Out.WriteLine($"{Tim.Er}Before foreach 1: thread={Thread.CurrentThread.ManagedThreadId} stack: {ParallelContext.GetCurrentContexts()}");
+        Logger.Log("Before foreach 1");
         
         await foreach (var n in await a.AsParallelAsync(3))
         {
-            Console.Out.WriteLine($"{Tim.Er}" +
-                                  $"Inside foreach 1: thread={Thread.CurrentThread.ManagedThreadId}, value={n} stack: {ParallelContext.GetCurrentContexts()}");
+            Logger.Log($"Inside foreach 1: value={n}");
             Thread.Sleep(1);
         }
         
-        Console.Out.WriteLine($"{Tim.Er}After foreach 1: thread={Thread.CurrentThread.ManagedThreadId} stack: {ParallelContext.GetCurrentContexts()}");
+        Logger.Log("After foreach 1");
     }
 
     private static async ParallelTask Foreach2()
     {
         var a = new List<int> {1, 2, 3, 4, 5, 6, 7, 8, 9};
         
-        Console.Out.WriteLine($"{Tim.Er}Before foreach 2: thread={Thread.CurrentThread.ManagedThreadId}");
+        Logger.Log("Before foreach 2");
         
         await foreach (var n in a.AsParallel(3))
         {
-            Console.Out.WriteLine($"{Tim.Er}Inside foreach 2: thread={Thread.CurrentThread.ManagedThreadId}, value={n}");
+            Logger.Log($"Inside foreach 2, value={n}");
             Thread.Sleep(1);
         }
         
-        Console.Out.WriteLine($"{Tim.Er}After foreach 2: thread={Thread.CurrentThread.ManagedThreadId}");
+        Logger.Log("After foreach 2");
     }
 
     private static async ParallelTask Foreach3()
     {
         var a = new List<int> {1, 2, 3, 4, 5, 6, 7, 8, 9};
         
-        Console.Out.WriteLine($"{Tim.Er}Before foreach 3: thread={Thread.CurrentThread.ManagedThreadId}");
+        Logger.Log("Before foreach 3");
         
         await foreach (var n in a.AsParallel(3))
         {
-            Console.Out.WriteLine($"{Tim.Er}Inside foreach 3: thread={Thread.CurrentThread.ManagedThreadId}, value={n}");
+            Logger.Log($"Inside foreach 3, value={n}");
             await Task.Delay(1).ConfigureAwait(false);
         }
         
-        Console.Out.WriteLine($"{Tim.Er}After foreach 3 s: thread={Thread.CurrentThread.ManagedThreadId}");
+        Logger.Log("After foreach 3");
     }
 }

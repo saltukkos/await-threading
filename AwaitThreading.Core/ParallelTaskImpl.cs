@@ -3,8 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Concurrent;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
 
 namespace AwaitThreading.Core;
 
@@ -28,13 +26,13 @@ internal sealed class ParallelTaskImpl<T>
         {
             lock (this)
             {
-                Console.Out.WriteLine($"{Tim.Er} setting result to task {this.GetHashCode() % 100}");
+                Logger.Log($"setting result to task {this.GetHashCode() % 100}");
 
                 _results.Add(result);
                 // normal control flow: if the continuation is here, run it. If no - save result to run on continuation set
                 if (!RequireContinuationToBeSetBeforeResult)
                 {
-                    Console.Out.WriteLine($"{Tim.Er} calling continuation synchronously for task {this.GetHashCode() % 100}");
+                    Logger.Log($"calling continuation synchronously for task {this.GetHashCode() % 100}");
 
                     // TODO have one result instead of collection in this case?
                     return _continuation;
@@ -44,11 +42,11 @@ internal sealed class ParallelTaskImpl<T>
                 // special control flow: we need continuation to be already set. If no - we will wait until it's done
                 while (_continuation is null)
                 {
-                    Console.Out.WriteLine($"{Tim.Er} waiting for continuation on task {this.GetHashCode() % 100}");
+                    Logger.Log($"waiting for continuation on task {this.GetHashCode() % 100}");
                     Monitor.Wait(this);
                 }
 
-                Console.Out.WriteLine($"{Tim.Er} calling continuation asynchronously for task {this.GetHashCode() % 100}");
+                Logger.Log($"calling continuation asynchronously for task {this.GetHashCode() % 100}");
                 return _continuation;
             }
         }

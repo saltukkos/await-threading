@@ -12,8 +12,13 @@ internal struct Unit
 {
 }
 
-public static class Tim
+public static class Logger
 {
-    private static Stopwatch _sw = Stopwatch.StartNew();
-    public static string Er => $"{_sw.ElapsedMilliseconds:00000}: ";
+    private static readonly Stopwatch Sw = Stopwatch.StartNew();
+
+    [Conditional("DEBUG")]
+    public static void Log(string message)
+    {
+        Console.Out.WriteLine($"{Sw.ElapsedMilliseconds:00000} [id={Thread.CurrentThread.ManagedThreadId}, context={ParallelContext.GetCurrentContexts()}]: {message}");
+    }
 }
