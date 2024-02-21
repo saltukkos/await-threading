@@ -14,6 +14,7 @@ public class Program
 
         // ThreadPool.SetMinThreads(5, 100);
         Logger.Log("Start!");
+        await MinimalExampleWithRequireContinuationToBeSetBeforeResult().WaitAsync();
         await MinimalRepro().WaitAsync();
         // return;
         var result = await JustGiveMeAValueAsyncWrapper().WaitAsync();
@@ -31,6 +32,20 @@ public class Program
         Logger.Log("Finish");
     }
 
+    private static async ParallelTask MinimalExampleWithRequireContinuationToBeSetBeforeResult()
+    {
+        for (var i = 0; i < 10; ++i)
+        {
+            await MethodThatForks();
+            await new JoiningTask();
+        }
+    }
+
+    private static async ParallelTask MethodThatForks()
+    {
+        await new ForkingTask(2);
+    }
+    
     private static async ParallelTask MinimalRepro()
     {
         // for (int i = 0; i < 1; ++i)

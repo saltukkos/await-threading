@@ -28,8 +28,7 @@ public readonly struct ParallelTaskMethodBuilder
     {
     }
 
-    public void AwaitOnCompleted<TAwaiter, TStateMachine>(
-        ref TAwaiter awaiter, ref TStateMachine stateMachine)
+    public void AwaitOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, ref TStateMachine stateMachine)
         where TAwaiter : INotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
@@ -42,13 +41,12 @@ public readonly struct ParallelTaskMethodBuilder
         }
         else
         {
-            ParallelTaskMethodBuilderImpl.OnCompleted(awaiter, stateMachine);
+            ParallelTaskMethodBuilderImpl.OnCompleted(ref awaiter, stateMachine);
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>(
-        ref TAwaiter awaiter, ref TStateMachine stateMachine)
+    public void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, ref TStateMachine stateMachine)
         where TAwaiter : ICriticalNotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
@@ -61,7 +59,7 @@ public readonly struct ParallelTaskMethodBuilder
         }
         else
         {
-            ParallelTaskMethodBuilderImpl.OnCompleted(awaiter, stateMachine);
+            ParallelTaskMethodBuilderImpl.UnsafeOnCompleted(ref awaiter, stateMachine);
         }
     }
 

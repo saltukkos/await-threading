@@ -42,7 +42,7 @@ public readonly struct ParallelTaskMethodBuilder<T>
         }
         else
         {
-            ParallelTaskMethodBuilderImpl.OnCompleted(awaiter, stateMachine);
+            ParallelTaskMethodBuilderImpl.OnCompleted(ref awaiter, stateMachine);
         }
     }
 
@@ -61,7 +61,7 @@ public readonly struct ParallelTaskMethodBuilder<T>
         }
         else
         {
-            ParallelTaskMethodBuilderImpl.OnCompleted(awaiter, stateMachine);
+            ParallelTaskMethodBuilderImpl.UnsafeOnCompleted(ref awaiter, stateMachine);
         }
     }
 

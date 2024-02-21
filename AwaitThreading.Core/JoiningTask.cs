@@ -15,6 +15,7 @@ public sealed class JoiningTask
         }
 
         public bool IsCompleted => false;
+        public bool RequireContinuationToBeSetBeforeResult => false;
 
         public void ParallelOnCompleted(Action continuation)
         {

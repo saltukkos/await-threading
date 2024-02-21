@@ -4,11 +4,11 @@
 
 namespace AwaitThreading.Core;
 
-public sealed class Barrier
+public sealed class SingleWaiterBarrier
 {
     private int _count;
 
-    public Barrier(int count)
+    public SingleWaiterBarrier(int count)
     {
         _count = count;
     }

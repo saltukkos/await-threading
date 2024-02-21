@@ -21,6 +21,7 @@ internal sealed class ParallelTaskImpl<T>
     public void SetResult(T result)
     {
         RetrieveContinuationIfNeed()?.Invoke();
+        return;
 
         Action? RetrieveContinuationIfNeed()
         {
@@ -63,6 +64,7 @@ internal sealed class ParallelTaskImpl<T>
     public void SetContinuation(Action continuation)
     {
         RetrieveContinuationIfNeed()?.Invoke();
+        return;
 
         Action? RetrieveContinuationIfNeed()
         {

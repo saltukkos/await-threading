@@ -25,7 +25,7 @@ public sealed class ForkingTask
         {
             var threadsCount = _threadsCount;
             var currentContext = ExecutionContext.Capture();
-            var barrier = new Barrier(threadsCount);
+            var barrier = new SingleWaiterBarrier(threadsCount);
             for (var i = 0; i < threadsCount; ++i)
             {
                 var id = i;
