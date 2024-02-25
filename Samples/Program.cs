@@ -4,12 +4,13 @@
 
 using AwaitThreading.Core;
 using AwaitThreading.Enumerable;
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
 namespace Samples;
 
-public class Program
+public static class Program
 {
-    public static async Task Main(string[] args)
+    public static async Task Main()
     {
 
         // ThreadPool.SetMinThreads(5, 100);

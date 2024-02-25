@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AwaitThreading.Enumerable",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Samples", "Samples\Samples.csproj", "{570AFD1C-86BE-404B-B0A2-8182920FFFBB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AwaitThreading.Core.Tests", "AwaitThreading.Core.Tests\AwaitThreading.Core.Tests.csproj", "{AA2E4F51-9A18-4245-AD29-AFE02C8D0CE5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{570AFD1C-86BE-404B-B0A2-8182920FFFBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{570AFD1C-86BE-404B-B0A2-8182920FFFBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{570AFD1C-86BE-404B-B0A2-8182920FFFBB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA2E4F51-9A18-4245-AD29-AFE02C8D0CE5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA2E4F51-9A18-4245-AD29-AFE02C8D0CE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA2E4F51-9A18-4245-AD29-AFE02C8D0CE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA2E4F51-9A18-4245-AD29-AFE02C8D0CE5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

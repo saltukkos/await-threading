@@ -3,6 +3,7 @@
 //See the LICENSE file in the project root for more information.
 
 using AwaitThreading.Core;
+using JetBrains.Annotations;
 
 namespace AwaitThreading.Enumerable;
 
@@ -22,10 +23,11 @@ public readonly struct ParallelLazyAsyncEnumerator<T>
         _list = list;
     }
 
-    public async ParallelTask<bool> MoveNextAsync() //TODO allocation every time is expensive.
+    public async ParallelTask<bool> MoveNextAsync()
     {
         if (_chunkEnumerator.Value is { } chunkEnumerator)
         {
+            //TODO: allocation every time is expensive, optimize fastpath. Introduce smth like valueTask
             Logger.Log("Set result for existing enumerator");
             return chunkEnumerator.MoveNext();
         }
@@ -41,6 +43,7 @@ public readonly struct ParallelLazyAsyncEnumerator<T>
             end = _list.Count;
         }
 
+        // ReSharper disable once NotDisposedResource TODO: can't we track it?
         var enumerator = _list.Skip(start).Take(end - start).GetEnumerator();
         _chunkEnumerator.Value = enumerator;
         
@@ -62,6 +65,7 @@ public readonly struct ParallelLazyAsyncEnumerator<T>
         }
     }
 
+    [UsedImplicitly] //TODO: R# bug?
     public async ParallelTask DisposeAsync()
     {
         _chunkEnumerator.Value?.Dispose();

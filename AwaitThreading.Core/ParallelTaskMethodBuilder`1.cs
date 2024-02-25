@@ -4,9 +4,11 @@
 
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
 
 namespace AwaitThreading.Core;
 
+[UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
 public readonly struct ParallelTaskMethodBuilder<T>
 {
     public ParallelTaskMethodBuilder()
