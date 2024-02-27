@@ -115,8 +115,81 @@ public class CoreOperationsTests
             await new JoiningTask();
         }
     }
-    
-    //TODO: shared resources tests
-    
-    //TODO: race conditions tests (like in samples)
+
+    [Test]
+    public async Task SharedState_ReferencesCreatedBeforeFork_SameReferenceAfterFork()
+    {
+        var res = await TestBody().WaitAsync();
+        Assert.That(res[0], Is.EqualTo(1));
+        Assert.That(res[1], Is.EqualTo(1));
+        return;
+
+        async ParallelTask<int[]> TestBody()
+        {
+            var sharedArray = new int[2];
+            await new ForkingTask(2);
+            sharedArray[ParallelContext.GetCurrentFrame().Id] = 1;
+            await new JoiningTask();
+            return sharedArray;
+        }
+    }
+
+    [Test]
+    public async Task SharedState_ReferencesCreatedAfterFork_ReferencesAreDifferent()
+    {
+        var res = await TestBody().WaitAsync();
+        Assert.That(res[0], Is.Not.SameAs(res[1]));
+        return;
+
+        async ParallelTask<object[]> TestBody()
+        {
+            var sharedArray = new object[2];
+            await new ForkingTask(2);
+            var localObject = new object();
+            sharedArray[ParallelContext.GetCurrentFrame().Id] = localObject;
+            await new JoiningTask();
+            return sharedArray;
+        }
+    }
+
+    [Test]
+    public async Task SharedState_ReferencesCreatedAfterFork_ReferenceFromThread0IsAvailableAfterJoin()
+    {
+        var res = await TestBody().WaitAsync();
+        Assert.That(res.SharedArray[0], Is.SameAs(res.ValueAfterJoin));
+        return;
+
+        async ParallelTask<(object[] SharedArray, object ValueAfterJoin)> TestBody()
+        {
+            var sharedArray = new object[2];
+            await new ForkingTask(2);
+            var localObject = new object();
+            sharedArray[ParallelContext.GetCurrentFrame().Id] = localObject;
+            await new JoiningTask();
+            return (sharedArray, localObject);
+        }
+    }
+
+    [Test]
+    public async Task SharedState_ValueTypeIsDefinedBeforeFork_ChangedSeparately()
+    {
+        var res = await TestBody().WaitAsync();
+        Assert.That(res.SharedArray[0], Is.EqualTo(2));
+        Assert.That(res.SharedArray[1], Is.EqualTo(2));
+        Assert.That(res.ValueAfterJoin, Is.EqualTo(2));
+        return;
+
+        async ParallelTask<(int[] SharedArray, object ValueAfterJoin)> TestBody()
+        {
+            var sharedArray = new int[2];
+            var sharedInt = 1;
+
+            await new ForkingTask(2);
+            var incrementedValue = Interlocked.Increment(ref sharedInt);
+            sharedArray[ParallelContext.GetCurrentFrame().Id] = incrementedValue;
+            await new JoiningTask();
+            
+            return (sharedArray, sharedInt);
+        }
+    }
 }
