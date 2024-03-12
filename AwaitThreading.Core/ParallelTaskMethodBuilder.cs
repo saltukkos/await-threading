@@ -4,9 +4,11 @@
 
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
 
 namespace AwaitThreading.Core;
 
+[UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
 public readonly struct ParallelTaskMethodBuilder
 {
     public ParallelTaskMethodBuilder()
@@ -65,9 +67,5 @@ public readonly struct ParallelTaskMethodBuilder
 
     public void SetResult() => Task.SetResult();
 
-    public void SetException(Exception exception)
-    {
-        Debugger.Break();
-        throw new NotImplementedException();
-    }
+    public void SetException(Exception exception) => Task.SetException(exception);
 }

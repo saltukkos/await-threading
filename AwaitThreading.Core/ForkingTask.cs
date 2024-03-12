@@ -61,6 +61,9 @@ public sealed class ForkingTask
 
     public ForkingTask(int threadsCount)
     {
+        if (threadsCount <= 0)
+            Assertion.ThrowInvalidTasksCount();
+
         _awaiter = new ForkingAwaiter(threadsCount);
     }
 

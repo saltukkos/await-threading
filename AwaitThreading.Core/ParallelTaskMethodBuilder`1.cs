@@ -67,22 +67,7 @@ public readonly struct ParallelTaskMethodBuilder<T>
         }
     }
 
-    public void SetResult(T result)
-    {
-        Task.SetResult(result);
-    }
+    public void SetResult(T result) => Task.SetResult(result);
 
-    public void SetException(Exception exception) => throw new NotImplementedException();
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static TStateMachine MakeCopy<TStateMachine>(TStateMachine stateMachine)
-        where TStateMachine : IAsyncStateMachine
-    {
-        if (typeof(TStateMachine).IsValueType)
-        {
-            return stateMachine;
-        }
-
-        return (TStateMachine) stateMachine.Copy();
-    }
+    public void SetException(Exception exception) => Task.SetException(exception);
 }

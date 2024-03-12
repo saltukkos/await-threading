@@ -3,13 +3,38 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.ExceptionServices;
 
 namespace AwaitThreading.Core;
+
+public readonly struct ParallelTaskResult<T>
+{
+    public ParallelTaskResult(T result)
+    {
+        Result = result;
+        ExceptionDispatchInfo = null;
+    }
+
+    public ParallelTaskResult(ExceptionDispatchInfo exceptionDispatchInfo)
+    {
+        ExceptionDispatchInfo = exceptionDispatchInfo;
+        Result = default;
+    }
+
+    [MemberNotNullWhen(true, nameof(Result))]
+    [MemberNotNullWhen(false, nameof(ExceptionDispatchInfo))]
+    public bool HasResult => ExceptionDispatchInfo is null;
+
+    public readonly T? Result;
+        
+    public readonly ExceptionDispatchInfo? ExceptionDispatchInfo;
+}
 
 internal sealed class ParallelTaskImpl<T>
 {
     //TODO disposing?
-    private readonly BlockingCollection<T> _results = new();
+    private readonly BlockingCollection<ParallelTaskResult<T>> _results = new();
     private Action? _continuation;
 
     /// <summary>
@@ -18,7 +43,7 @@ internal sealed class ParallelTaskImpl<T>
     /// </summary>
     public bool RequireContinuationToBeSetBeforeResult { get; internal set; }
     
-    public void SetResult(T result)
+    public void SetResult(ParallelTaskResult<T> result)
     {
         RetrieveContinuationIfNeed()?.Invoke();
         return;
@@ -39,7 +64,6 @@ internal sealed class ParallelTaskImpl<T>
                     return _continuation;
                 }
 
-
                 // special control flow: we need continuation to be already set. If no - we will wait until it's done
                 while (_continuation is null)
                 {
@@ -56,7 +80,7 @@ internal sealed class ParallelTaskImpl<T>
     /// <summary>
     /// Achtung! This method is not pure and has to be called only once per thread. Additinal call will lead to deadlock
     /// </summary>
-    public T GetResult()
+    public ParallelTaskResult<T> GetResult()
     {
         return _results.Take();
     }

@@ -26,5 +26,12 @@ public readonly struct ParallelTaskAwaiter : ICriticalNotifyCompletion, IParalle
 
     public void UnsafeOnCompleted(Action continuation) => Assertion.ThrowInvalidTaskIsUsed();
 
-    public void GetResult() => _taskImpl.GetResult();
+    public void GetResult()
+    {
+        var taskResult = _taskImpl.GetResult();
+        if (!taskResult.HasResult)
+        {
+            taskResult.ExceptionDispatchInfo.Throw();
+        }
+    }
 }

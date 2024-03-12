@@ -105,4 +105,76 @@ public class ParallelTaskMethodBuilderTests
             return ParallelContext.GetCurrentFrame().Id == 0 ? 1 : 2;
         }
     }
+
+    [Test]
+    public async Task AwaitVoid_ExceptionIsThrownInSyncContext_ExceptionIsPropagated()
+    {
+        Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => TestBody().WaitAsync());
+        return;
+
+        async ParallelTask TestBody()
+        {
+            throw new ArgumentOutOfRangeException();
+        }
+    }
+
+    [Test]
+    public async Task AwaitWithResult_ExceptionIsThrownInSyncContext_ExceptionIsPropagated()
+    {
+        Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => TestBody().WaitAsync());
+        return;
+
+        async ParallelTask<int> TestBody()
+        {
+            throw new ArgumentOutOfRangeException();
+        }
+    }
+
+    [Test]
+    public async Task AwaitVoid_ExceptionIsThrownInSubMethodSync_ExceptionIsPropagated()
+    {
+        Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => TestBody().WaitAsync());
+        return;
+
+        async ParallelTask TestBody()
+        {
+            await InnerMethod();
+        }
+        
+        async ParallelTask InnerMethod()
+        {
+            throw new ArgumentOutOfRangeException();
+        }
+    }
+
+    [Test]
+    public async Task AwaitWithResult_ExceptionIsThrownInSubMethodSync_ExceptionIsPropagated()
+    {
+        Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => TestBody().WaitAsync());
+        return;
+
+        async ParallelTask<int> TestBody()
+        {
+            return await InnerMethod();
+        }
+        
+        async ParallelTask<int> InnerMethod()
+        {
+            throw new ArgumentOutOfRangeException();
+        }
+    }
+
+    [Test]
+    public async Task Await_ExceptionIsThrownInAsyncContextDepth_ExceptionIsPropagated()
+    {
+        Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => TestBody().WaitAsync());
+        return;
+
+        async ParallelTask<int> TestBody()
+        {
+            await new ForkingTask(2);
+            await new JoiningTask();
+            throw new ArgumentOutOfRangeException();
+        }
+    }
 }

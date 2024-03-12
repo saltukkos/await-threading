@@ -10,4 +10,7 @@ internal static class Assertion
 {
     [DoesNotReturn]
     public static void ThrowInvalidTaskIsUsed() => throw new NotSupportedException("Only ParallelTask methods are supported");
+    
+    [DoesNotReturn]
+    public static void ThrowInvalidTasksCount() => throw new NotSupportedException("Threads count should be greater than zero");
 }

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Runtime.CompilerServices;
+using System.Runtime.ExceptionServices;
 
 namespace AwaitThreading.Core;
 
@@ -23,12 +24,13 @@ public readonly struct ParallelTask
 
     internal void SetResult() => _implementation.SetResult(default);
 
+    internal void SetException(Exception e) =>
+        _implementation.SetResult(new ParallelTaskResult<Unit>(ExceptionDispatchInfo.Capture(e)));
+
     /// <summary>
-    /// Achtung! This method is not pure and has to be called only once per thread. Additinal call will lead to deadlock
+    /// Achtung! This method is not pure and has to be called only once per thread. Additional call will lead to deadlock
     /// </summary>
-    public void GetResult() => _implementation.GetResult();
+    public ExceptionDispatchInfo? GetResult() => _implementation.GetResult().ExceptionDispatchInfo;
 
     public ParallelTaskAwaiter GetAwaiter() => new(_implementation);
-
-    public void SetContinuation(Action continuation) => _implementation.SetContinuation(continuation);
 }
