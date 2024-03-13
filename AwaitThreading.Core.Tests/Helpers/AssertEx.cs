@@ -4,7 +4,20 @@
 
 namespace AwaitThreading.Core.Tests.Helpers;
 
-public class AssertEx
+public static class AssertEx
 {
-    //TODO: implement normal ThrowsAsync.
+    public static async Task CheckThrowsAsync<TException>(Func<Task> testFunc) where TException : Exception
+    {
+        try
+        {
+            await testFunc.Invoke();
+        }
+        catch (Exception exception)
+        {
+            Assert.That(exception, Is.InstanceOf<TException>());
+            return;
+        }
+        
+        Assert.Fail("No exception is thrown");
+    }
 }

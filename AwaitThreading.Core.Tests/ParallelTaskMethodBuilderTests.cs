@@ -109,7 +109,7 @@ public class ParallelTaskMethodBuilderTests
     [Test]
     public async Task AwaitVoid_ExceptionIsThrownInSyncContext_ExceptionIsPropagated()
     {
-        Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => TestBody().WaitAsync());
+        await AssertEx.CheckThrowsAsync<ArgumentOutOfRangeException>(() => TestBody().WaitAsync());
         return;
 
         async ParallelTask TestBody()
@@ -121,7 +121,7 @@ public class ParallelTaskMethodBuilderTests
     [Test]
     public async Task AwaitWithResult_ExceptionIsThrownInSyncContext_ExceptionIsPropagated()
     {
-        Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => TestBody().WaitAsync());
+        await AssertEx.CheckThrowsAsync<ArgumentOutOfRangeException>(() => TestBody().WaitAsync());
         return;
 
         async ParallelTask<int> TestBody()
@@ -133,7 +133,7 @@ public class ParallelTaskMethodBuilderTests
     [Test]
     public async Task AwaitVoid_ExceptionIsThrownInSubMethodSync_ExceptionIsPropagated()
     {
-        Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => TestBody().WaitAsync());
+        await AssertEx.CheckThrowsAsync<ArgumentOutOfRangeException>(() => TestBody().WaitAsync());
         return;
 
         async ParallelTask TestBody()
@@ -150,7 +150,7 @@ public class ParallelTaskMethodBuilderTests
     [Test]
     public async Task AwaitWithResult_ExceptionIsThrownInSubMethodSync_ExceptionIsPropagated()
     {
-        Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => TestBody().WaitAsync());
+        await AssertEx.CheckThrowsAsync<ArgumentOutOfRangeException>(() => TestBody().WaitAsync());
         return;
 
         async ParallelTask<int> TestBody()
@@ -167,7 +167,7 @@ public class ParallelTaskMethodBuilderTests
     [Test]
     public async Task Await_ExceptionIsThrownInAsyncContextDepth_ExceptionIsPropagated()
     {
-        Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => TestBody().WaitAsync());
+        await AssertEx.CheckThrowsAsync<ArgumentOutOfRangeException>(() => TestBody().WaitAsync());
         return;
 
         async ParallelTask<int> TestBody()
