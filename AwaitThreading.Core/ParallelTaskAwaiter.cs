@@ -15,8 +15,7 @@ public readonly struct ParallelTaskAwaiter : ICriticalNotifyCompletion, IParalle
         _taskImpl = taskImpl;
     }
 
-    //TODO: Am I sure? Why not with result and !RequireContinuationToBeSetBeforeResult?
-    public bool IsCompleted => false;
+    public bool IsCompleted => _taskImpl.IsCompleted;
 
     public bool RequireContinuationToBeSetBeforeResult => _taskImpl.RequireContinuationToBeSetBeforeResult;
 

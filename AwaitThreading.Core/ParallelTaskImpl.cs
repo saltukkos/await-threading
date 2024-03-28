@@ -85,6 +85,8 @@ internal sealed class ParallelTaskImpl<T>
         return _results.Take();
     }
 
+    public bool IsCompleted => !RequireContinuationToBeSetBeforeResult && _results.Count > 0;
+
     public void SetContinuation(Action continuation)
     {
         RetrieveContinuationIfNeed()?.Invoke();

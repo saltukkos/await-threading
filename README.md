@@ -95,4 +95,3 @@ TODO list of critical items:
 - Exceptions handling (probably should aggregate all exceptions inside `JoinTask`)
 - API is not finalized and provides data to some internal structures (like `ParallelContext`)
 - No steps to minimize overhead are made yet: There are a lot of unnecessary allocations
-- Tasks are not rescheduled sometimes and stacktrace can grow with every `await`

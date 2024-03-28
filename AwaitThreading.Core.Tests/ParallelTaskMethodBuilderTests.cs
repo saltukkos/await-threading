@@ -2,8 +2,6 @@
 // Copyright (c) 2024 Saltuk Konstantin
 // See the LICENSE file in the project root for more information.
 
-using NUnit.Framework.Constraints;
-
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 namespace AwaitThreading.Core.Tests;
 
@@ -244,7 +242,7 @@ public class ParallelTaskMethodBuilderTests
         }
     }
 
-    [Test]
+    [Test, Ignore("This test can also fail with standard `Task<T>`")]
     public async Task Await_MultipleNotCompleted_StackTrackDoNotGrow()
     {
         await TestBody().WaitAsync();
@@ -257,13 +255,41 @@ public class ParallelTaskMethodBuilderTests
             await GetResult();
             var stackTrace2 = Environment.StackTrace;
 
-            Assert.That(stackTrace1, Is.EqualTo(stackTrace2).UsingStringLinesCountEquality());
+            Assert.That(stackTrace1.Split('\n'), Is.EqualTo(stackTrace2.Split('\n')));
         }
 
         async ParallelTask<int> GetResult()
         {
             await Task.Yield();
             return 42;
+        }
+    }
+    
+    [Test]
+    public async Task Await_MultipleCallsOfNestedParallelMethod_StackTrackDoNotGrow()
+    {
+        await TestBody().WaitAsync();
+        return;
+
+        async ParallelTask TestBody()
+        {
+            await DoSomething();
+            var stackTrace1 = Environment.StackTrace;
+            await DoSomething();
+            var stackTrace2 = Environment.StackTrace;
+
+            Assert.That(stackTrace1, Is.EqualTo(stackTrace2).UsingStringLinesCountEquality());
+        }
+
+        async ParallelTask DoSomething()
+        {
+            await DoSomethingNested();
+        }
+        
+        async ParallelTask DoSomethingNested()
+        {
+            await new ForkingTask(2);
+            await new JoiningTask();
         }
     }
 }
