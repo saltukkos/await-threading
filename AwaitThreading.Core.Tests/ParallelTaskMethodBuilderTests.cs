@@ -2,6 +2,8 @@
 // Copyright (c) 2024 Saltuk Konstantin
 // See the LICENSE file in the project root for more information.
 
+using NUnit.Framework.Constraints;
+
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 namespace AwaitThreading.Core.Tests;
 
@@ -175,6 +177,93 @@ public class ParallelTaskMethodBuilderTests
             await new ForkingTask(2);
             await new JoiningTask();
             throw new ArgumentOutOfRangeException();
+        }
+    }
+
+    [Test]
+    public async Task Await_MultipleCallsOfParallelMethod_StackTrackDoNotGrow()
+    {
+        await TestBody().WaitAsync();
+        return;
+
+        async ParallelTask TestBody()
+        {
+            await DoSomething();
+            var stackTrace1 = Environment.StackTrace;
+            await DoSomething();
+            var stackTrace2 = Environment.StackTrace;
+
+            Assert.That(stackTrace1, Is.EqualTo(stackTrace2).UsingStringLinesCountEquality());
+        }
+
+        async ParallelTask DoSomething()
+        {
+            await new ForkingTask(2);
+            await new JoiningTask();
+        }
+    }
+
+    [Test]
+    public async Task Await_MultipleForks_StackTrackDoNotGrow()
+    {
+        await TestBody().WaitAsync();
+        return;
+
+        async ParallelTask TestBody()
+        {
+            await new ForkingTask(2);
+            var stackTrace1 = Environment.StackTrace;
+            await new ForkingTask(2);
+            var stackTrace2 = Environment.StackTrace;
+            await new JoiningTask();
+            await new JoiningTask();
+
+            Assert.That(stackTrace1, Is.EqualTo(stackTrace2).UsingStringLinesCountEquality());
+        }
+    }
+
+    [Test]
+    public async Task Await_MultipleCompleted_StackTrackDoNotGrow()
+    {
+        await TestBody().WaitAsync();
+        return;
+
+        async ParallelTask TestBody()
+        {
+            await GetResult();
+            var stackTrace1 = Environment.StackTrace;
+            await GetResult();
+            var stackTrace2 = Environment.StackTrace;
+
+            Assert.That(stackTrace1, Is.EqualTo(stackTrace2).UsingStringLinesCountEquality());
+        }
+
+        async ParallelTask<int> GetResult()
+        {
+            return 42;
+        }
+    }
+
+    [Test]
+    public async Task Await_MultipleNotCompleted_StackTrackDoNotGrow()
+    {
+        await TestBody().WaitAsync();
+        return;
+
+        async ParallelTask TestBody()
+        {
+            await GetResult();
+            var stackTrace1 = Environment.StackTrace;
+            await GetResult();
+            var stackTrace2 = Environment.StackTrace;
+
+            Assert.That(stackTrace1, Is.EqualTo(stackTrace2).UsingStringLinesCountEquality());
+        }
+
+        async ParallelTask<int> GetResult()
+        {
+            await Task.Yield();
+            return 42;
         }
     }
 }
