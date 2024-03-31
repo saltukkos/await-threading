@@ -2,7 +2,6 @@
 // Copyright (c) 2023 Saltuk Konstantin
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.ExceptionServices;
 
@@ -33,8 +32,7 @@ public readonly struct ParallelTaskResult<T>
 
 internal sealed class ParallelTaskImpl<T>
 {
-    //TODO disposing?
-    private readonly BlockingCollection<ParallelTaskResult<T>> _results = new();
+    private readonly BlockingQueue<ParallelTaskResult<T>> _results = new();
     private Action? _continuation;
 
     /// <summary>
@@ -55,6 +53,7 @@ internal sealed class ParallelTaskImpl<T>
                 Logger.Log($"setting result to task {this.GetHashCode() % 100}");
 
                 _results.Add(result);
+
                 // normal control flow: if the continuation is here, run it. If no - save result to run on continuation set
                 if (!RequireContinuationToBeSetBeforeResult)
                 {
@@ -64,7 +63,7 @@ internal sealed class ParallelTaskImpl<T>
                     return _continuation;
                 }
 
-                // special control flow: we need continuation to be already set. If no - we will wait until it's done
+                // special control flow: we need continuation to be already set. If no, we will wait until it's done
                 while (_continuation is null)
                 {
                     Logger.Log($"waiting for continuation on task {this.GetHashCode() % 100}");
