@@ -18,6 +18,8 @@ public readonly struct ParallelFrame
         Count = count;
         JoinBarrier = joinBarrier;
     }
+
+    public object ForkIdentity => JoinBarrier;
 }
 
 public readonly struct ParallelContext
@@ -34,8 +36,19 @@ public readonly struct ParallelContext
     public static ParallelFrame GetCurrentFrame()
     {
         var currentContextStack = CurrentThreadContext.Value._stack;
-        if (currentContextStack is null) 
+        if (currentContextStack is null)
             throw new InvalidOperationException("Stack is empty");
+
+        return currentContextStack.Peek();
+    }
+
+    public static ParallelFrame? GetCurrentFrameSafe()
+    {
+        var currentContextStack = CurrentThreadContext.Value._stack;
+        if (currentContextStack is null || currentContextStack.IsEmpty)
+        {
+            return null;
+        }
 
         return currentContextStack.Peek();
     }
@@ -51,7 +64,7 @@ public readonly struct ParallelContext
     {
         var currentContext = CurrentThreadContext.Value;
         var currentContextStack = currentContext._stack;
-        if (currentContextStack is null) 
+        if (currentContextStack is null)
             throw new InvalidOperationException("Stack is empty");
 
         var newStack = currentContextStack.Pop(out var poppedFrame);

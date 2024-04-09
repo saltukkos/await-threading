@@ -17,7 +17,7 @@ Basic example:
 ```csharp
 using AwaitThreading.Core;
 
-await NormalForkAndJoin(5).WaitAsync();
+await NormalForkAndJoin(5);
 
 async ParallelTask NormalForkAndJoin(int threadsCount)
 {
@@ -36,7 +36,7 @@ Methods composition:
 ```csharp
 using AwaitThreading.Core;
 
-await CompositionExample(5).WaitAsync();
+await CompositionExample(5);
 
 async ParallelTask CompositionExample(int threadsCount)
 {
@@ -64,8 +64,8 @@ There are two main methods: `AsParallel` and `AsParallelAsync`. The key differen
 using AwaitThreading.Core;
 using AwaitThreading.Enumerable;
 
-await AsParallelAsync().WaitAsync();
-await AsParallel().WaitAsync();
+await AsParallelAsync();
+await AsParallel();
 
 async ParallelTask AsParallelAsync()
 {

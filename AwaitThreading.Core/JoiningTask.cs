@@ -8,7 +8,7 @@ namespace AwaitThreading.Core;
 
 public sealed class JoiningTask
 {
-    public readonly struct JoiningTaskAwaiter : ICriticalNotifyCompletion, IParallelNotifyCompletion
+    public struct JoiningTaskAwaiter : ICriticalNotifyCompletion, IParallelNotifyCompletion
     {
         public JoiningTaskAwaiter()
         {
@@ -34,12 +34,12 @@ public sealed class JoiningTask
 
         public void OnCompleted(Action continuation)
         {
-            Assertion.ThrowInvalidTaskIsUsed();
+            Assertion.ThrowBadAwait();
         }
 
         public void UnsafeOnCompleted(Action continuation)
         {
-            Assertion.ThrowInvalidTaskIsUsed();
+            Assertion.ThrowBadAwait();
         }
 
         public void GetResult()

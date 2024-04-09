@@ -1,8 +1,8 @@
 using AwaitThreading.Core;
 using AwaitThreading.Enumerable;
 
-await AsParallelAsync().WaitAsync();
-await AsParallel().WaitAsync();
+await AsParallelAsync();
+await AsParallel();
 
 async ParallelTask AsParallelAsync()
 {

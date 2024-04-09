@@ -17,7 +17,7 @@ in `RequireContinuationToBeSetBeforeResult`.")]
     public async Task NestedOperation_MultipleForks_NoRaceConditions()
     {
         using var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-        await TestBody().WaitAsync().WaitAsync(tokenSource.Token);
+        await TestBody().AsTask().WaitAsync(tokenSource.Token);
         return;
 
         async ParallelTask TestBody()
@@ -39,7 +39,7 @@ in `RequireContinuationToBeSetBeforeResult`.")]
     public async Task Fork_ALotOfThreads_NoStarvation()
     {
         using var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(1));
-        await TestBody().WaitAsync().WaitAsync(tokenSource.Token);
+        await TestBody().AsTask().WaitAsync(tokenSource.Token);
         return;
 
         async ParallelTask TestBody()

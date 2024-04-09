@@ -16,7 +16,7 @@ public class CoreOperationsTests
     public async Task Fork_NThreadsStarted_NThreadsExecuted(int n)
     {
         var counter = new ParallelCounter();
-        await TestBody().WaitAsync();
+        await TestBody().AsTask();
         counter.AssertCount(n);
         return;
 
@@ -35,7 +35,7 @@ public class CoreOperationsTests
     public async Task NestedOperation_Fork_ForksAreMultiplied(int n)
     {
         var counter = new ParallelCounter();
-        await TestBody().WaitAsync();
+        await TestBody().AsTask();
         counter.AssertCount(n * n);
         return;
 
@@ -58,7 +58,7 @@ public class CoreOperationsTests
     public async Task NestedOperation_Join_JoinAffectsExternalMethod()
     {
         var counter = new ParallelCounter();
-        await TestBody().WaitAsync();
+        await TestBody().AsTask();
         counter.AssertCount(1);
         return;
 
@@ -80,7 +80,7 @@ public class CoreOperationsTests
     {
         var counterAfterForks = new ParallelCounter();
         var counterAfterJoins = new ParallelCounter();
-        await TestBody().WaitAsync();
+        await TestBody().AsTask();
         counterAfterForks.AssertCount(4);
         counterAfterJoins.AssertCount(1);
         return;
@@ -119,7 +119,7 @@ public class CoreOperationsTests
     [Test]
     public async Task SharedState_ReferencesCreatedBeforeFork_SameReferenceAfterFork()
     {
-        var res = await TestBody().WaitAsync();
+        var res = await TestBody().AsTask();
         Assert.That(res[0], Is.EqualTo(1));
         Assert.That(res[1], Is.EqualTo(1));
         return;
@@ -137,7 +137,7 @@ public class CoreOperationsTests
     [Test]
     public async Task SharedState_ReferencesCreatedAfterFork_ReferencesAreDifferent()
     {
-        var res = await TestBody().WaitAsync();
+        var res = await TestBody().AsTask();
         Assert.That(res[0], Is.Not.SameAs(res[1]));
         return;
 
@@ -155,7 +155,7 @@ public class CoreOperationsTests
     [Test]
     public async Task SharedState_ReferencesCreatedAfterFork_ReferenceFromThread0IsAvailableAfterJoin()
     {
-        var res = await TestBody().WaitAsync();
+        var res = await TestBody().AsTask();
         Assert.That(res.SharedArray[0], Is.SameAs(res.ValueAfterJoin));
         return;
 
@@ -173,7 +173,7 @@ public class CoreOperationsTests
     [Test]
     public async Task SharedState_ValueTypeIsDefinedBeforeFork_ChangedSeparately()
     {
-        var res = await TestBody().WaitAsync();
+        var res = await TestBody().AsTask();
         Assert.That(res.SharedArray[0], Is.EqualTo(2));
         Assert.That(res.SharedArray[1], Is.EqualTo(2));
         Assert.That(res.ValueAfterJoin, Is.EqualTo(2));

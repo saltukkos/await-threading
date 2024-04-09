@@ -13,7 +13,7 @@ public class ParallelTaskMethodBuilderTests
     [Test]
     public async Task Await_VoidResultSetSync_ResultReturned()
     {
-        await TestBody().WaitAsync();
+        await TestBody();
         return;
 
         async ParallelTask TestBody()
@@ -29,7 +29,7 @@ public class ParallelTaskMethodBuilderTests
     [Test]
     public async Task Await_IntResultSetSync_ResultReturned()
     {
-        var result = await TestBody().WaitAsync();
+        var result = await TestBody();
         Assert.That(result, Is.EqualTo(42));
         return;
 
@@ -47,7 +47,7 @@ public class ParallelTaskMethodBuilderTests
     [Test]
     public async Task Await_ResultSetAfterNonParallelTaskAwait_ResultReturned()
     {
-        var result = await TestBody().WaitAsync();
+        var result = await TestBody();
         Assert.That(result, Is.EqualTo(42));
         return;
 
@@ -66,7 +66,7 @@ public class ParallelTaskMethodBuilderTests
     [Test]
     public async Task Await_ResultSetAfterParallelOperations_ResultReturned()
     {
-        var result = await TestBody().WaitAsync();
+        var result = await TestBody();
         Assert.That(result, Is.EqualTo(42));
         return;
 
@@ -86,7 +86,7 @@ public class ParallelTaskMethodBuilderTests
     [Test]
     public async Task Await_ResultSetInTwoThreads_BothReturned()
     {
-        var result = await TestBody().WaitAsync();
+        var result = await TestBody();
         Assert.That(result, Is.EqualTo(3));
         return;
 
@@ -109,7 +109,7 @@ public class ParallelTaskMethodBuilderTests
     [Test]
     public async Task AwaitVoid_ExceptionIsThrownInSyncContext_ExceptionIsPropagated()
     {
-        await AssertEx.CheckThrowsAsync<ArgumentOutOfRangeException>(() => TestBody().WaitAsync());
+        await AssertEx.CheckThrowsAsync<ArgumentOutOfRangeException>(() => TestBody().AsTask());
         return;
 
         async ParallelTask TestBody()
@@ -121,7 +121,7 @@ public class ParallelTaskMethodBuilderTests
     [Test]
     public async Task AwaitWithResult_ExceptionIsThrownInSyncContext_ExceptionIsPropagated()
     {
-        await AssertEx.CheckThrowsAsync<ArgumentOutOfRangeException>(() => TestBody().WaitAsync());
+        await AssertEx.CheckThrowsAsync<ArgumentOutOfRangeException>(() => TestBody().AsTask());
         return;
 
         async ParallelTask<int> TestBody()
@@ -133,7 +133,7 @@ public class ParallelTaskMethodBuilderTests
     [Test]
     public async Task AwaitVoid_ExceptionIsThrownInSubMethodSync_ExceptionIsPropagated()
     {
-        await AssertEx.CheckThrowsAsync<ArgumentOutOfRangeException>(() => TestBody().WaitAsync());
+        await AssertEx.CheckThrowsAsync<ArgumentOutOfRangeException>(() => TestBody().AsTask());
         return;
 
         async ParallelTask TestBody()
@@ -150,7 +150,7 @@ public class ParallelTaskMethodBuilderTests
     [Test]
     public async Task AwaitWithResult_ExceptionIsThrownInSubMethodSync_ExceptionIsPropagated()
     {
-        await AssertEx.CheckThrowsAsync<ArgumentOutOfRangeException>(() => TestBody().WaitAsync());
+        await AssertEx.CheckThrowsAsync<ArgumentOutOfRangeException>(() => TestBody().AsTask());
         return;
 
         async ParallelTask<int> TestBody()
@@ -167,7 +167,7 @@ public class ParallelTaskMethodBuilderTests
     [Test]
     public async Task Await_ExceptionIsThrownInAsyncContextDepth_ExceptionIsPropagated()
     {
-        await AssertEx.CheckThrowsAsync<ArgumentOutOfRangeException>(() => TestBody().WaitAsync());
+        await AssertEx.CheckThrowsAsync<ArgumentOutOfRangeException>(() => TestBody().AsTask());
         return;
 
         async ParallelTask<int> TestBody()
@@ -181,7 +181,7 @@ public class ParallelTaskMethodBuilderTests
     [Test]
     public async Task Await_MultipleCallsOfParallelMethod_StackTrackDoNotGrow()
     {
-        await TestBody().WaitAsync();
+        await TestBody();
         return;
 
         async ParallelTask TestBody()
@@ -204,7 +204,7 @@ public class ParallelTaskMethodBuilderTests
     [Test]
     public async Task Await_MultipleForks_StackTrackDoNotGrow()
     {
-        await TestBody().WaitAsync();
+        await TestBody();
         return;
 
         async ParallelTask TestBody()
@@ -223,7 +223,7 @@ public class ParallelTaskMethodBuilderTests
     [Test]
     public async Task Await_MultipleCompleted_StackTrackDoNotGrow()
     {
-        await TestBody().WaitAsync();
+        await TestBody();
         return;
 
         async ParallelTask TestBody()
@@ -245,7 +245,7 @@ public class ParallelTaskMethodBuilderTests
     [Test, Ignore("This test can also fail with standard `Task<T>`")]
     public async Task Await_MultipleNotCompleted_StackTrackDoNotGrow()
     {
-        await TestBody().WaitAsync();
+        await TestBody();
         return;
 
         async ParallelTask TestBody()
@@ -268,7 +268,7 @@ public class ParallelTaskMethodBuilderTests
     [Test]
     public async Task Await_MultipleCallsOfNestedParallelMethod_StackTrackDoNotGrow()
     {
-        await TestBody().WaitAsync();
+        await TestBody();
         return;
 
         async ParallelTask TestBody()

@@ -8,9 +8,10 @@ namespace AwaitThreading.Core;
 
 public static class ParallelTaskMethodBuilderImpl
 {
-    public static void ParallelOnCompleted<TStateMachine>(
-        TStateMachine stateMachine,
-        IParallelNotifyCompletion parallelAwaiter)
+    public static void ParallelOnCompleted<TAwaiter, TStateMachine>(
+        ref TAwaiter parallelAwaiter,
+        TStateMachine stateMachine)
+        where TAwaiter : IParallelNotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
         var stateMachineLocal = MakeCopy(stateMachine);
@@ -18,7 +19,8 @@ public static class ParallelTaskMethodBuilderImpl
     }
 
     public static void OnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, TStateMachine stateMachine)
-        where TAwaiter : INotifyCompletion where TStateMachine : IAsyncStateMachine
+        where TAwaiter : INotifyCompletion
+        where TStateMachine : IAsyncStateMachine
     {
         var executionContext = ExecutionContext.Capture();
 

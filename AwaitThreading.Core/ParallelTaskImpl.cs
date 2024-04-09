@@ -26,7 +26,7 @@ public readonly struct ParallelTaskResult<T>
     public bool HasResult => ExceptionDispatchInfo is null;
 
     public readonly T? Result;
-        
+
     public readonly ExceptionDispatchInfo? ExceptionDispatchInfo;
 }
 
@@ -40,7 +40,7 @@ internal sealed class ParallelTaskImpl<T>
     /// We need this garuantee when forking so every thread will be able to run continuation 
     /// </summary>
     public bool RequireContinuationToBeSetBeforeResult { get; internal set; }
-    
+
     public void SetResult(ParallelTaskResult<T> result)
     {
         RetrieveContinuationIfNeed()?.Invoke();
@@ -86,7 +86,7 @@ internal sealed class ParallelTaskImpl<T>
 
     public bool IsCompleted => !RequireContinuationToBeSetBeforeResult && _results.Count > 0;
 
-    public void SetContinuation(Action continuation)
+    public void ParallelOnCompleted(Action continuation)
     {
         RetrieveContinuationIfNeed()?.Invoke();
         return;
@@ -112,5 +112,28 @@ internal sealed class ParallelTaskImpl<T>
                 return null;
             }
         }
+    }
+
+    public void OnCompleted(Action continuation)
+    {
+        var currentFrameBeforeAwait = ParallelContext.GetCurrentFrameSafe();
+        ParallelOnCompleted(() =>
+        {
+            var currentFrameAfterAwait = ParallelContext.GetCurrentFrameSafe();
+            if (currentFrameAfterAwait?.ForkIdentity != currentFrameBeforeAwait?.ForkIdentity)
+            {
+                _results.Take();
+                _results.Add(new ParallelTaskResult<T>(Assertion.BadAwaitExceptionDispatchInfo));
+            }
+
+            continuation.Invoke();
+        });
+    }
+
+    
+    public void UnsafeOnCompleted(Action continuation)
+    {
+        // TODO: do we need a proper implementation?
+        OnCompleted(continuation);
     }
 }

@@ -44,12 +44,12 @@ public sealed class ForkingTask
 
         public void OnCompleted(Action continuation)
         {
-            Assertion.ThrowInvalidTaskIsUsed();
+            Assertion.ThrowBadAwait();
         }
 
         public void UnsafeOnCompleted(Action continuation)
         {
-            Assertion.ThrowInvalidTaskIsUsed();
+            Assertion.ThrowBadAwait();
         }
 
         public void GetResult()

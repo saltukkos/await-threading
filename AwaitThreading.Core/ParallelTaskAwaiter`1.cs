@@ -19,12 +19,13 @@ public readonly struct ParallelTaskAwaiter<T> : ICriticalNotifyCompletion, IPara
 
     public bool RequireContinuationToBeSetBeforeResult => _taskImpl.RequireContinuationToBeSetBeforeResult;
 
-    public void ParallelOnCompleted(Action continuation) => _taskImpl.SetContinuation(continuation);
+    public void ParallelOnCompleted(Action continuation) => _taskImpl.ParallelOnCompleted(continuation);
 
-    public void OnCompleted(Action continuation) => Assertion.ThrowInvalidTaskIsUsed();
+    public void OnCompleted(Action continuation) => _taskImpl.OnCompleted(continuation);
 
-    public void UnsafeOnCompleted(Action continuation) => Assertion.ThrowInvalidTaskIsUsed();
+    public void UnsafeOnCompleted(Action continuation) => _taskImpl.UnsafeOnCompleted(continuation);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T GetResult()
     {
         var taskResult = _taskImpl.GetResult();
