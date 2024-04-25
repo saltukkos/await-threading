@@ -79,8 +79,11 @@ internal sealed class ParallelTaskImpl<T>
     /// <summary>
     /// Achtung! This method is not pure and has to be called only once per thread. Additinal call will lead to deadlock
     /// </summary>
-    public ParallelTaskResult<T> GetResult()
+    internal ParallelTaskResult<T> GetResult()
     {
+        if (RequireContinuationToBeSetBeforeResult && _continuation is null)
+            Assertion.ThrowInvalidDirectGetResultCall();
+
         return _results.Take();
     }
 

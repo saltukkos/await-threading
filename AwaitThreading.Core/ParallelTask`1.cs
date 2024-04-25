@@ -26,10 +26,5 @@ public readonly struct ParallelTask<T>
     internal void SetException(Exception e) =>
         _implementation.SetResult(new ParallelTaskResult<T>(ExceptionDispatchInfo.Capture(e)));
 
-    /// <summary>
-    /// Achtung! This method is not pure and has to be called only once per thread. Additional call will lead to deadlock
-    /// </summary>
-    public ParallelTaskResult<T> GetResult() => _implementation.GetResult();
-
     public ParallelTaskAwaiter<T> GetAwaiter() => new(_implementation);
 }
