@@ -17,7 +17,7 @@ public struct ParallelAsyncEnumerator<T>
     {
         _list = list;
         _maxIndex = endIndex - 1;
-        _currentIndex = startIndex;
+        _currentIndex = startIndex - 1;
     }
 
     public SyncTask<bool> MoveNextAsync()
