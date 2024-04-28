@@ -11,11 +11,11 @@ public static class ListExtensions
     public static async ParallelTask<ParallelAsyncEnumerable<T>> AsParallelAsync<T>(this List<T> list, int threadsCount)
     {
         Logger.Log("inside AsParallelAsync before await");
+        var chunkSize = (list.Count + threadsCount - 1) / threadsCount;
         await new ForkingTask(threadsCount);
         Logger.Log("inside AsParallelAsync after await");
         var context = ParallelContext.GetCurrentFrame();
         var id = context.Id;
-        var chunkSize = (list.Count + threadsCount - 1) / threadsCount;
         var start = chunkSize * id;
         var end = chunkSize * (id + 1);
         if (end > list.Count)
@@ -23,8 +23,7 @@ public static class ListExtensions
             end = list.Count;
         }
 
-        var part = new List<T>(list.Skip(start).Take(end - start));
-        return new ParallelAsyncEnumerable<T>(part);
+        return new ParallelAsyncEnumerable<T>(list, start, end);
     }
     
     public static ParallelLazyAsyncEnumerable<T> AsParallel<T>(this List<T> list, int threadsCount)

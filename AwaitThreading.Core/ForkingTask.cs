@@ -21,6 +21,13 @@ public sealed class ForkingTask
 
         public bool RequireContinuationToBeSetBeforeResult => true;
 
+        private class ActionClosure
+        {
+            public ExecutionContext? ExecutionContext;
+            public ParallelFrame ParallelFrame;
+            public Action Continuation;
+        }
+        
         public void ParallelOnCompleted(Action continuation)
         {
             var threadsCount = _threadsCount;
@@ -28,17 +35,30 @@ public sealed class ForkingTask
             var barrier = new SingleWaiterBarrier(threadsCount);
             for (var i = 0; i < threadsCount; ++i)
             {
-                var id = i;
-                Task.Run(() =>
+                var actionClosure = new ActionClosure
                 {
-                    if (currentContext is not null)
+                    ExecutionContext = currentContext,
+                    ParallelFrame = new ParallelFrame(i, threadsCount, barrier),
+                    Continuation = continuation,
+                };
+                
+                Task.Factory.StartNew(
+                    static args =>
                     {
-                        ExecutionContext.Restore(currentContext);
-                    }
+                        var parameters = (ActionClosure)args!;
+                        var executionContext = parameters.ExecutionContext;
+                        if (executionContext is not null)
+                        {
+                            ExecutionContext.Restore(executionContext);
+                        }
 
-                    ParallelContext.PushFrame(new ParallelFrame(id, threadsCount, barrier));
-                    continuation.Invoke();
-                }); //TODO exception handling
+                        ParallelContext.PushFrame(parameters.ParallelFrame);
+                        parameters.Continuation.Invoke();
+                    },
+                    actionClosure,
+                    CancellationToken.None,
+                    TaskCreationOptions.DenyChildAttach | TaskCreationOptions.RunContinuationsAsynchronously,
+                    TaskScheduler.Default);
             }
         }
 

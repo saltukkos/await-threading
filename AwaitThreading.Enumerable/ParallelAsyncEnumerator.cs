@@ -9,15 +9,27 @@ namespace AwaitThreading.Enumerable;
 
 public struct ParallelAsyncEnumerator<T>
 {
-    private List<T>.Enumerator _enumerator;
+    private readonly List<T> _list;
+    private readonly int _maxIndex;
+    private int _currentIndex;
 
-    public ParallelAsyncEnumerator(List<T>.Enumerator enumerator)
+    public ParallelAsyncEnumerator(List<T> list, int startIndex, int endIndex)
     {
-        _enumerator = enumerator;
+        _list = list;
+        _maxIndex = endIndex - 1;
+        _currentIndex = startIndex;
     }
 
-    public ValueTask<bool> MoveNextAsync() => ValueTask.FromResult(_enumerator.MoveNext());
-    public T Current => _enumerator.Current;
+    public SyncTask<bool> MoveNextAsync()
+    {
+        if (_currentIndex >= _maxIndex)
+            return new SyncTask<bool>(false);
+
+        _currentIndex++;
+        return new SyncTask<bool>(true);
+    }
+
+    public T Current => _list[_currentIndex];
 
     [UsedImplicitly] //TODO: R# bug?
     public JoiningTask DisposeAsync()

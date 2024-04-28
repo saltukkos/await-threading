@@ -4,17 +4,21 @@
 
 namespace AwaitThreading.Enumerable;
 
-public sealed class ParallelAsyncEnumerable<T>
+public readonly struct ParallelAsyncEnumerable<T>
 {
-    private readonly List<T> _subList;
+    private readonly List<T> _list;
+    private readonly int _start;
+    private readonly int _end;
 
-    public ParallelAsyncEnumerable(List<T> subList)
+    public ParallelAsyncEnumerable(List<T> list, int start, int end)
     {
-        _subList = subList;
+        _list = list;
+        _start = start;
+        _end = end;
     }
     
     public ParallelAsyncEnumerator<T> GetAsyncEnumerator()
     {
-        return new ParallelAsyncEnumerator<T>(_subList.GetEnumerator());
+        return new ParallelAsyncEnumerator<T>(_list, _start, _end);
     }
 }
