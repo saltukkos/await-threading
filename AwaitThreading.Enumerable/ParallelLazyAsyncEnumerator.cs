@@ -28,7 +28,6 @@ public readonly struct ParallelLazyAsyncEnumerator<T>
         if (_chunkEnumerator.Value is { } chunkEnumerator)
         {
             //TODO: allocation every time is expensive, optimize fastpath. Introduce smth like valueTask
-            Logger.Log("Set result for existing enumerator");
             return chunkEnumerator.MoveNext();
         }
 
@@ -47,7 +46,6 @@ public readonly struct ParallelLazyAsyncEnumerator<T>
         var enumerator = _list.Skip(start).Take(end - start).GetEnumerator();
         _chunkEnumerator.Value = enumerator;
         
-        Logger.Log("Set result for new created enumerator thread");
         return enumerator.MoveNext();
     }
 

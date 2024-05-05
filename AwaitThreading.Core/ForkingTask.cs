@@ -33,6 +33,7 @@ public sealed class ForkingTask
             var threadsCount = _threadsCount;
             var currentContext = ExecutionContext.Capture();
             var barrier = new SingleWaiterBarrier(threadsCount);
+
             for (var i = 0; i < threadsCount; ++i)
             {
                 var actionClosure = new ActionClosure
@@ -42,9 +43,12 @@ public sealed class ForkingTask
                     Continuation = continuation,
                 };
                 
+                Logger.Log("Scheduling task " + i);
                 Task.Factory.StartNew(
                     static args =>
                     {
+                        Logger.Log("Task started");
+
                         var parameters = (ActionClosure)args!;
                         var executionContext = parameters.ExecutionContext;
                         if (executionContext is not null)
