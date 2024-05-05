@@ -153,7 +153,7 @@ public class CoreOperationsTests
     }
 
     [Test]
-    public async Task SharedState_ReferencesCreatedAfterFork_ReferenceFromThread0IsAvailableAfterJoin()
+    public async Task SharedStateWithTargeredJoin_ReferencesCreatedAfterFork_ReferenceFromThread0IsAvailableAfterJoin()
     {
         var res = await TestBody().AsTask();
         Assert.That(res.SharedArray[0], Is.SameAs(res.ValueAfterJoin));
@@ -165,7 +165,7 @@ public class CoreOperationsTests
             await new ForkingTask(2);
             var localObject = new object();
             sharedArray[ParallelContext.GetCurrentFrame().Id] = localObject;
-            await new JoiningTask();
+            await new TargetedJoiningTask();
             return (sharedArray, localObject);
         }
     }

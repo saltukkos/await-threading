@@ -1,14 +1,14 @@
-//MIT License
-//Copyright (c) 2023 Saltuk Konstantin
-//See the LICENSE file in the project root for more information.
+// MIT License
+// Copyright (c) 2024 Saltuk Konstantin
+// See the LICENSE file in the project root for more information.
 
 using System.Runtime.CompilerServices;
 
 namespace AwaitThreading.Core;
 
-public readonly struct JoiningTask
+public readonly struct TargetedJoiningTask
 {
-    public struct JoiningTaskAwaiter : ICriticalNotifyCompletion, IParallelNotifyCompletion
+    public struct TargetedJoiningTaskAwaiter : ICriticalNotifyCompletion, IParallelNotifyCompletion
     {
         public bool IsCompleted => false;
         public bool RequireContinuationToBeSetBeforeResult => false;
@@ -17,9 +17,14 @@ public readonly struct JoiningTask
         {
             var context = ParallelContext.PopFrame();
 
-            if (context.JoinBarrier.Finish())
+            if (context.Id == 0)
             {
+                context.JoinBarrier.SignalAndWait();
                 continuation.Invoke();
+            }
+            else
+            {
+                context.JoinBarrier.Signal();
             }
         }
 
@@ -38,5 +43,5 @@ public readonly struct JoiningTask
         }
     }
 
-    public JoiningTaskAwaiter GetAwaiter() => new();
+    public TargetedJoiningTaskAwaiter GetAwaiter() => new();
 }
