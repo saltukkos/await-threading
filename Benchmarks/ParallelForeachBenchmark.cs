@@ -368,4 +368,58 @@ ASYNC LOCAL + SYNC RESULT
 | AsParallelAsync   | 10000      | 28.153 us | 0.1931 us | 0.2769 us |   6.25 KB |
 | AsParallelAsync_2 | 10000      | 31.721 us | 0.1730 us | 0.2590 us |   2.36 KB |
 
+THREAD LOCAL
+| Method            | ListLength | Mean      | Error     | StdDev    | Gen0   | Gen1   | Allocated |
+|------------------ |----------- |----------:|----------:|----------:|-------:|-------:|----------:|
+| AsParallelAsync   | 10         | 12.890 us | 0.2192 us | 0.3143 us | 2.0142 | 0.7019 |   5.48 KB |
+| AsParallelAsync_2 | 10         |  7.829 us | 0.2257 us | 0.3164 us | 0.8850 | 0.4425 |   2.17 KB |
+| AsParallelAsync   | 100        | 13.447 us | 0.5045 us | 0.7395 us | 2.0142 | 0.6866 |    5.5 KB |
+| AsParallelAsync_2 | 100        |  8.695 us | 0.2534 us | 0.3714 us | 0.8698 | 0.4272 |   2.17 KB |
+| AsParallelAsync   | 1000       | 17.162 us | 2.3222 us | 3.2554 us | 2.0142 | 0.6714 |   5.54 KB |
+| AsParallelAsync_2 | 1000       | 11.301 us | 0.8946 us | 1.3390 us | 0.9460 | 0.4730 |   2.17 KB |
+| AsParallelAsync   | 10000      | 34.240 us | 0.7574 us | 1.1337 us | 2.0752 | 0.7324 |   5.59 KB |
+| AsParallelAsync_2 | 10000      | 32.349 us | 0.3193 us | 0.4371 us | 0.7324 | 0.3662 |   2.21 KB |
+
+DICTIONARY:
+| AsParallelAsync   | 10         | 10.532 us | 0.2715 us | 0.4063 us | 3.3417 |    6.7 KB |
+| AsParallelAsync_2 | 10         |  6.357 us | 0.1413 us | 0.1981 us | 1.6327 |   3.28 KB |
+| AsParallelAsync   | 100        | 11.192 us | 0.3530 us | 0.5284 us | 3.3417 |    6.7 KB |
+| AsParallelAsync_2 | 100        |  7.582 us | 0.6738 us | 0.9877 us | 1.6403 |   3.28 KB |
+| AsParallelAsync   | 1000       | 13.305 us | 0.1979 us | 0.2962 us | 3.3417 |    6.7 KB |
+| AsParallelAsync_2 | 1000       |  9.470 us | 0.4523 us | 0.6769 us | 1.6327 |   3.28 KB |
+| AsParallelAsync   | 10000      | 32.310 us | 0.1229 us | 0.1840 us | 3.2959 |    6.7 KB |
+| AsParallelAsync_2 | 10000      | 31.651 us | 0.1617 us | 0.2319 us | 1.6479 |   3.33 KB |
+
+DICTIONARY + SYNC RESULT
+| Method            | ListLength | Mean      | Error     | StdDev    | Gen0   | Allocated |
+|------------------ |----------- |----------:|----------:|----------:|-------:|----------:|
+| AsParallelAsync   | 10         | 10.761 us | 0.2602 us | 0.3894 us | 3.3722 |   6.76 KB |
+| AsParallelAsync_2 | 10         |  6.665 us | 0.1864 us | 0.2732 us | 1.6632 |   3.34 KB |
+| AsParallelAsync   | 100        | 10.676 us | 0.1226 us | 0.1835 us | 3.3722 |   6.76 KB |
+| AsParallelAsync_2 | 100        |  7.041 us | 0.3211 us | 0.4807 us | 1.6632 |   3.34 KB |
+| AsParallelAsync   | 1000       | 13.509 us | 0.3498 us | 0.5127 us | 3.3722 |   6.76 KB |
+| AsParallelAsync_2 | 1000       | 10.060 us | 0.6694 us | 1.0019 us | 1.6479 |   3.34 KB |
+| AsParallelAsync   | 10000      | 29.205 us | 0.3508 us | 0.5142 us | 3.3569 |   6.76 KB |
+| AsParallelAsync_2 | 10000      | 32.397 us | 0.4773 us | 0.7144 us | 1.6479 |   3.39 KB |
+
+SINGLE SLOT
+| AsParallelAsync   | 10         | 12.940 us | 0.3600 us | 0.5388 us | 2.4414 |   4.91 KB |
+| AsParallelAsync_2 | 10         |  4.819 us | 0.1338 us | 0.2002 us | 0.9079 |   1.82 KB |
+| AsParallelAsync   | 100        | 14.117 us | 1.1872 us | 1.7401 us | 2.4414 |   4.91 KB |
+| AsParallelAsync_2 | 100        |  5.776 us | 0.2998 us | 0.4300 us | 0.9079 |   1.82 KB |
+| AsParallelAsync   | 1000       | 16.509 us | 0.6971 us | 1.0434 us | 2.4414 |   4.91 KB |
+| AsParallelAsync_2 | 1000       |  8.177 us | 0.2433 us | 0.3411 us | 0.9003 |   1.82 KB |
+| AsParallelAsync   | 10000      | 30.153 us | 0.5856 us | 0.8765 us | 2.4414 |   4.91 KB |
+| AsParallelAsync_2 | 10000      | 31.106 us | 0.2204 us | 0.3299 us | 0.9155 |   1.87 KB |
+
+THREAD STATIC
+| AsParallelAsync   | 10         |  8.355 us | 0.5561 us | 0.8323 us | 2.4567 |   4.93 KB |
+| AsParallelAsync_2 | 10         |  4.942 us | 0.1489 us | 0.2228 us | 0.9155 |   1.84 KB |
+| AsParallelAsync   | 100        |  9.338 us | 0.3788 us | 0.5310 us | 2.4567 |   4.93 KB |
+| AsParallelAsync_2 | 100        |  5.942 us | 0.2140 us | 0.3203 us | 0.9155 |   1.84 KB |
+| AsParallelAsync   | 1000       | 12.140 us | 0.2554 us | 0.3663 us | 2.4567 |   4.93 KB |
+| AsParallelAsync_2 | 1000       |  8.290 us | 0.2934 us | 0.4113 us | 0.9003 |   1.84 KB |
+| AsParallelAsync   | 10000      | 27.140 us | 0.1144 us | 0.1712 us | 2.4414 |   4.93 KB |
+| AsParallelAsync_2 | 10000      | 31.014 us | 0.3134 us | 0.4394 us | 0.9155 |   1.88 KB |
+
 */

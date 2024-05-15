@@ -40,8 +40,7 @@ internal static class ParallelTaskStaticData
 
 internal sealed class ParallelTaskImpl<T>
 {
-    
-#if FEATTURE_DEDICATED_SYNCRESULT
+#if FEATURE_DEDICATED_SYNCRESULT
     private ParallelTaskResult<T>? _syncResult;
 
 #if FEATURE_TASKIMPL_NORESULT
@@ -50,8 +49,11 @@ internal sealed class ParallelTaskImpl<T>
     private AsyncLocal<ParallelTaskResult<T>>? _results;
 #elif FEATURE_TASKIMPL_QUEUE
     private ConcurrentQueue<ParallelTaskResult<T>>? _results;
-#else
+#elif FEATURE_TASKIMPL_STACK
     private ConcurrentStack<ParallelTaskResult<T>>? _results;
+#elif FEATURE_TASKIMPL_DICTIONARY
+    private ConcurrentDictionary<int, ParallelTaskResult<T>>? _results;
+
 #endif
 
 #else
@@ -62,12 +64,23 @@ internal sealed class ParallelTaskImpl<T>
     private readonly AsyncLocal<ParallelTaskResult<T>> _result = new();
 #elif FEATURE_TASKIMPL_QUEUE
     private readonly ConcurrentQueue<ParallelTaskResult<T>> _results = new();
-#else
+#elif FEATURE_TASKIMPL_STACK
     private readonly ConcurrentStack<ParallelTaskResult<T>> _results = new();
+#elif FEATURE_TASKIMPL_DICTIONARY
+    private readonly ConcurrentDictionary<int, ParallelTaskResult<T>> _results = new();
 #endif
 
 #endif
+    
+#if FEATURE_TASKIMPL_SIGNLESLOT
+    private volatile int _slotIsTakenMarker;
+    private ParallelTaskResult<T> _result;
+#endif
 
+#if FEATURE_TASKIMPL_THREADSTATIC
+    [ThreadStatic]
+    private static ParallelTaskResult<T>? _result; 
+#endif
     private volatile Action? _continuation;
 
     private bool _requireContinuationToBeSetBeforeResult;
@@ -81,7 +94,7 @@ internal sealed class ParallelTaskImpl<T>
         get => _requireContinuationToBeSetBeforeResult;
         internal set
         {
-#if FEATTURE_DEDICATED_SYNCRESULT
+#if FEATURE_DEDICATED_SYNCRESULT && !FEATURE_TASKIMPL_THREADSTATIC
             _results ??= new();
 #endif
             _requireContinuationToBeSetBeforeResult = value;
@@ -93,7 +106,7 @@ internal sealed class ParallelTaskImpl<T>
         // normal control flow: if the continuation is here, run it. If no - save result to run on continuation set
         if (!RequireContinuationToBeSetBeforeResult)
         {
-#if FEATTURE_DEDICATED_SYNCRESULT
+#if FEATURE_DEDICATED_SYNCRESULT
             _syncResult = result;
 #else
             SetParallelResult(result);
@@ -139,7 +152,7 @@ internal sealed class ParallelTaskImpl<T>
             if (_continuation is null) Assertion.ThrowInvalidDirectGetResultCall();
             return GetParallelResult();
         }
-#if FEATTURE_DEDICATED_SYNCRESULT
+#if FEATURE_DEDICATED_SYNCRESULT
         return _syncResult!.Value;
 #else
         return GetParallelResult();
@@ -166,14 +179,33 @@ internal sealed class ParallelTaskImpl<T>
         }
 
         return result;
-#else
+#elif FEATURE_TASKIMPL_STACK
         if (!_results.TryPop(out var result))
         {
             IllegalWaitHappened();
         }
 
         return result;
+#elif FEATURE_TASKIMPL_DICTIONARY
+        if (!_results.TryGetValue(Environment.CurrentManagedThreadId, out var result))
+        {
+            IllegalWaitHappened();
+        }
+
+        return result;
+#elif FEATURE_TASKIMPL_SIGNLESLOT
+        var result = _result;
+        Interlocked.MemoryBarrier();
+        _slotIsTakenMarker = 0;
+        return result;
 #endif
+        if (_result is not { } result)
+        {
+            return IllegalWaitHappened();
+        }
+
+        _result = null;
+        return result;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -185,16 +217,29 @@ internal sealed class ParallelTaskImpl<T>
         _results.Value = result;
 #elif FEATURE_TASKIMPL_QUEUE
         _results.Enqueue(result);
-#else
+#elif FEATURE_TASKIMPL_STACK
         _results.Push(result);
+#elif FEATURE_TASKIMPL_DICTIONARY
+        _results[Environment.CurrentManagedThreadId] = result;
+#elif FEATURE_TASKIMPL_THREADSTATIC
+        _result = result;
+#elif FEATURE_TASKIMPL_SIGNLESLOT
+        var spinWait = new SpinWait();
+        while (Interlocked.CompareExchange(ref _slotIsTakenMarker, 1, 0) != 0)
+        {
+            spinWait.SpinOnce();
+        }
+        Interlocked.MemoryBarrier();
+        _result = result;
 #endif
     }
 
-    private static void IllegalWaitHappened()
+    [DoesNotReturn]
+    private static ParallelTaskResult<T> IllegalWaitHappened()
     {
         Debug.Fail("Illegal wait");
         Thread.Sleep(10_000); //TODO: remove after benchmarks
-        Assertion.ThrowBadAwait();
+        throw new InvalidOperationException("Wait is invalid");
     }
 
     public bool IsCompleted
@@ -206,7 +251,7 @@ internal sealed class ParallelTaskImpl<T>
                 return false;
             }
 
-#if FEATTURE_DEDICATED_SYNCRESULT
+#if FEATURE_DEDICATED_SYNCRESULT
             return _syncResult.HasValue;
 #elif FEATURE_TASKIMPL_NORESULT
             return _resCount > 0;
@@ -215,8 +260,12 @@ internal sealed class ParallelTaskImpl<T>
             return true;
 #elif FEATURE_TASKIMPL_QUEUE
             return !_results.IsEmpty;
-#else
+#elif FEATURE_TASKIMPL_STACK
             return !_results.IsEmpty;
+#elif FEATURE_TASKIMPL_DICTIONARY
+            return _results.ContainsKey(Environment.CurrentManagedThreadId);
+#elif FEATURE_TASKIMPL_SIGNLESLOT
+            return _slotIsTakenMarker != 0;
 #endif
         }
     }
@@ -252,7 +301,7 @@ internal sealed class ParallelTaskImpl<T>
                 SetParallelResult(new ParallelTaskResult<T>(Assertion.BadAwaitExceptionDispatchInfo));
             }
 
-#if FEATTURE_DEDICATED_SYNCRESULT
+#if FEATURE_DEDICATED_SYNCRESULT
             RequireContinuationToBeSetBeforeResult = false;
             _syncResult = GetParallelResult();
 #endif

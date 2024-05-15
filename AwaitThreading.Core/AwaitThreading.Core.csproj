@@ -4,7 +4,7 @@
         <TargetFramework>net6.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-<!--        <DefineConstants>FEATURE_TASKIMPL_ASYNCLOCAL;FEATTURE_DEDICATED_SYNCRESULT</DefineConstants>-->
+        <DefineConstants>FEATURE_TASKIMPL_THREADSTATIC;FEATURE_DEDICATED_SYNCRESULT</DefineConstants>
     </PropertyGroup>
 
     <ItemGroup>
