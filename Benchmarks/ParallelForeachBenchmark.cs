@@ -5,31 +5,12 @@
 using AwaitThreading.Core;
 using AwaitThreading.Enumerable;
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Configs;
-using BenchmarkDotNet.Jobs;
 
 namespace Benchmarks;
 
 [MemoryDiagnoser]
-[Config(typeof(Config))]
 public class ParallelForeachBenchmark
 {
-    private class Config : ManualConfig
-    {
-        // private const string MsBuildSemicolon = ";"; // for some reason, `;` does not work on macOS, even if escaped correctly. 
-        
-        public Config()
-        {
-            AddJob(Job.MediumRun);
-            // AddJob(Job.MediumRun.WithId("Stack"));
-            // AddJob(Job.MediumRun.WithId("Stack+SyncResult").WithArguments(new[] { new MsBuildArgument("/p:DefineConstants=\"FEATTURE_DEDICATED_SYNCRESULT\"") }));
-            // AddJob(Job.MediumRun.WithId("Queue").WithArguments(new[] { new MsBuildArgument("/p:DefineConstants=\"FEATURE_TASKIMPL_QUEUE\"") }));
-            // AddJob(Job.MediumRun.WithId("Queue+SyncResult").WithArguments(new[] { new MsBuildArgument($"/p:DefineConstants=\"FEATTURE_DEDICATED_SYNCRESULT{MsBuildSemicolon}FEATURE_TASKIMPL_QUEUE\"") }));
-            // AddJob(Job.MediumRun.WithId("AsyncLocal+SyncResult(bug)").WithArguments(new[] { new MsBuildArgument($"/p:DefineConstants=\"FEATURE_TASKIMPL_ASYNCLOCAL{MsBuildSemicolon}FEATTURE_DEDICATED_SYNCRESULT\"") }));
-            // AddJob(Job.MediumRun.WithId("NoResult").WithArguments(new[] { new MsBuildArgument("/p:DefineConstants=\"FEATURE_TASKIMPL_NORESULT\"") }));
-        }
-    }
-
     private List<int> _data = null!;
 
     [Params(
@@ -37,10 +18,10 @@ public class ParallelForeachBenchmark
         , 100
         , 1000
         , 10000
-        // , 20000
-        // , 40000
-        // , 80000
-        // , 160000
+        , 20000
+        , 40000
+        , 80000
+        , 160000
         )] 
     public int ListLength;
     
@@ -50,376 +31,117 @@ public class ParallelForeachBenchmark
         _data = Enumerable.Range(0, ListLength).ToList();
     }
 
-    class S
+    class Calculator
     {
         public double Sum;
+
+        public void Calculate(double value)
+        {
+            Sum += Math.Sqrt(value) * 2;
+        }
+    }
+
+    [Benchmark]
+    public double ParallelForEach()
+    {
+        var calculator = new Calculator();
+        Parallel.ForEach(
+            _data,
+            new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount },
+            i =>
+            {
+                calculator.Calculate(i);
+            });
+        return calculator.Sum;
+    }
+
+    [Benchmark]
+    public double AsParallel()
+    {
+        var calculator = new Calculator();
+        _data.AsParallel().ForAll(
+            i =>
+            {
+                calculator.Calculate(i);
+            });
+        return calculator.Sum;
     }
     
-    // [IterationSetup]
-    // public void SetUpEach()
-    // {
-    //     // var tasks = new List<Task>();
-    //     // for (int i = 0; i < Environment.ProcessorCount; ++i)
-    //     // {
-    //     //     tasks.Add(Task.Run(() => { }));
-    //     // }
-    //     //
-    //     // Task.WaitAll(tasks.ToArray());
-    //
-    // }
-
-    // [Benchmark(Baseline = true)]
-    // public double SingleThreadedForEach()
-    // {
-    //     return DoAsync().AsTask().Result;
-    //
-    //     async ParallelTask<double> DoAsync()
-    //     {
-    //
-    //         S sum = new S();
-    //         foreach (var i in _data)
-    //         {
-    //             sum.Sum += Math.Sqrt(i);
-    //         }
-    //
-    //         return sum.Sum;
-    //     }
-    // }
-    
-    
-    // [Benchmark]
-    // public double ParallelForEach()
-    // {
-    //     return DoAsync().AsTask().Result;
-    //
-    //     async ParallelTask<double> DoAsync()
-    //     {
-    //
-    //         S sum = new S();
-    //         Parallel.ForEach(
-    //             _data,
-    //             new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount },
-    //             i =>
-    //             {
-    //
-    //                 var sqrt = Math.Sqrt(i);
-    //                 sum.Sum += sqrt; //yep, it's not valid, but we are only benchmarking
-    //             });
-    //         return sum.Sum;
-    //     }
-    // }
-    
-    // [Benchmark]
-    // public double AsParallel()
-    // {
-    //     return DoAsync().AsTask().Result;
-    //
-    //     async ParallelTask<double> DoAsync()
-    //     {
-    //
-    //         S sum = new S();
-    //         _data.AsParallel().ForAll(
-    //             i =>
-    //             {
-    //                 var sqrt = Math.Sqrt(i);
-    //                 sum.Sum += sqrt;
-    //             });
-    //         return sum.Sum;
-    //     }
-    // }
-
     [Benchmark]
     public double AsParallelAsync()
     {
         return DoAsync().AsTask().Result;
-
+    
         async ParallelTask<double> DoAsync()
         {
-            S sum = new S();
+            var calculator = new Calculator();
             await foreach (var i in await _data.AsParallelAsync(Environment.ProcessorCount))
             {
-
-                var sqrt = Math.Sqrt(i);
-                sum.Sum += sqrt;
+                calculator.Calculate(i);
             }
-
-            return sum.Sum;
+    
+            return calculator.Sum;
         }
     }
-
+    
     [Benchmark]
-    public double AsParallelAsync_2()
+    public double AsParallelAsync_Half()
     {
         return DoAsync().AsTask().Result;
-
+    
         async ParallelTask<double> DoAsync()
         {
-            S sum = new S();
-            await foreach (var i in await _data.AsParallelAsync(2))
+            var calculator = new Calculator();
+            await foreach (var i in await _data.AsParallelAsync(Math.Max(2, Environment.ProcessorCount / 2)))
             {
-
-                var sqrt = Math.Sqrt(i);
-                sum.Sum += sqrt;
+                calculator.Calculate(i);
             }
-
-            return sum.Sum;
+    
+            return calculator.Sum;
         }
     }
-    //
-    // [Benchmark]
-    // public double AsParallelAsync_1()
-    // {
-    //     return DoAsync().AsTask().Result;
-    //
-    //     async ParallelTask<double> DoAsync()
-    //     {
-    //         S sum = new S();
-    //         await foreach (var i in await _data.AsParallelAsync(1))
-    //         {
-    //
-    //             var sqrt = Math.Sqrt(i);
-    //             sum.Sum += sqrt;
-    //         }
-    //
-    //         return sum.Sum;
-    //     }
-    // }
-
-//     [Benchmark]
-//     public double AsParallelAsyncTwice()
-//     {
-// //        _ = DoAsync().AsTask().Result;
-//         return DoAsync().AsTask().Result;
-//
-//         async ParallelTask<double> DoAsync()
-//         {
-//             double sum = 0;
-//             await foreach (var i in await _data.AsParallelAsync(Environment.ProcessorCount))
-//             {
-//
-//                 var sqrt = Math.Sqrt(i);
-//                 sum += sqrt;
-//             }
-//
-//             Thread.Sleep(1);
-//             return sum;
-//         }
-//     }
 }
 
 /*
-
 BenchmarkDotNet v0.13.12, macOS Sonoma 14.4.1 (23E224) [Darwin 23.4.0]
 Apple M1, 1 CPU, 8 logical and 8 physical cores
 .NET SDK 6.0.100
-  [Host]    : .NET 6.0.0 (6.0.21.52210), Arm64 RyuJIT AdvSIMD
-  MediumRun : .NET 6.0.0 (6.0.21.52210), Arm64 RyuJIT AdvSIMD
-
-No waits at all:
-| Method                | ListLength | Mean        | Error      | StdDev       | Ratio  | RatioSD | Gen0   | Allocated | Alloc Ratio |
-|---------------------- |----------- |------------:|-----------:|-------------:|-------:|--------:|-------:|----------:|------------:|
-| SingleThreadedForEach | 10         |    63.70 ns |   0.339 ns |     0.265 ns |   1.00 |    0.00 | 0.0612 |     128 B |        1.00 |
-| ParallelForEach       | 10         | 3,160.72 ns |  51.722 ns |    48.381 ns |  49.58 |    0.83 | 1.2894 |    2616 B |       20.44 |
-| AsParallel            | 10         | 8,394.55 ns | 163.594 ns |   229.336 ns | 130.63 |    3.84 | 2.0905 |    4304 B |       33.62 |
-| AsParallelAsync       | 10         | 8,258.10 ns | 400.643 ns | 1,181.306 ns | 128.78 |   18.83 | 2.5177 |    5176 B |       40.44 |
-| AsParallelAsync_2     | 10         | 4,925.34 ns |  97.932 ns |   191.009 ns |  78.99 |    3.16 | 0.9079 |    1864 B |       14.56 |
-
-Spinwait only in SetResult:
-| Method                | ListLength | Mean        | Error      | StdDev     | Ratio  | RatioSD | Gen0   | Allocated | Alloc Ratio |
-|---------------------- |----------- |------------:|-----------:|-----------:|-------:|--------:|-------:|----------:|------------:|
-| SingleThreadedForEach | 10         |    63.96 ns |   0.632 ns |   0.528 ns |   1.00 |    0.00 | 0.0612 |     128 B |        1.00 |
-| ParallelForEach       | 10         | 3,214.88 ns |  49.880 ns |  46.658 ns |  50.22 |    0.96 | 1.2856 |    2614 B |       20.42 |
-| AsParallel            | 10         | 8,242.71 ns | 163.883 ns | 414.153 ns | 127.35 |   10.96 | 2.0905 |    4304 B |       33.62 |
-| AsParallelAsync       | 10         | 9,949.84 ns | 194.833 ns | 341.234 ns | 154.84 |    5.64 | 2.5177 |    5176 B |       40.44 |
-| AsParallelAsync_2     | 10         | 4,878.77 ns |  96.590 ns | 216.038 ns |  78.93 |    4.33 | 0.9079 |    1864 B |       14.56 |
-
-Spinwait in SetResult + GetResult
-| Method                | ListLength | Mean        | Error      | StdDev     | Ratio  | RatioSD | Gen0   | Allocated | Alloc Ratio |
-|---------------------- |----------- |------------:|-----------:|-----------:|-------:|--------:|-------:|----------:|------------:|
-| SingleThreadedForEach | 10         |    64.87 ns |   0.200 ns |   0.187 ns |   1.00 |    0.00 | 0.0612 |     128 B |        1.00 |
-| ParallelForEach       | 10         | 3,183.38 ns |  46.013 ns |  43.040 ns |  49.07 |    0.67 | 1.2817 |    2609 B |       20.38 |
-| AsParallel            | 10         | 7,989.22 ns |  49.376 ns |  43.771 ns | 123.17 |    0.81 | 2.0905 |    4304 B |       33.62 |
-| AsParallelAsync       | 10         | 9,846.65 ns | 186.484 ns | 199.536 ns | 151.90 |    3.13 | 2.5177 |    5176 B |       40.44 |
-| AsParallelAsync_2     | 10         | 4,773.25 ns |  95.372 ns | 176.778 ns |  74.42 |    2.86 | 0.9079 |    1864 B |       14.56 |
-
-With spinwaits:
-| Method                | ListLength | Mean         | Error      | StdDev     | Ratio  | RatioSD | Gen0   | Allocated | Alloc Ratio |
-|---------------------- |----------- |-------------:|-----------:|-----------:|-------:|--------:|-------:|----------:|------------:|
-| SingleThreadedForEach | 10         |     63.97 ns |   0.263 ns |   0.246 ns |   1.00 |    0.00 | 0.0612 |     128 B |        1.00 |
-| ParallelForEach       | 10         |  3,170.01 ns |  48.493 ns |  45.360 ns |  49.56 |    0.76 | 1.2779 |    2612 B |       20.41 |
-| AsParallel            | 10         |  8,256.70 ns | 164.349 ns | 283.495 ns | 130.97 |    5.14 | 2.0905 |    4304 B |       33.62 |
-| AsParallelAsync       | 10         | 11,764.27 ns | 233.005 ns | 408.090 ns | 183.61 |    5.62 | 2.5024 |    5176 B |       40.44 |
-| AsParallelAsync_2     | 10         |  5,551.51 ns | 109.036 ns | 267.466 ns |  87.96 |    4.52 | 0.9079 |    1864 B |       14.56 |
-
-Spinwaits + lock in SingleWaiterBarrier + single pulse
-| Method                | ListLength | Mean         | Error      | StdDev       | Median       | Ratio  | RatioSD | Gen0   | Allocated | Alloc Ratio |
-|---------------------- |----------- |-------------:|-----------:|-------------:|-------------:|-------:|--------:|-------:|----------:|------------:|
-| SingleThreadedForEach | 10         |     66.73 ns |   1.087 ns |     0.963 ns |     66.82 ns |   1.00 |    0.00 | 0.0612 |     128 B |        1.00 |
-| ParallelForEach       | 10         |  3,147.08 ns |  26.659 ns |    24.937 ns |  3,153.33 ns |  47.20 |    0.89 | 1.2817 |    2616 B |       20.44 |
-| AsParallel            | 10         |  8,106.82 ns | 161.549 ns |   269.912 ns |  8,025.80 ns | 123.88 |    4.53 | 2.1057 |    4304 B |       33.62 |
-| AsParallelAsync       | 10         | 22,469.87 ns | 880.393 ns | 2,511.810 ns | 23,477.13 ns | 326.50 |   35.69 | 2.5024 |    5176 B |       40.44 |
-| AsParallelAsync_2     | 10         | 20,395.34 ns | 399.918 ns |   427.908 ns | 20,491.31 ns | 306.58 |    8.65 | 0.8850 |    1864 B |       14.56 |
-
-Spinwaits + single lock in SingleWaiterBarrier + single pulse
-| Method                | ListLength | Mean         | Error      | StdDev     | Ratio  | RatioSD | Gen0   | Allocated | Alloc Ratio |
-|---------------------- |----------- |-------------:|-----------:|-----------:|-------:|--------:|-------:|----------:|------------:|
-| SingleThreadedForEach | 10         |     64.18 ns |   0.655 ns |   0.512 ns |   1.00 |    0.00 | 0.0612 |     128 B |        1.00 |
-| ParallelForEach       | 10         |  3,137.06 ns |  36.904 ns |  34.520 ns |  48.81 |    0.51 | 1.2817 |    2619 B |       20.46 |
-| AsParallel            | 10         |  8,001.50 ns | 137.713 ns | 128.817 ns | 124.84 |    2.28 | 2.0905 |    4304 B |       33.62 |
-| AsParallelAsync       | 10         | 24,728.38 ns | 482.068 ns | 450.927 ns | 387.08 |    7.65 | 2.5024 |    5176 B |       40.44 |
-| AsParallelAsync_2     | 10         | 20,130.89 ns | 183.928 ns | 172.046 ns | 313.34 |    4.39 | 0.8850 |    1864 B |       14.56 |
-
-Spinwaits + lock in SingleWaiterBarrier + pulseall
-| Method                | ListLength | Mean         | Error        | StdDev       | Ratio  | RatioSD | Gen0   | Allocated | Alloc Ratio |
-|---------------------- |----------- |-------------:|-------------:|-------------:|-------:|--------:|-------:|----------:|------------:|
-| SingleThreadedForEach | 10         |     64.03 ns |     0.192 ns |     0.160 ns |   1.00 |    0.00 | 0.0612 |     128 B |        1.00 |
-| ParallelForEach       | 10         |  3,097.14 ns |    59.508 ns |    63.673 ns |  48.19 |    1.03 | 1.2779 |    2612 B |       20.41 |
-| AsParallel            | 10         |  8,060.71 ns |   160.360 ns |   171.583 ns | 126.32 |    2.81 | 2.0905 |    4304 B |       33.62 |
-| AsParallelAsync       | 10         | 34,206.31 ns | 1,396.055 ns | 4,116.299 ns | 547.09 |   57.53 | 2.5024 |    5180 B |       40.47 |
-| AsParallelAsync_2     | 10         | 20,348.56 ns |   387.320 ns |   430.505 ns | 315.83 |    5.99 | 0.8850 |    1864 B |       14.56 |
-
-Spinwait + no wait barrier:
-| Method                | ListLength | Mean        | Error      | StdDev     | Ratio  | RatioSD | Gen0   | Allocated | Alloc Ratio |
-|---------------------- |----------- |------------:|-----------:|-----------:|-------:|--------:|-------:|----------:|------------:|
-| SingleThreadedForEach | 10         |    62.64 ns |   0.131 ns |   0.122 ns |   1.00 |    0.00 | 0.0612 |     128 B |        1.00 |
-| ParallelForEach       | 10         | 2,976.10 ns |  33.981 ns |  31.786 ns |  47.52 |    0.55 | 1.2856 |    2647 B |       20.68 |
-| AsParallel            | 10         | 7,869.67 ns | 156.714 ns | 253.064 ns | 126.63 |    5.22 | 2.0905 |    4304 B |       33.62 |
-| AsParallelAsync       | 10         | 8,922.07 ns | 172.024 ns | 204.783 ns | 143.19 |    3.29 | 2.5177 |    5176 B |       40.44 |
-| AsParallelAsync_2     | 10         | 4,204.05 ns |  80.872 ns | 107.961 ns |  67.41 |    2.00 | 0.9079 |    1864 B |       14.56 |
+  [Host]     : .NET 6.0.0 (6.0.21.52210), Arm64 RyuJIT AdvSIMD
+  DefaultJob : .NET 6.0.0 (6.0.21.52210), Arm64 RyuJIT AdvSIMD
 
 
-| SingleThreadedForEach | 10         |     187.3 ns |     0.25 ns |      0.21 ns |     187.2 ns | 1.38 KB |
-| ParallelForEach       | 10         |   3,223.1 ns |    28.15 ns |     26.33 ns |   3,217.5 ns |  3.8 KB |
-| AsParallel            | 10         |   7,868.0 ns |   153.84 ns |    225.50 ns |   7,838.6 ns | 5.46 KB |
-|                       |            |              |             |              |              |         |
-| SingleThreadedForEach | 100        |     505.2 ns |     0.26 ns |      0.24 ns |     505.2 ns | 1.38 KB |
-| ParallelForEach       | 100        |   4,049.4 ns |    27.48 ns |     22.95 ns |   4,046.7 ns | 3.82 KB |
-| AsParallel            | 100        |   8,239.0 ns |   128.93 ns |    120.60 ns |   8,219.3 ns | 5.46 KB |
-|                       |            |              |             |              |              |         |
-| SingleThreadedForEach | 1000       |   3,673.7 ns |     1.09 ns |      1.02 ns |   3,674.1 ns | 1.38 KB |
-| ParallelForEach       | 1000       |  36,997.8 ns |   498.30 ns |    466.11 ns |  37,072.9 ns | 4.54 KB |
-| AsParallel            | 1000       |  13,902.1 ns |   232.64 ns |    217.61 ns |  13,949.7 ns | 5.46 KB |
-|                       |            |              |             |              |              |         |
-| SingleThreadedForEach | 10000      |  35,299.4 ns |    19.02 ns |     17.79 ns |  35,300.8 ns | 1.38 KB |
-| ParallelForEach       | 10000      | 446,776.2 ns | 8,722.12 ns | 12,227.19 ns | 449,180.8 ns | 4.55 KB |
-| AsParallel            | 10000      |  74,008.7 ns | 1,479.81 ns |  4,149.56 ns |  73,257.8 ns | 5.46 KB |
-
-
-NO RESULT
-| AsParallelAsync   | NA         | 9.068 us | 0.3019 us | 0.4426 us |   4.88 KB |
-| AsParallelAsync_2 | NA         | 4.288 us | 0.0469 us | 0.0688 us |   1.78 KB |
-
-STACK:
-| AsParallelAsync   | 10         | 11.276 us | 0.2971 us | 0.4261 us |   5.35 KB |
-| AsParallelAsync_2 | 10         |  5.113 us | 0.1429 us | 0.2095 us |   1.98 KB |
-| AsParallelAsync   | 100        | 11.257 us | 0.1264 us | 0.1812 us |   5.35 KB |
-| AsParallelAsync_2 | 100        |  6.297 us | 0.3018 us | 0.4328 us |   1.98 KB |
-| AsParallelAsync   | 1000       | 13.136 us | 0.1961 us | 0.2935 us |   5.35 KB |
-| AsParallelAsync_2 | 1000       |  8.323 us | 0.3070 us | 0.4500 us |   1.98 KB |
-| AsParallelAsync   | 10000      | 32.754 us | 0.1782 us | 0.2668 us |   5.35 KB |
-| AsParallelAsync_2 | 10000      | 31.620 us | 0.1511 us | 0.2215 us |   2.03 KB |
-
-STACK + SYNC RESULT
-| AsParallelAsync   | 10         | 11.025 us | 0.1666 us | 0.2443 us |   5.41 KB |
-| AsParallelAsync_2 | 10         |  5.098 us | 0.1843 us | 0.2584 us |   2.03 KB |
-| AsParallelAsync   | 100        | 11.563 us | 0.3312 us | 0.4533 us |   5.41 KB |
-| AsParallelAsync_2 | 100        |  6.137 us | 0.2047 us | 0.2936 us |   2.03 KB |
-| AsParallelAsync   | 1000       | 13.216 us | 0.2301 us | 0.3372 us |   5.41 KB |
-| AsParallelAsync_2 | 1000       |  8.740 us | 0.4286 us | 0.6415 us |   2.03 KB |
-| AsParallelAsync   | 10000      | 33.186 us | 0.6275 us | 0.9392 us |   5.41 KB |
-| AsParallelAsync_2 | 10000      | 31.664 us | 0.1897 us | 0.2840 us |   2.08 KB |
-
-| AsParallelAsync   | 10         | 11.197 us | 0.2755 us | 0.4038 us |   5.41 KB |
-| AsParallelAsync_2 | 10         |  5.153 us | 0.2000 us | 0.2738 us |   2.03 KB |
-| AsParallelAsync   | 100        | 11.300 us | 0.1448 us | 0.2168 us |   5.41 KB |
-| AsParallelAsync_2 | 100        |  5.918 us | 0.1239 us | 0.1777 us |   2.03 KB |
-| AsParallelAsync   | 1000       | 13.039 us | 0.1608 us | 0.2406 us |   5.41 KB |
-| AsParallelAsync_2 | 1000       |  8.549 us | 0.3959 us | 0.5677 us |   2.03 KB |
-| AsParallelAsync   | 10000      | 32.483 us | 0.1609 us | 0.2308 us |   5.41 KB |
-| AsParallelAsync_2 | 10000      | 31.590 us | 0.1675 us | 0.2507 us |   2.08 KB |
-
-QUEUE:
-| AsParallelAsync   | 10         | 10.610 us | 0.1496 us | 0.2192 us |   7.64 KB |
-| AsParallelAsync_2 | 10         |  7.167 us | 0.3534 us | 0.5290 us |   4.55 KB |
-| AsParallelAsync   | 100        | 11.187 us | 0.2407 us | 0.3452 us |   7.64 KB |
-| AsParallelAsync_2 | 100        |  7.309 us | 0.5265 us | 0.7881 us |   4.55 KB |
-| AsParallelAsync   | 1000       | 13.293 us | 0.1144 us | 0.1712 us |   7.64 KB |
-| AsParallelAsync_2 | 1000       |  9.872 us | 0.4847 us | 0.7255 us |   4.55 KB |
-| AsParallelAsync   | 10000      | 33.527 us | 0.1836 us | 0.2747 us |   7.64 KB |
-| AsParallelAsync_2 | 10000      | 32.269 us | 0.2190 us | 0.3277 us |    4.6 KB |
-
-QUEUE + SYNC RESULT
-| AsParallelAsync   | 10         | 10.883 us | 0.2394 us | 0.3584 us |    7.7 KB |
-| AsParallelAsync_2 | 10         |  6.929 us | 0.2330 us | 0.3488 us |    4.6 KB |
-| AsParallelAsync   | 100        | 11.519 us | 0.3028 us | 0.4532 us |    7.7 KB |
-| AsParallelAsync_2 | 100        |  7.132 us | 0.1539 us | 0.2207 us |    4.6 KB |
-| AsParallelAsync   | 1000       | 13.848 us | 0.1153 us | 0.1725 us |    7.7 KB |
-| AsParallelAsync_2 | 1000       |  9.588 us | 0.3680 us | 0.5394 us |    4.6 KB |
-| AsParallelAsync   | 10000      | 33.709 us | 0.1879 us | 0.2695 us |    7.7 KB |
-| AsParallelAsync_2 | 10000      | 32.642 us | 0.1739 us | 0.2603 us |   4.65 KB |
-
-ASYNC LOCAL + SYNC RESULT
-| AsParallelAsync   | 10         |  9.761 us | 0.2957 us | 0.4426 us |   6.25 KB |
-| AsParallelAsync_2 | 10         |  5.368 us | 0.1639 us | 0.2402 us |   2.31 KB |
-| AsParallelAsync   | 100        |  9.871 us | 0.2296 us | 0.3365 us |   6.25 KB |
-| AsParallelAsync_2 | 100        |  6.363 us | 0.2588 us | 0.3874 us |   2.31 KB |
-| AsParallelAsync   | 1000       | 12.660 us | 0.2800 us | 0.4104 us |   6.25 KB |
-| AsParallelAsync_2 | 1000       |  8.683 us | 0.5161 us | 0.7725 us |   2.31 KB |
-| AsParallelAsync   | 10000      | 28.153 us | 0.1931 us | 0.2769 us |   6.25 KB |
-| AsParallelAsync_2 | 10000      | 31.721 us | 0.1730 us | 0.2590 us |   2.36 KB |
-
-THREAD LOCAL
-| Method            | ListLength | Mean      | Error     | StdDev    | Gen0   | Gen1   | Allocated |
-|------------------ |----------- |----------:|----------:|----------:|-------:|-------:|----------:|
-| AsParallelAsync   | 10         | 12.890 us | 0.2192 us | 0.3143 us | 2.0142 | 0.7019 |   5.48 KB |
-| AsParallelAsync_2 | 10         |  7.829 us | 0.2257 us | 0.3164 us | 0.8850 | 0.4425 |   2.17 KB |
-| AsParallelAsync   | 100        | 13.447 us | 0.5045 us | 0.7395 us | 2.0142 | 0.6866 |    5.5 KB |
-| AsParallelAsync_2 | 100        |  8.695 us | 0.2534 us | 0.3714 us | 0.8698 | 0.4272 |   2.17 KB |
-| AsParallelAsync   | 1000       | 17.162 us | 2.3222 us | 3.2554 us | 2.0142 | 0.6714 |   5.54 KB |
-| AsParallelAsync_2 | 1000       | 11.301 us | 0.8946 us | 1.3390 us | 0.9460 | 0.4730 |   2.17 KB |
-| AsParallelAsync   | 10000      | 34.240 us | 0.7574 us | 1.1337 us | 2.0752 | 0.7324 |   5.59 KB |
-| AsParallelAsync_2 | 10000      | 32.349 us | 0.3193 us | 0.4371 us | 0.7324 | 0.3662 |   2.21 KB |
-
-DICTIONARY:
-| AsParallelAsync   | 10         | 10.532 us | 0.2715 us | 0.4063 us | 3.3417 |    6.7 KB |
-| AsParallelAsync_2 | 10         |  6.357 us | 0.1413 us | 0.1981 us | 1.6327 |   3.28 KB |
-| AsParallelAsync   | 100        | 11.192 us | 0.3530 us | 0.5284 us | 3.3417 |    6.7 KB |
-| AsParallelAsync_2 | 100        |  7.582 us | 0.6738 us | 0.9877 us | 1.6403 |   3.28 KB |
-| AsParallelAsync   | 1000       | 13.305 us | 0.1979 us | 0.2962 us | 3.3417 |    6.7 KB |
-| AsParallelAsync_2 | 1000       |  9.470 us | 0.4523 us | 0.6769 us | 1.6327 |   3.28 KB |
-| AsParallelAsync   | 10000      | 32.310 us | 0.1229 us | 0.1840 us | 3.2959 |    6.7 KB |
-| AsParallelAsync_2 | 10000      | 31.651 us | 0.1617 us | 0.2319 us | 1.6479 |   3.33 KB |
-
-DICTIONARY + SYNC RESULT
-| Method            | ListLength | Mean      | Error     | StdDev    | Gen0   | Allocated |
-|------------------ |----------- |----------:|----------:|----------:|-------:|----------:|
-| AsParallelAsync   | 10         | 10.761 us | 0.2602 us | 0.3894 us | 3.3722 |   6.76 KB |
-| AsParallelAsync_2 | 10         |  6.665 us | 0.1864 us | 0.2732 us | 1.6632 |   3.34 KB |
-| AsParallelAsync   | 100        | 10.676 us | 0.1226 us | 0.1835 us | 3.3722 |   6.76 KB |
-| AsParallelAsync_2 | 100        |  7.041 us | 0.3211 us | 0.4807 us | 1.6632 |   3.34 KB |
-| AsParallelAsync   | 1000       | 13.509 us | 0.3498 us | 0.5127 us | 3.3722 |   6.76 KB |
-| AsParallelAsync_2 | 1000       | 10.060 us | 0.6694 us | 1.0019 us | 1.6479 |   3.34 KB |
-| AsParallelAsync   | 10000      | 29.205 us | 0.3508 us | 0.5142 us | 3.3569 |   6.76 KB |
-| AsParallelAsync_2 | 10000      | 32.397 us | 0.4773 us | 0.7144 us | 1.6479 |   3.39 KB |
-
-SINGLE SLOT
-| AsParallelAsync   | 10         | 12.940 us | 0.3600 us | 0.5388 us | 2.4414 |   4.91 KB |
-| AsParallelAsync_2 | 10         |  4.819 us | 0.1338 us | 0.2002 us | 0.9079 |   1.82 KB |
-| AsParallelAsync   | 100        | 14.117 us | 1.1872 us | 1.7401 us | 2.4414 |   4.91 KB |
-| AsParallelAsync_2 | 100        |  5.776 us | 0.2998 us | 0.4300 us | 0.9079 |   1.82 KB |
-| AsParallelAsync   | 1000       | 16.509 us | 0.6971 us | 1.0434 us | 2.4414 |   4.91 KB |
-| AsParallelAsync_2 | 1000       |  8.177 us | 0.2433 us | 0.3411 us | 0.9003 |   1.82 KB |
-| AsParallelAsync   | 10000      | 30.153 us | 0.5856 us | 0.8765 us | 2.4414 |   4.91 KB |
-| AsParallelAsync_2 | 10000      | 31.106 us | 0.2204 us | 0.3299 us | 0.9155 |   1.87 KB |
-
-THREAD STATIC
-| AsParallelAsync   | 10         |  8.355 us | 0.5561 us | 0.8323 us | 2.4567 |   4.93 KB |
-| AsParallelAsync_2 | 10         |  4.942 us | 0.1489 us | 0.2228 us | 0.9155 |   1.84 KB |
-| AsParallelAsync   | 100        |  9.338 us | 0.3788 us | 0.5310 us | 2.4567 |   4.93 KB |
-| AsParallelAsync_2 | 100        |  5.942 us | 0.2140 us | 0.3203 us | 0.9155 |   1.84 KB |
-| AsParallelAsync   | 1000       | 12.140 us | 0.2554 us | 0.3663 us | 2.4567 |   4.93 KB |
-| AsParallelAsync_2 | 1000       |  8.290 us | 0.2934 us | 0.4113 us | 0.9003 |   1.84 KB |
-| AsParallelAsync   | 10000      | 27.140 us | 0.1144 us | 0.1712 us | 2.4414 |   4.93 KB |
-| AsParallelAsync_2 | 10000      | 31.014 us | 0.3134 us | 0.4394 us | 0.9155 |   1.88 KB |
-
+| Method               | ListLength | Mean         | Error       | StdDev      | Gen0   | Allocated |
+|--------------------- |----------- |-------------:|------------:|------------:|-------:|----------:|
+| ParallelForEach      | 10         |     2.950 us |   0.0403 us |   0.0377 us | 1.2245 |   2.44 KB |
+| AsParallel           | 10         |     7.630 us |   0.1086 us |   0.1292 us | 2.0447 |    4.1 KB |
+| AsParallelAsync      | 10         |     9.078 us |   0.1789 us |   0.4111 us | 2.4567 |   4.92 KB |
+| AsParallelAsync_Half | 10         |     6.390 us |   0.1092 us |   0.1022 us | 1.4267 |   2.86 KB |
+| ParallelForEach      | 100        |     3.773 us |   0.0384 us |   0.0340 us | 1.2283 |   2.47 KB |
+| AsParallel           | 100        |     8.142 us |   0.1563 us |   0.2087 us | 2.0447 |    4.1 KB |
+| AsParallelAsync      | 100        |     9.121 us |   0.1815 us |   0.2360 us | 2.4414 |   4.92 KB |
+| AsParallelAsync_Half | 100        |     6.996 us |   0.1387 us |   0.2570 us | 1.4267 |   2.86 KB |
+| ParallelForEach      | 1000       |    37.947 us |   0.3876 us |   0.3626 us | 1.5869 |   3.19 KB |
+| AsParallel           | 1000       |    13.437 us |   0.0598 us |   0.0560 us | 2.0447 |    4.1 KB |
+| AsParallelAsync      | 1000       |    11.846 us |   0.1941 us |   0.1816 us | 2.4414 |   4.92 KB |
+| AsParallelAsync_Half | 1000       |    10.661 us |   0.2129 us |   0.6210 us | 1.4191 |   2.86 KB |
+| ParallelForEach      | 10000      |   444.607 us |   4.2010 us |   3.7241 us | 1.4648 |   3.19 KB |
+| AsParallel           | 10000      |    74.922 us |   1.4898 us |   3.6546 us | 1.9531 |    4.1 KB |
+| AsParallelAsync      | 10000      |    27.398 us |   0.1729 us |   0.1533 us | 2.4414 |   4.92 KB |
+| AsParallelAsync_Half | 10000      |    36.252 us |   0.7237 us |   1.5578 us | 1.3428 |   2.86 KB |
+| ParallelForEach      | 20000      |   902.151 us |  11.4283 us |  10.6900 us | 0.9766 |   3.19 KB |
+| AsParallel           | 20000      |   140.733 us |   2.8119 us |   6.8975 us | 1.9531 |   4.13 KB |
+| AsParallelAsync      | 20000      |    44.644 us |   0.2000 us |   0.1871 us | 2.4414 |   4.92 KB |
+| AsParallelAsync_Half | 20000      |    58.170 us |   1.1419 us |   1.5631 us | 1.4038 |   2.87 KB |
+| ParallelForEach      | 40000      | 1,811.224 us |  24.7867 us |  23.1855 us |      - |   3.19 KB |
+| AsParallel           | 40000      |   253.070 us |   5.0297 us |  10.6094 us | 1.9531 |   4.15 KB |
+| AsParallelAsync      | 40000      |    78.508 us |   1.2894 us |   1.2664 us | 2.4414 |   4.92 KB |
+| AsParallelAsync_Half | 40000      |    99.632 us |   1.8452 us |   4.9251 us | 1.3428 |   2.89 KB |
+| ParallelForEach      | 80000      | 3,620.395 us |  71.5776 us |  66.9537 us |      - |   3.19 KB |
+| AsParallel           | 80000      |   444.914 us |   3.2883 us |   2.9150 us | 1.9531 |   4.15 KB |
+| AsParallelAsync      | 80000      |   139.536 us |   2.7340 us |   4.3364 us | 2.4414 |   4.95 KB |
+| AsParallelAsync_Half | 80000      |   184.999 us |   3.5679 us |   3.3374 us | 1.2207 |   2.91 KB |
+| ParallelForEach      | 160000     | 7,254.711 us | 139.7574 us | 149.5388 us |      - |    3.2 KB |
+| AsParallel           | 160000     |   858.118 us |   8.2812 us |   7.7463 us | 1.9531 |   4.15 KB |
+| AsParallelAsync      | 160000     |   295.875 us |   3.2879 us |   3.0755 us | 2.4414 |   4.98 KB |
+| AsParallelAsync_Half | 160000     |   449.229 us |   8.8799 us |  22.2779 us | 0.9766 |   2.92 KB |
 */
