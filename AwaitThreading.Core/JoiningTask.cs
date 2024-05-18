@@ -11,15 +11,17 @@ public readonly struct JoiningTask
     public struct JoiningTaskAwaiter : ICriticalNotifyCompletion, IParallelNotifyCompletion
     {
         public bool IsCompleted => false;
+
         public bool RequireContinuationToBeSetBeforeResult => false;
 
-        public void ParallelOnCompleted(Action continuation)
+        public void ParallelOnCompleted<TStateMachine>(TStateMachine stateMachine)
+            where TStateMachine : IAsyncStateMachine
         {
             var context = ParallelContext.PopFrame();
 
             if (context.JoinBarrier.Finish())
             {
-                continuation.Invoke();
+                stateMachine.MoveNext();
             }
         }
 

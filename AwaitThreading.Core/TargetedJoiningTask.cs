@@ -13,14 +13,15 @@ public readonly struct TargetedJoiningTask
         public bool IsCompleted => false;
         public bool RequireContinuationToBeSetBeforeResult => false;
 
-        public void ParallelOnCompleted(Action continuation)
+        public void ParallelOnCompleted<TStateMachine>(TStateMachine stateMachine)
+            where TStateMachine : IAsyncStateMachine
         {
             var context = ParallelContext.PopFrame();
 
             if (context.Id == 0)
             {
                 context.JoinBarrier.SignalAndWait();
-                continuation.Invoke();
+                stateMachine.MoveNext();
             }
             else
             {

@@ -110,38 +110,39 @@ Apple M1, 1 CPU, 8 logical and 8 physical cores
   DefaultJob : .NET 6.0.0 (6.0.21.52210), Arm64 RyuJIT AdvSIMD
 
 
-| Method               | ListLength | Mean         | Error       | StdDev      | Gen0   | Allocated |
-|--------------------- |----------- |-------------:|------------:|------------:|-------:|----------:|
-| ParallelForEach      | 10         |     2.950 us |   0.0403 us |   0.0377 us | 1.2245 |   2.44 KB |
-| AsParallel           | 10         |     7.630 us |   0.1086 us |   0.1292 us | 2.0447 |    4.1 KB |
-| AsParallelAsync      | 10         |     9.078 us |   0.1789 us |   0.4111 us | 2.4567 |   4.92 KB |
-| AsParallelAsync_Half | 10         |     6.390 us |   0.1092 us |   0.1022 us | 1.4267 |   2.86 KB |
-| ParallelForEach      | 100        |     3.773 us |   0.0384 us |   0.0340 us | 1.2283 |   2.47 KB |
-| AsParallel           | 100        |     8.142 us |   0.1563 us |   0.2087 us | 2.0447 |    4.1 KB |
-| AsParallelAsync      | 100        |     9.121 us |   0.1815 us |   0.2360 us | 2.4414 |   4.92 KB |
-| AsParallelAsync_Half | 100        |     6.996 us |   0.1387 us |   0.2570 us | 1.4267 |   2.86 KB |
-| ParallelForEach      | 1000       |    37.947 us |   0.3876 us |   0.3626 us | 1.5869 |   3.19 KB |
-| AsParallel           | 1000       |    13.437 us |   0.0598 us |   0.0560 us | 2.0447 |    4.1 KB |
-| AsParallelAsync      | 1000       |    11.846 us |   0.1941 us |   0.1816 us | 2.4414 |   4.92 KB |
-| AsParallelAsync_Half | 1000       |    10.661 us |   0.2129 us |   0.6210 us | 1.4191 |   2.86 KB |
-| ParallelForEach      | 10000      |   444.607 us |   4.2010 us |   3.7241 us | 1.4648 |   3.19 KB |
-| AsParallel           | 10000      |    74.922 us |   1.4898 us |   3.6546 us | 1.9531 |    4.1 KB |
-| AsParallelAsync      | 10000      |    27.398 us |   0.1729 us |   0.1533 us | 2.4414 |   4.92 KB |
-| AsParallelAsync_Half | 10000      |    36.252 us |   0.7237 us |   1.5578 us | 1.3428 |   2.86 KB |
-| ParallelForEach      | 20000      |   902.151 us |  11.4283 us |  10.6900 us | 0.9766 |   3.19 KB |
-| AsParallel           | 20000      |   140.733 us |   2.8119 us |   6.8975 us | 1.9531 |   4.13 KB |
-| AsParallelAsync      | 20000      |    44.644 us |   0.2000 us |   0.1871 us | 2.4414 |   4.92 KB |
-| AsParallelAsync_Half | 20000      |    58.170 us |   1.1419 us |   1.5631 us | 1.4038 |   2.87 KB |
-| ParallelForEach      | 40000      | 1,811.224 us |  24.7867 us |  23.1855 us |      - |   3.19 KB |
-| AsParallel           | 40000      |   253.070 us |   5.0297 us |  10.6094 us | 1.9531 |   4.15 KB |
-| AsParallelAsync      | 40000      |    78.508 us |   1.2894 us |   1.2664 us | 2.4414 |   4.92 KB |
-| AsParallelAsync_Half | 40000      |    99.632 us |   1.8452 us |   4.9251 us | 1.3428 |   2.89 KB |
-| ParallelForEach      | 80000      | 3,620.395 us |  71.5776 us |  66.9537 us |      - |   3.19 KB |
-| AsParallel           | 80000      |   444.914 us |   3.2883 us |   2.9150 us | 1.9531 |   4.15 KB |
-| AsParallelAsync      | 80000      |   139.536 us |   2.7340 us |   4.3364 us | 2.4414 |   4.95 KB |
-| AsParallelAsync_Half | 80000      |   184.999 us |   3.5679 us |   3.3374 us | 1.2207 |   2.91 KB |
-| ParallelForEach      | 160000     | 7,254.711 us | 139.7574 us | 149.5388 us |      - |    3.2 KB |
-| AsParallel           | 160000     |   858.118 us |   8.2812 us |   7.7463 us | 1.9531 |   4.15 KB |
-| AsParallelAsync      | 160000     |   295.875 us |   3.2879 us |   3.0755 us | 2.4414 |   4.98 KB |
-| AsParallelAsync_Half | 160000     |   449.229 us |   8.8799 us |  22.2779 us | 0.9766 |   2.92 KB |
+| Method               | ListLength | Mean         | Error       | StdDev     | Gen0   | Allocated |
+|--------------------- |----------- |-------------:|------------:|-----------:|-------:|----------:|
+| ParallelForEach      | 10         |     2.975 us |   0.0262 us |  0.0232 us | 1.2283 |   2.45 KB |
+| AsParallel           | 10         |     7.409 us |   0.1142 us |  0.1068 us | 2.0523 |    4.1 KB |
+| AsParallelAsync      | 10         |     8.318 us |   0.0985 us |  0.0922 us | 1.5564 |   3.13 KB |
+| AsParallelAsync_Half | 10         |     6.167 us |   0.1126 us |  0.0998 us | 0.9384 |   1.88 KB |
+| ParallelForEach      | 100        |     3.860 us |   0.0547 us |  0.0512 us | 1.2360 |   2.47 KB |
+| AsParallel           | 100        |     8.076 us |   0.1394 us |  0.1549 us | 2.0523 |    4.1 KB |
+| AsParallelAsync      | 100        |     8.874 us |   0.1742 us |  0.3519 us | 1.5564 |   3.13 KB |
+| AsParallelAsync_Half | 100        |     6.454 us |   0.1243 us |  0.1659 us | 0.9308 |   1.88 KB |
+| ParallelForEach      | 1000       |    37.351 us |   0.2001 us |  0.1774 us | 1.5869 |   3.18 KB |
+| AsParallel           | 1000       |    16.157 us |   0.3215 us |  0.5879 us | 2.0447 |    4.1 KB |
+| AsParallelAsync      | 1000       |    10.957 us |   0.1186 us |  0.1109 us | 1.5564 |   3.13 KB |
+| AsParallelAsync_Half | 1000       |     9.493 us |   0.1860 us |  0.2840 us | 0.9308 |   1.88 KB |
+| ParallelForEach      | 10000      |   444.658 us |   3.1277 us |  2.7726 us | 1.4648 |   3.19 KB |
+| AsParallel           | 10000      |    75.836 us |   1.5164 us |  4.1255 us | 1.9531 |    4.1 KB |
+| AsParallelAsync      | 10000      |    26.647 us |   0.1432 us |  0.1269 us | 1.5564 |   3.13 KB |
+| AsParallelAsync_Half | 10000      |    32.930 us |   0.0971 us |  0.0908 us | 0.9155 |   1.88 KB |
+| ParallelForEach      | 20000      |   893.693 us |   6.7343 us |  5.6235 us | 0.9766 |   3.19 KB |
+| AsParallel           | 20000      |   144.428 us |   2.8721 us |  7.5159 us | 1.9531 |   4.13 KB |
+| AsParallelAsync      | 20000      |    44.033 us |   0.2531 us |  0.2113 us | 1.5259 |   3.13 KB |
+| AsParallelAsync_Half | 20000      |    58.677 us |   1.1536 us |  1.3733 us | 0.9155 |   1.89 KB |
+| ParallelForEach      | 40000      | 1,810.709 us |  30.8795 us | 28.8847 us |      - |   3.19 KB |
+| AsParallel           | 40000      |   249.528 us |   4.4997 us |  3.5131 us | 1.9531 |   4.15 KB |
+| AsParallelAsync      | 40000      |    73.636 us |   1.4477 us |  1.7234 us | 1.4648 |   3.15 KB |
+| AsParallelAsync_Half | 40000      |    89.694 us |   1.7799 us |  3.1174 us | 0.8545 |   1.91 KB |
+| ParallelForEach      | 80000      | 3,585.120 us |  32.3490 us | 25.2560 us |      - |   3.19 KB |
+| AsParallel           | 80000      |   449.590 us |   3.0698 us |  2.7213 us | 1.9531 |   4.15 KB |
+| AsParallelAsync      | 80000      |   148.339 us |   4.2851 us | 12.5673 us | 1.4648 |   3.18 KB |
+| AsParallelAsync_Half | 80000      |   174.657 us |   2.0587 us |  1.8250 us | 0.7324 |   1.93 KB |
+| ParallelForEach      | 160000     | 7,326.779 us | 101.4336 us | 94.8810 us |      - |    3.2 KB |
+| AsParallel           | 160000     |   858.643 us |   8.1720 us |  7.6441 us | 1.9531 |   4.15 KB |
+| AsParallelAsync      | 160000     |   293.419 us |   3.9131 us |  3.6603 us | 1.4648 |    3.2 KB |
+| AsParallelAsync_Half | 160000     |   427.159 us |   8.5345 us | 24.7602 us | 0.4883 |   1.94 KB |
+
 */

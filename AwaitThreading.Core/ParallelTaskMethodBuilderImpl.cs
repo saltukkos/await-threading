@@ -8,18 +8,18 @@ namespace AwaitThreading.Core;
 
 public static class ParallelTaskMethodBuilderImpl
 {
-    public static void ParallelOnCompleted<TAwaiter, TStateMachine>(
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static void AwaitParallelOnCompleted<TAwaiter, TStateMachine>(
         ref TAwaiter parallelAwaiter,
         TStateMachine stateMachine)
         where TAwaiter : IParallelNotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
         // TODO: we probably want to restore ExecutionContext, but how to implement ParallelLazyAsyncEnumerator then?
-        var stateMachineLocal = MakeCopy(stateMachine);
-        parallelAwaiter.ParallelOnCompleted(() => { MakeCopy(stateMachineLocal).MoveNext(); });
+        parallelAwaiter.ParallelOnCompleted(stateMachine);
     }
 
-    public static void OnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, TStateMachine stateMachine)
+    public static void AwaitOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, TStateMachine stateMachine)
         where TAwaiter : INotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
@@ -33,13 +33,14 @@ public static class ParallelTaskMethodBuilderImpl
         {
             awaiter.OnCompleted(() =>
             {
-                ExecutionContext.Restore(executionContext);
-                MakeCopy(stateMachine).MoveNext();
+                ExecutionContext.Restore(executionContext); //TODO: custom closure class instead of lambda
+                stateMachine.MoveNext();
             });
         }
     }
 
-    public static void UnsafeOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, TStateMachine stateMachine)
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, TStateMachine stateMachine)
         where TAwaiter : ICriticalNotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
@@ -54,21 +55,8 @@ public static class ParallelTaskMethodBuilderImpl
             awaiter.UnsafeOnCompleted(() =>
             {
                 ExecutionContext.Restore(executionContext);
-                MakeCopy(stateMachine).MoveNext();
+                stateMachine.MoveNext();
             });
         }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static TStateMachine MakeCopy<TStateMachine>(TStateMachine stateMachine)
-        where TStateMachine : IAsyncStateMachine
-    {
-        if (typeof(TStateMachine).IsValueType)
-        {
-            // in release mode this method sould be inlined with no copy overhead at all
-            return stateMachine;
-        }
-
-        return (TStateMachine) stateMachine.Copy();
     }
 }

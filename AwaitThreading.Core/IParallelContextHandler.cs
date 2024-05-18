@@ -2,11 +2,14 @@
 // Copyright (c) 2023 Saltuk Konstantin
 // See the LICENSE file in the project root for more information.
 
+using System.Runtime.CompilerServices;
+
 namespace AwaitThreading.Core;
 
 public interface IParallelNotifyCompletion
 {
-    void ParallelOnCompleted(Action continuation);
+    void ParallelOnCompleted<TStateMachine>(TStateMachine stateMachine)
+        where TStateMachine : IAsyncStateMachine;
 
     // Sometimes we need continuation to be set in 'ParallelTask' before  '.SetResult()' invocation.
     // It's crucial to not have race conditions. Consider the next example:

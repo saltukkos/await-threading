@@ -21,45 +21,20 @@ public sealed class ForkingTask
 
         public bool RequireContinuationToBeSetBeforeResult => true;
 
-        private class ActionClosure
+        public void ParallelOnCompleted<TStateMachine>(TStateMachine stateMachine)
+            where TStateMachine : IAsyncStateMachine
         {
-            public ExecutionContext? ExecutionContext;
-            public ParallelFrame ParallelFrame;
-            public Action Continuation;
-        }
-        
-        public void ParallelOnCompleted(Action continuation)
-        {
-            var threadsCount = _threadsCount;
-            var currentContext = ExecutionContext.Capture();
-            var barrier = new SingleWaiterBarrier(threadsCount);
+            var forkingClosure = new ForkingClosure<TStateMachine>(stateMachine, _threadsCount);
 
-            for (var i = 0; i < threadsCount; ++i)
+            for (var i = 0; i < _threadsCount; ++i)
             {
-                var actionClosure = new ActionClosure
-                {
-                    ExecutionContext = currentContext,
-                    ParallelFrame = new ParallelFrame(i, threadsCount, barrier),
-                    Continuation = continuation,
-                };
-                
                 Logger.Log("Scheduling task " + i);
                 Task.Factory.StartNew(
                     static args =>
                     {
-                        Logger.Log("Task started");
-
-                        var parameters = (ActionClosure)args!;
-                        var executionContext = parameters.ExecutionContext;
-                        if (executionContext is not null)
-                        {
-                            ExecutionContext.Restore(executionContext);
-                        }
-
-                        ParallelContext.PushFrame(parameters.ParallelFrame);
-                        parameters.Continuation.Invoke();
+                        ((ForkingClosure<TStateMachine>)args!).StartNewThread();
                     },
-                    actionClosure,
+                    forkingClosure,
                     CancellationToken.None,
                     TaskCreationOptions.DenyChildAttach | TaskCreationOptions.RunContinuationsAsynchronously,
                     TaskScheduler.Default);
@@ -92,4 +67,32 @@ public sealed class ForkingTask
     }
 
     public ForkingAwaiter GetAwaiter() => _awaiter;
+}
+
+public class ForkingClosure<TStateMachine>
+    where TStateMachine : IAsyncStateMachine
+{
+    private readonly TStateMachine _stateMachine;
+    private readonly ExecutionContext? _executionContext;
+    private readonly SingleWaiterBarrier _barrier;
+    private int _myThreadId = -1;
+
+    public ForkingClosure(TStateMachine stateMachine, int threadsCount)
+    {
+        _executionContext = ExecutionContext.Capture();
+        _stateMachine = stateMachine.MakeCopy();
+        _barrier = new SingleWaiterBarrier(threadsCount);
+    }
+
+    public void StartNewThread()
+    {
+        if (_executionContext is not null)
+        {
+            ExecutionContext.Restore(_executionContext);
+        }
+
+        ParallelContext.PushFrame(new ParallelFrame(Interlocked.Increment(ref _myThreadId), _barrier.Count, _barrier));
+        Logger.Log("Task started");
+        _stateMachine.MakeCopy().MoveNext();
+    }
 }

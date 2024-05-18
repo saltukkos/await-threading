@@ -3,38 +3,9 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.ExceptionServices;
+using System.Runtime.CompilerServices;
 
 namespace AwaitThreading.Core;
-
-public readonly struct ParallelTaskResult<T>
-{
-    public ParallelTaskResult(T result)
-    {
-        Result = result;
-        ExceptionDispatchInfo = null;
-    }
-
-    public ParallelTaskResult(ExceptionDispatchInfo exceptionDispatchInfo)
-    {
-        ExceptionDispatchInfo = exceptionDispatchInfo;
-        Result = default;
-    }
-
-    [MemberNotNullWhen(true, nameof(Result))]
-    [MemberNotNullWhen(false, nameof(ExceptionDispatchInfo))]
-    public bool HasResult => ExceptionDispatchInfo is null;
-
-    public readonly T? Result;
-
-    public readonly ExceptionDispatchInfo? ExceptionDispatchInfo;
-}
-
-internal static class ParallelTaskStaticData
-{
-    public static readonly Action TaskFinishedFlag = () => { };
-}
 
 internal sealed class ParallelTaskImpl<T>
 {
@@ -43,7 +14,7 @@ internal sealed class ParallelTaskImpl<T>
 
     private ParallelTaskResult<T>? _syncResult;
 
-    private volatile Action? _continuation;
+    private volatile IContinuationInvoker? _continuation;
 
     /// <summary>
     /// Indicates whether task requires SetContinuation call before SetResult happens.
@@ -58,10 +29,10 @@ internal sealed class ParallelTaskImpl<T>
         {
             _syncResult = result;
 
-            var oldValue = Interlocked.CompareExchange(ref _continuation, ParallelTaskStaticData.TaskFinishedFlag, null);
+            var oldValue = Interlocked.CompareExchange(ref _continuation, TaskFinishedMarker.Instance, null);
             if (oldValue != null)
             {
-                Debug.Assert(oldValue != ParallelTaskStaticData.TaskFinishedFlag);
+                Debug.Assert(!ReferenceEquals(oldValue, TaskFinishedMarker.Instance));
                 oldValue.Invoke();
             }
             
@@ -72,20 +43,16 @@ internal sealed class ParallelTaskImpl<T>
 
         // special control flow: we need continuation to be already set. If no, we will wait until it's done
         var continuation = _continuation;
-        if (continuation != null)
+        if (continuation == null)
         {
-            continuation.Invoke();
-            return;
+            var spinWait = new SpinWait();
+            do
+            {
+                spinWait.SpinOnce();
+                continuation = _continuation;
+            } while (continuation is null);
         }
 
-        var spinWait = new SpinWait();
-        do
-        {
-            spinWait.SpinOnce();
-            continuation = _continuation;
-        }
-        while (continuation is null);
-        
         continuation.Invoke();
     }
 
@@ -111,45 +78,65 @@ internal sealed class ParallelTaskImpl<T>
 
     public bool IsCompleted => !RequireContinuationToBeSetBeforeResult && _syncResult.HasValue;
 
-    public void ParallelOnCompleted(Action continuation)
+    public void ParallelOnCompleted<TStateMachine>(TStateMachine stateMachine) 
+        where TStateMachine : IAsyncStateMachine
     {
-        if (RequireContinuationToBeSetBeforeResult)
-        {
-            _continuation = continuation;
-            return;
-        }
-
-        var oldContinuation = Interlocked.CompareExchange(ref _continuation, continuation, null);
-        if (oldContinuation == null)
-        {
-            return;
-        }
-
-        Debug.Assert(oldContinuation == ParallelTaskStaticData.TaskFinishedFlag);
-        continuation.Invoke();
+        OnCompletedInternal(new ParallelContinuationInvoker<TStateMachine>(stateMachine));
     }
 
     public void OnCompleted(Action continuation)
     {
-        var currentFrameBeforeAwait = ParallelContext.GetCurrentFrameSafe();
-        ParallelOnCompleted(() =>
-        {
-            var currentFrameAfterAwait = ParallelContext.GetCurrentFrameSafe();
-            if (currentFrameAfterAwait?.ForkIdentity != currentFrameBeforeAwait?.ForkIdentity)
-            {
-                //note: there is no other way for us to be here, only after parallel operations
-                Debug.Assert(RequireContinuationToBeSetBeforeResult);
-
-                _parallelResult = new ParallelTaskResult<T>(Assertion.BadAwaitExceptionDispatchInfo);
-            }
-
-            continuation.Invoke();
-        });
+        OnCompletedInternal(new RegularContinuationInvoker(continuation));
     }
 
     public void UnsafeOnCompleted(Action continuation)
     {
         // TODO: do we need a proper implementation?
         OnCompleted(continuation);
+    }
+
+    private void OnCompletedInternal(IContinuationInvoker continuationInvoker)
+    {
+        if (RequireContinuationToBeSetBeforeResult)
+        {
+            // in this control flow continuation should be set before 'SetResult' finishes. So, another thread could
+            // wait for this continuation while spinning in 'SetResult', we only write to the volatile field.
+            _continuation = continuationInvoker;
+            return;
+        }
+        
+        var oldContinuation = Interlocked.CompareExchange(ref _continuation, continuationInvoker, null);
+        if (oldContinuation == null)
+        {
+            return;
+        }
+
+        Debug.Assert(ReferenceEquals(oldContinuation, TaskFinishedMarker.Instance));
+        continuationInvoker.Invoke();
+    }
+
+    private sealed class RegularContinuationInvoker : IContinuationInvoker
+    {
+        private readonly Action _action;
+        private readonly ParallelFrame? _frameBeforeAwait;
+        public RegularContinuationInvoker(Action action)
+        {
+            _frameBeforeAwait = ParallelContext.GetCurrentFrameSafe();
+            _action = action;
+        }
+
+        public void Invoke()
+        {
+            var currentFrameAfterAwait = ParallelContext.GetCurrentFrameSafe();
+            if (currentFrameAfterAwait?.ForkIdentity != _frameBeforeAwait?.ForkIdentity)
+            {
+                // note: we can be here only after parallel operations,
+                // so RequireContinuationToBeSetBeforeResult is true, and we can use the `_parallelResult`
+
+                _parallelResult = new ParallelTaskResult<T>(Assertion.BadAwaitExceptionDispatchInfo);
+            }
+
+            _action.Invoke();
+        }
     }
 }

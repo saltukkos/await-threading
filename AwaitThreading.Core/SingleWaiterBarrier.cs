@@ -6,29 +6,29 @@ namespace AwaitThreading.Core;
 
 public sealed class SingleWaiterBarrier
 {
-    private int _count; 
+    internal int Count; 
 
     public SingleWaiterBarrier(int count)
     {
-        _count = count;
+        Count = count;
     }
 
     public bool Finish()
     {
-        return Interlocked.Decrement(ref _count) == 0;
+        return Interlocked.Decrement(ref Count) == 0;
     }
     
     public void Signal()
     {
         lock (this)
         {
-            _count--;
-            if (_count < 0)
+            Count--;
+            if (Count < 0)
             {
                 throw new InvalidOperationException("Too many threads signaled");
             }
 
-            if (_count == 0)
+            if (Count == 0)
             {
                 Monitor.Pulse(this);
             }
@@ -39,13 +39,13 @@ public sealed class SingleWaiterBarrier
     {
         lock (this)
         {
-            _count--;
-            if (_count < 0)
+            Count--;
+            if (Count < 0)
             {
                 throw new InvalidOperationException("Too many threads signaled");
             }
 
-            while (_count != 0)
+            while (Count != 0)
             {
                 Monitor.Wait(this);
             }

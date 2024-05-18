@@ -72,7 +72,7 @@ public readonly struct ParallelContext
         return poppedFrame;
     }
 
-    public static string GetCurrentContexts()
+    internal static string GetCurrentContexts()
     {
         var stack = CurrentThreadContext.Value._stack;
         if (stack is null)
