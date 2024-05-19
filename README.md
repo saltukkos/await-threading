@@ -25,7 +25,7 @@ async ParallelTask NormalForkAndJoin(int threadsCount)
 
     await new ForkingTask(threadsCount);
     var id = ParallelContext.GetCurrentFrame().Id;
-    Console.Out.WriteLine($"Hello world from {id}");
+    Console.Out.WriteLine($"Hello world from {id}"); //executed on two different threads
 
     await new JoiningTask();
     Console.Out.WriteLine("After join: single thread");
@@ -72,6 +72,7 @@ async ParallelTask AsParallelAsync()
     var list = Enumerable.Range(1, 10).ToList();
     await foreach (var item in await list.AsParallelAsync(3))
     {
+        // foreach body is executed across three separate threads
         Console.Out.WriteLine($"Processing element {item}");
         await Task.Delay(10); //simulate some workload
     }
@@ -82,6 +83,7 @@ async ParallelTask AsParallel()
     var list = Enumerable.Range(1, 10).ToList();
     await foreach (var item in list.AsParallel(3))
     {
+        // foreach body is executed across three separate threads
         Console.Out.WriteLine($"Processing element {item}");
         await Task.Delay(10); //simulate some workload
     }
@@ -92,5 +94,7 @@ async ParallelTask AsParallel()
 Project is in development state and not production-ready yet.
 
 TODO list of critical items:
-- Exceptions handling (probably should aggregate all exceptions inside `JoinTask`)
 - API is not finalized and provides data to some internal structures (like `ParallelContext`)
+
+## Known limitations
+- Exceptions are not propagated from parallel foreach body (compiler-generated state machine saves the exception to a field and rethrows this after `DisposeAsync()`, so there is no way to retrieve this exception for now)
