@@ -8,7 +8,7 @@ namespace AwaitThreading.Enumerable;
 
 public static class ListExtensions
 {
-    public static async ParallelTask<ParallelAsyncEnumerable<T>> AsParallelAsync<T>(this List<T> list, int threadsCount)
+    public static async ParallelTask<ChunkEnumerable<T>> AsParallelAsync<T>(this List<T> list, int threadsCount)
     {
         var chunkSize = (list.Count + threadsCount - 1) / threadsCount;
         await new ForkingTask(threadsCount);
@@ -21,7 +21,7 @@ public static class ListExtensions
             end = list.Count;
         }
 
-        return new ParallelAsyncEnumerable<T>(list, start, end);
+        return new ChunkEnumerable<T>(list, start, end);
     }
     
     public static ParallelLazyAsyncEnumerable<T> AsParallel<T>(this List<T> list, int threadsCount)
