@@ -6,10 +6,53 @@ using System.Runtime.CompilerServices;
 
 namespace AwaitThreading.Core;
 
-public static class ParallelTaskMethodBuilderImpl
+internal static class ParallelTaskMethodBuilderImpl
 {
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void AwaitParallelOnCompleted<TAwaiter, TStateMachine>(
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void AwaitOnCompleted<TAwaiter, TStateMachine, TResult>(
+        ref TAwaiter awaiter, ref TStateMachine stateMachine, ref ParallelTaskImpl<TResult>? taskImpl)
+        where TAwaiter : INotifyCompletion
+        where TStateMachine : IAsyncStateMachine
+    {
+        if (awaiter is IParallelNotifyCompletion parallelAwaiter)
+        {
+            if (parallelAwaiter.RequireContinuationToBeSetBeforeResult)
+            {
+                taskImpl ??= new ParallelTaskImpl<TResult>();
+                taskImpl.RequireContinuationToBeSetBeforeResult = true;
+            }
+
+            AwaitParallelOnCompletedInternal(ref parallelAwaiter, stateMachine);
+        }
+        else
+        {
+            AwaitOnCompletedInternal(ref awaiter, stateMachine);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine, TResult>(
+        ref TAwaiter awaiter, ref TStateMachine stateMachine, ref ParallelTaskImpl<TResult>? taskImpl)
+        where TAwaiter : ICriticalNotifyCompletion
+        where TStateMachine : IAsyncStateMachine
+    {
+        if (awaiter is IParallelNotifyCompletion parallelAwaiter)
+        {
+            if (parallelAwaiter.RequireContinuationToBeSetBeforeResult)
+            {
+                taskImpl ??= new ParallelTaskImpl<TResult>();
+                taskImpl.RequireContinuationToBeSetBeforeResult = true;
+            }
+
+            AwaitParallelOnCompletedInternal(ref parallelAwaiter, stateMachine);
+        }
+        else
+        {
+            AwaitUnsafeOnCompletedInternal(ref awaiter, stateMachine);
+        }
+    }
+
+    private static void AwaitParallelOnCompletedInternal<TAwaiter, TStateMachine>(
         ref TAwaiter parallelAwaiter,
         TStateMachine stateMachine)
         where TAwaiter : IParallelNotifyCompletion
@@ -19,7 +62,7 @@ public static class ParallelTaskMethodBuilderImpl
         parallelAwaiter.ParallelOnCompleted(stateMachine);
     }
 
-    public static void AwaitOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, TStateMachine stateMachine)
+    private static void AwaitOnCompletedInternal<TAwaiter, TStateMachine>(ref TAwaiter awaiter, TStateMachine stateMachine)
         where TAwaiter : INotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
@@ -40,7 +83,7 @@ public static class ParallelTaskMethodBuilderImpl
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, TStateMachine stateMachine)
+    private static void AwaitUnsafeOnCompletedInternal<TAwaiter, TStateMachine>(ref TAwaiter awaiter, TStateMachine stateMachine)
         where TAwaiter : ICriticalNotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {

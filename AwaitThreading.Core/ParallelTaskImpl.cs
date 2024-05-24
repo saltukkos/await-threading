@@ -86,7 +86,7 @@ internal sealed class ParallelTaskImpl<T>
 
     public void OnCompleted(Action continuation)
     {
-        OnCompletedInternal(new RegularContinuationInvoker(continuation));
+        OnCompletedInternal(new RegularContinuationInvokerWithFrameProtection(continuation));
     }
 
     public void UnsafeOnCompleted(Action continuation)
@@ -115,11 +115,11 @@ internal sealed class ParallelTaskImpl<T>
         continuationInvoker.Invoke();
     }
 
-    private sealed class RegularContinuationInvoker : IContinuationInvoker
+    private sealed class RegularContinuationInvokerWithFrameProtection : IContinuationInvoker
     {
         private readonly Action _action;
         private readonly ParallelFrame? _frameBeforeAwait;
-        public RegularContinuationInvoker(Action action)
+        public RegularContinuationInvokerWithFrameProtection(Action action)
         {
             _frameBeforeAwait = ParallelContext.GetCurrentFrameSafe();
             _action = action;

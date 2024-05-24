@@ -34,17 +34,8 @@ public readonly struct ParallelTaskMethodBuilder
         where TAwaiter : INotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
-        if (awaiter is IParallelNotifyCompletion parallelAwaiter)
-        {
-            if (parallelAwaiter.RequireContinuationToBeSetBeforeResult)
-                Task.MarkAsRequireContinuationToBeSetBeforeResult();
-
-            ParallelTaskMethodBuilderImpl.AwaitParallelOnCompleted(ref parallelAwaiter, stateMachine);
-        }
-        else
-        {
-            ParallelTaskMethodBuilderImpl.AwaitOnCompleted(ref awaiter, stateMachine);
-        }
+        var parallelTaskImpl = Task.Implementation;
+        ParallelTaskMethodBuilderImpl.AwaitOnCompleted(ref awaiter, ref stateMachine, ref parallelTaskImpl);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -52,17 +43,8 @@ public readonly struct ParallelTaskMethodBuilder
         where TAwaiter : ICriticalNotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
-        if (awaiter is IParallelNotifyCompletion parallelAwaiter)
-        {
-            if (parallelAwaiter.RequireContinuationToBeSetBeforeResult)
-                Task.MarkAsRequireContinuationToBeSetBeforeResult();
-
-            ParallelTaskMethodBuilderImpl.AwaitParallelOnCompleted(ref parallelAwaiter, stateMachine);
-        }
-        else
-        {
-            ParallelTaskMethodBuilderImpl.AwaitUnsafeOnCompleted(ref awaiter, stateMachine);
-        }
+        var parallelTaskImpl = Task.Implementation;
+        ParallelTaskMethodBuilderImpl.AwaitUnsafeOnCompleted(ref awaiter, ref stateMachine, ref parallelTaskImpl);
     }
 
     public void SetResult() => Task.SetResult();
