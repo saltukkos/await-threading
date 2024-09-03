@@ -11,7 +11,8 @@ public readonly struct ParallelLazyAsyncEnumerator<T>
 {
     private readonly List<T> _list;
     private readonly int _threadsCount;
-    
+
+    //TODO: this implementation is not fully correct and relies on the fact that ExecutionContext is not restored for IParallelNotifyCompletion awaits. Use ParallelLocal or static dictionary + make enumerator a class 
     // In ideal world we would be able to store enumerator for our chunk in struct field,
     // but any changes to the state of this struct will be lost since async methods are
     // executed on the copy of a struct, so we have to store the data somewhere else.
@@ -23,11 +24,11 @@ public readonly struct ParallelLazyAsyncEnumerator<T>
         _list = list;
     }
 
+    // TODO: resurrect ParallelValueTask to reduce allocations and have good performance here
     public async ParallelTask<bool> MoveNextAsync()
     {
         if (_chunkEnumerator.Value is { } chunkEnumerator)
         {
-            //TODO: allocation every time is expensive, optimize fastpath. Introduce smth like valueTask
             return chunkEnumerator.MoveNext();
         }
 
@@ -42,7 +43,6 @@ public readonly struct ParallelLazyAsyncEnumerator<T>
             end = _list.Count;
         }
 
-        // ReSharper disable once NotDisposedResource TODO: can't we track it?
         var enumerator = _list.Skip(start).Take(end - start).GetEnumerator();
         _chunkEnumerator.Value = enumerator;
         
@@ -63,7 +63,7 @@ public readonly struct ParallelLazyAsyncEnumerator<T>
         }
     }
 
-    [UsedImplicitly] //TODO: R# bug?
+    [UsedImplicitly] //TODO: detect in usage analysis
     public async ParallelTask DisposeAsync()
     {
         _chunkEnumerator.Value?.Dispose();

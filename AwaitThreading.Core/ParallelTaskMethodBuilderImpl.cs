@@ -15,7 +15,7 @@ public static class ParallelTaskMethodBuilderImpl
         where TAwaiter : IParallelNotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
-        // TODO: we probably want to restore ExecutionContext, but how to implement ParallelLazyAsyncEnumerator then?
+        // TODO: we need to restore ExecutionContext and reimplement ParallelLazyAsyncEnumerator
         parallelAwaiter.ParallelOnCompleted(stateMachine);
     }
 

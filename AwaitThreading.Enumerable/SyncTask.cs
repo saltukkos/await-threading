@@ -6,6 +6,9 @@ using System.Runtime.CompilerServices;
 
 namespace AwaitThreading.Enumerable;
 
+/// <summary>
+/// Even more optimized version of ValueTask that supports only sync returns. Should be free in terms of overhead after inlining
+/// </summary>
 public readonly struct SyncTask<T> : INotifyCompletion
 {
     private readonly T _result;
