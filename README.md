@@ -95,6 +95,7 @@ Project is in development state and not production-ready yet.
 
 TODO list of critical items:
 - API is not finalized and provides data to some internal structures (like `ParallelContext`)
+- ExecutionContext is not always restored when it has to
 
 ## Known limitations
 - Exceptions are not propagated from parallel foreach body (compiler-generated state machine saves the exception to a field and rethrows this after `DisposeAsync()`, so there is no way to retrieve this exception for now)

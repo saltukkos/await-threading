@@ -7,13 +7,13 @@ using JetBrains.Annotations;
 
 namespace AwaitThreading.Enumerable;
 
-public struct ParallelAsyncEnumerator<T>
+public struct ChunkEnumerator<T>
 {
     private readonly List<T> _list;
     private readonly int _maxIndex;
     private int _currentIndex;
 
-    public ParallelAsyncEnumerator(List<T> list, int startIndex, int endIndex)
+    public ChunkEnumerator(List<T> list, int startIndex, int endIndex)
     {
         _list = list;
         _maxIndex = endIndex - 1;

@@ -59,6 +59,53 @@ public class ListExtensionsTest
             CollectionAssert.AreEquivalent(list, result);
         }
     }
+    
+    [Test]
+    public async Task AsParallelLazyAsync_WithOneThread_IteratesOverAllElementsInNaturalOrder()
+    {
+        await TestBody();
+        return;
+
+        async ParallelTask TestBody()
+        {
+            var list = System.Linq.Enumerable.Range(0, 10).ToList();
+            var result = new List<int>();
+            await foreach (var i in list.AsParallel(1))
+            {
+                result.Add(i);
+            }
+
+            CollectionAssert.AreEquivalent(list, result);
+        }
+    }
+
+    [TestCase(10, 2)]
+    [TestCase(10, 3)]
+    [TestCase(100, 2)]
+    [TestCase(100, 3)]
+    [TestCase(100, 4)]
+    [TestCase(100, 5)]
+    [TestCase(1, 2)]
+    [TestCase(0, 2)]
+    public async Task AsParallelLazyAsync_WithDifferentThreadCount_IteratesOverAllElementsOnce(
+        int itemsCount,
+        int threadsCount)
+    {
+        await TestBody();
+        return;
+
+        async ParallelTask TestBody()
+        {
+            var list = System.Linq.Enumerable.Range(0, itemsCount).ToList();
+            var result = new ConcurrentBag<int>();
+            await foreach (var i in list.AsParallel(threadsCount))
+            {
+                result.Add(i);
+            }
+
+            CollectionAssert.AreEquivalent(list, result);
+        }
+    }
 
     // [Test]
     // public void AsParallelAsync_WithZeroThreads_ThrowsException()

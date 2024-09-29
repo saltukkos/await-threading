@@ -10,21 +10,16 @@ namespace AwaitThreading.Core;
 [AsyncMethodBuilder(typeof(ParallelTaskMethodBuilder<>))]
 public readonly struct ParallelTask<T>
 {
-    private readonly ParallelTaskImpl<T> _implementation;
+    internal readonly ParallelTaskImpl<T> Implementation;
 
     public ParallelTask()
     {
-        _implementation = new ParallelTaskImpl<T>();
+        Implementation = new ParallelTaskImpl<T>();
     }
 
-    internal void MarkAsRequireContinuationToBeSetBeforeResult()
-    {
-        _implementation.RequireContinuationToBeSetBeforeResult = true;
-    }
-
-    internal void SetResult(T result) => _implementation.SetResult(new ParallelTaskResult<T>(result));
+    internal void SetResult(T result) => Implementation.SetResult(new ParallelTaskResult<T>(result));
     internal void SetException(Exception e) =>
-        _implementation.SetResult(new ParallelTaskResult<T>(ExceptionDispatchInfo.Capture(e)));
+        Implementation.SetResult(new ParallelTaskResult<T>(ExceptionDispatchInfo.Capture(e)));
 
-    public ParallelTaskAwaiter<T> GetAwaiter() => new(_implementation);
+    public ParallelTaskAwaiter<T> GetAwaiter() => new(Implementation);
 }

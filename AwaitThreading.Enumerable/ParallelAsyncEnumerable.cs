@@ -4,21 +4,21 @@
 
 namespace AwaitThreading.Enumerable;
 
-public readonly struct ParallelAsyncEnumerable<T>
+public readonly struct ChunkEnumerable<T>
 {
     private readonly List<T> _list;
     private readonly int _start;
     private readonly int _end;
 
-    public ParallelAsyncEnumerable(List<T> list, int start, int end)
+    public ChunkEnumerable(List<T> list, int start, int end)
     {
         _list = list;
         _start = start;
         _end = end;
     }
     
-    public ParallelAsyncEnumerator<T> GetAsyncEnumerator()
+    public ChunkEnumerator<T> GetAsyncEnumerator()
     {
-        return new ParallelAsyncEnumerator<T>(_list, _start, _end);
+        return new ChunkEnumerator<T>(_list, _start, _end);
     }
 }
