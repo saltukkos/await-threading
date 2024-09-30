@@ -12,8 +12,7 @@ public static class ListExtensions
     {
         var chunkSize = (list.Count + threadsCount - 1) / threadsCount;
         await new ForkingTask(threadsCount);
-        var context = ParallelContext.GetCurrentFrame();
-        var id = context.Id;
+        var id = ParallelContext.Id;
         var start = chunkSize * id;
         var end = chunkSize * (id + 1);
         if (end > list.Count)

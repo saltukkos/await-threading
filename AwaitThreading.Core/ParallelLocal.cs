@@ -17,7 +17,7 @@ namespace AwaitThreading.Core;
 /// </remarks>
 public sealed class ParallelLocal<T> //TODO: it can be a mutable struct, can't it?
 {
-    private T[]? _slots;
+    private T?[]? _slots;
 
     [MustUseReturnValue]
     public ForkingTask InitializeAndFork(int threadsCount)
@@ -29,24 +29,17 @@ public sealed class ParallelLocal<T> //TODO: it can be a mutable struct, can't i
         return new ForkingTask(threadsCount);
     }
 
-    [MaybeNull]
-    public T Value
+    public bool IsInitialized => _slots is not null;
+
+    public ref T? Value
     {
         get
         {
             if (_slots is null)
-                return default;
-
-            var id = ParallelContext.GetCurrentFrame().Id;
-            return _slots[id];
-        }
-        set
-        {
-            if (_slots is null)
                 Assertion.ThrowInvalidParallelLocalUsage();
 
-            var id = ParallelContext.GetCurrentFrame().Id;
-            _slots[id] = value;
+            var id = ParallelContext.Id;
+            return ref _slots[id];
         }
     }
 }

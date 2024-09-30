@@ -128,7 +128,7 @@ public class CoreOperationsTests
         {
             var sharedArray = new int[2];
             await new ForkingTask(2);
-            sharedArray[ParallelContext.GetCurrentFrame().Id] = 1;
+            sharedArray[ParallelContext.Id] = 1;
             await new JoiningTask();
             return sharedArray;
         }
@@ -146,7 +146,7 @@ public class CoreOperationsTests
             var sharedArray = new object[2];
             await new ForkingTask(2);
             var localObject = new object();
-            sharedArray[ParallelContext.GetCurrentFrame().Id] = localObject;
+            sharedArray[ParallelContext.Id] = localObject;
             await new JoiningTask();
             return sharedArray;
         }
@@ -164,7 +164,7 @@ public class CoreOperationsTests
             var sharedArray = new object[2];
             await new ForkingTask(2);
             var localObject = new object();
-            sharedArray[ParallelContext.GetCurrentFrame().Id] = localObject;
+            sharedArray[ParallelContext.Id] = localObject;
             await new TargetedJoiningTask();
             return (sharedArray, localObject);
         }
@@ -186,7 +186,7 @@ public class CoreOperationsTests
 
             await new ForkingTask(2);
             var incrementedValue = Interlocked.Increment(ref sharedInt);
-            sharedArray[ParallelContext.GetCurrentFrame().Id] = incrementedValue;
+            sharedArray[ParallelContext.Id] = incrementedValue;
             await new JoiningTask();
             
             return (sharedArray, sharedInt);

@@ -28,12 +28,29 @@ public readonly struct ParallelContext
 
     private static readonly AsyncLocal<ParallelContext> CurrentThreadContext = new();
 
+    [ThreadStatic]
+    private static int _cachedId; // note: stores ID + 1. 0 means no Id is set  
+
     private ParallelContext(ImmutableStack<ParallelFrame> stack)
     {
         _stack = stack;
     }
 
-    public static ParallelFrame GetCurrentFrame()
+    public static int Id
+    {
+        get
+        {
+            var cachedId = _cachedId;
+            if (cachedId > 0)
+                return cachedId - 1;
+
+            var id = GetCurrentFrame().Id;
+            _cachedId = id + 1;
+            return id;
+        }
+    }
+
+    private static ParallelFrame GetCurrentFrame()
     {
         var currentContextStack = CurrentThreadContext.Value._stack;
         if (currentContextStack is null)
@@ -58,6 +75,7 @@ public readonly struct ParallelContext
         var currentContext = CurrentThreadContext.Value;
         var newStack = (currentContext._stack ?? ImmutableStack<ParallelFrame>.Empty).Push(frame);
         CurrentThreadContext.Value = new ParallelContext(newStack);
+        _cachedId = frame.Id + 1;
     }
 
     public static ParallelFrame PopFrame()
@@ -69,7 +87,13 @@ public readonly struct ParallelContext
 
         var newStack = currentContextStack.Pop(out var poppedFrame);
         CurrentThreadContext.Value = new ParallelContext(newStack);
+        ClearCachedId();
         return poppedFrame;
+    }
+
+    internal static void ClearCachedId()
+    {
+        _cachedId = 0;
     }
 
     internal static string GetCurrentContexts()

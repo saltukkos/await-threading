@@ -102,7 +102,7 @@ public class ParallelTaskMethodBuilderTests
         async ParallelTask<int> ForkAndGetResult()
         {
             await new ForkingTask(2);
-            return ParallelContext.GetCurrentFrame().Id == 0 ? 1 : 2;
+            return ParallelContext.Id == 0 ? 1 : 2;
         }
     }
 
