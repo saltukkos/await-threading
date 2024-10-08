@@ -9,29 +9,28 @@ namespace AwaitThreading.Enumerable;
 
 public readonly struct ParallelLazyAsyncEnumerator<T>
 {
-    private struct ChunkIndexer
+    private class ChunkIndexer
     {
-        private readonly int _maxIndex;
-        private int _currentIndex;
+        private RangeWorker _rangeWorker;
+        private int _fromInclusive;
+        private int _toExclusive;
 
-        public ChunkIndexer(int startIndex, int endIndex)
+        public ChunkIndexer(RangeWorker rangeWorker)
         {
-            _currentIndex = startIndex - 1;
-            _maxIndex = endIndex - 1;
+            _rangeWorker = rangeWorker;
         }
 
         public bool MoveNext()
         {
-            if (_currentIndex >= _maxIndex)
+            if (_fromInclusive++ >= _toExclusive - 1)
             {
-                return false;
+                return _rangeWorker.FindNewWork(out _fromInclusive, out _toExclusive);
             }
             
-            _currentIndex++;
             return true;
         }
 
-        public T GetItem(List<T> list) => list[_currentIndex];
+        public T GetItem(List<T> list) => list[_fromInclusive];
     }
     
     private readonly List<T> _list;
@@ -52,7 +51,12 @@ public readonly struct ParallelLazyAsyncEnumerator<T>
     {
         if (_chunkIndexer.IsInitialized)
         {
-            return ParallelValueTask.FromResult(_chunkIndexer.Value.MoveNext());
+            return ParallelValueTask.FromResult(_chunkIndexer.Value!.MoveNext());
+        }
+
+        if (_list.Count == 0)
+        {
+            return ParallelValueTask.FromResult(false);
         }
 
         return ForkAndMoveNextAsync();
@@ -60,25 +64,22 @@ public readonly struct ParallelLazyAsyncEnumerator<T>
 
     private async ParallelValueTask<bool> ForkAndMoveNextAsync()
     {
+        var rangeManager = new RangeManager(0, _list.Count, 1, _threadsCount);
         await _chunkIndexer.InitializeAndFork(_threadsCount);
-        var id = ParallelContext.Id;
-
-        var count = _list.Count;
-        var chunkSize = (count + _threadsCount - 1) / _threadsCount;
-        var start = chunkSize * id;
-        var end = Math.Min(chunkSize * (id + 1), count);
-
-        var indexer = new ChunkIndexer(start, end);
-        var returnResul = indexer.MoveNext();
+        var indexer = new ChunkIndexer(rangeManager.RegisterNewWorker());
+        var returnResult = indexer.MoveNext();
         _chunkIndexer.Value = indexer;
-        return returnResul;
+        return returnResult;
     }
 
-    public T Current => _chunkIndexer.Value.GetItem(_list);
+    public T Current => _chunkIndexer.Value!.GetItem(_list);
 
     [UsedImplicitly] //TODO: detect in usage analysis
     public async ParallelTask DisposeAsync()
     {
-        await new JoiningTask();
+        if (_chunkIndexer.IsInitialized)
+        {
+            await new JoiningTask();
+        }
     }
 }

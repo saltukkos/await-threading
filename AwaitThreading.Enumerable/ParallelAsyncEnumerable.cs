@@ -7,18 +7,16 @@ namespace AwaitThreading.Enumerable;
 public readonly struct ChunkEnumerable<T>
 {
     private readonly List<T> _list;
-    private readonly int _start;
-    private readonly int _end;
+    private readonly RangeWorker _rangeWorker;
 
-    public ChunkEnumerable(List<T> list, int start, int end)
+    internal ChunkEnumerable(List<T> list, RangeWorker rangeWorker)
     {
         _list = list;
-        _start = start;
-        _end = end;
+        _rangeWorker = rangeWorker;
     }
     
     public ChunkEnumerator<T> GetAsyncEnumerator()
     {
-        return new ChunkEnumerator<T>(_list, _start, _end);
+        return new ChunkEnumerator<T>(_list, _rangeWorker);
     }
 }
