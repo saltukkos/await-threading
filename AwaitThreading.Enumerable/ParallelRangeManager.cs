@@ -1,6 +1,9 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+// Changes made to this file:
+// - Added support for empty ranges on 2024-10-09 by Konstantin Saltuk
+
 // =+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+
 //
 // Implements the algorithm for distributing loop indices to parallel loop workers
@@ -248,6 +251,12 @@ namespace System.Threading.Tasks
             // Should be fine so long as uRangeSize < Int64.MaxValue, which we guaranteed by setting #workers >= 2.
             long nRangeSize = (long)uRangeSize;
             _use32BitCurrentIndex = IntPtr.Size == 4 && nRangeSize <= int.MaxValue;
+
+            if (nNumRanges == 0)
+            {
+                _indexRanges = new[] { new IndexRange() { _bRangeFinished = 1 } };
+                return;
+            }
 
             // allocate the array of index ranges
             _indexRanges = new IndexRange[nNumRanges];

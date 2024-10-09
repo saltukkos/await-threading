@@ -34,7 +34,7 @@ public struct ChunkEnumerator<T>
 
     public T Current => _list[_fromInclusive];
 
-    [UsedImplicitly] //TODO: R# bug?
+    [UsedImplicitly] //TODO: detect in usage analysis
     public JoiningTask DisposeAsync()
     {
         return new JoiningTask();

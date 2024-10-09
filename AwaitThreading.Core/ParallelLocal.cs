@@ -2,7 +2,6 @@
 // Copyright (c) 2024 Saltuk Konstantin
 // See the LICENSE file in the project root for more information.
 
-using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 
 namespace AwaitThreading.Core;
@@ -13,7 +12,7 @@ namespace AwaitThreading.Core;
 /// <remarks>
 /// Usage flow: ParallelLocal needs to be created before forking,
 /// then, forking should be performed using the <see cref="InitializeAndFork"/> method.
-/// After that, each thread can get and set it's local value
+/// After that, each thread can get and set its local value
 /// </remarks>
 public sealed class ParallelLocal<T> //TODO: it can be a mutable struct, can't it?
 {

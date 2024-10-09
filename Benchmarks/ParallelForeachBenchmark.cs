@@ -70,7 +70,6 @@ public class ParallelForeachBenchmark
     [Benchmark]
     public bool AsParallel()
     {
-        
         var calculator = new Calculator();
         _data.AsParallel()
             .WithDegreeOfParallelism(ThreadsCount)
@@ -153,18 +152,18 @@ Apple M1, 1 CPU, 8 logical and 8 physical cores
 | AsParallel          | 160000     | 4            |  4,282.067 us | 27.6395 us | 25.8540 us |      - |   3.15 KB |
 | AsParallel          | 160000     | 8            |  3,722.779 us | 29.9159 us | 24.9811 us |      - |   4.39 KB |
 |                     |            |              |               |            |            |        |           |
-| AsParallelAsync     | 10         | 1            |      3.026 us |  0.0342 us |  0.0303 us | 0.5836 |   1.19 KB |
-| AsParallelAsync     | 10         | 2            |      6.515 us |  0.1168 us |  0.1818 us | 0.7477 |    1.5 KB |
-| AsParallelAsync     | 10         | 4            |      8.142 us |  0.1610 us |  0.2258 us | 1.1444 |    2.3 KB |
-| AsParallelAsync     | 10         | 8            |     11.795 us |  0.2048 us |  0.1816 us | 1.9379 |    3.9 KB |
-| AsParallelAsync     | 10000      | 1            |    866.766 us |  0.3749 us |  0.2927 us |      - |   1.25 KB |
-| AsParallelAsync     | 10000      | 2            |    449.085 us |  1.1534 us |  0.9005 us | 0.4883 |   1.56 KB |
-| AsParallelAsync     | 10000      | 4            |    544.903 us | 10.8602 us | 11.6203 us | 0.9766 |   2.29 KB |
-| AsParallelAsync     | 10000      | 8            |    220.621 us |  2.8922 us |  2.4151 us | 1.7090 |   3.71 KB |
-| AsParallelAsync     | 160000     | 1            | 13,701.459 us |  5.8360 us |  5.4590 us |      - |   1.27 KB |
-| AsParallelAsync     | 160000     | 2            |  6,958.837 us |  4.3015 us |  3.8132 us |      - |   1.57 KB |
-| AsParallelAsync     | 160000     | 4            |  4,474.482 us | 43.3604 us | 38.4379 us |      - |   2.31 KB |
-| AsParallelAsync     | 160000     | 8            |  3,325.081 us | 19.0779 us | 16.9120 us |      - |   3.76 KB |
+| AsParallelAsync     | 10         | 1            |      3.058 us |  0.0328 us |  0.0307 us | 0.5836 |   1.19 KB |
+| AsParallelAsync     | 10         | 2            |      6.804 us |  0.1261 us |  0.2460 us | 0.7477 |    1.5 KB |
+| AsParallelAsync     | 10         | 4            |      8.003 us |  0.1272 us |  0.1514 us | 1.1444 |    2.3 KB |
+| AsParallelAsync     | 10         | 8            |     11.815 us |  0.1530 us |  0.1431 us | 1.9531 |   3.91 KB |
+| AsParallelAsync     | 10000      | 1            |    870.795 us |  3.5375 us |  2.9539 us |      - |   1.25 KB |
+| AsParallelAsync     | 10000      | 2            |    453.632 us |  6.2659 us |  8.5769 us |      - |   1.56 KB |
+| AsParallelAsync     | 10000      | 4            |    558.011 us | 21.1598 us | 62.3901 us | 0.9766 |    2.3 KB |
+| AsParallelAsync     | 10000      | 8            |    188.933 us |  2.7895 us |  2.6093 us | 1.7090 |   3.72 KB |
+| AsParallelAsync     | 160000     | 1            | 13,805.764 us | 96.9952 us | 85.9837 us |      - |   1.27 KB |
+| AsParallelAsync     | 160000     | 2            |  6,960.659 us | 21.6161 us | 19.1621 us |      - |   1.57 KB |
+| AsParallelAsync     | 160000     | 4            |  4,010.717 us | 20.6152 us | 19.2835 us |      - |   2.31 KB |
+| AsParallelAsync     | 160000     | 8            |  2,970.931 us | 43.2653 us | 40.4704 us |      - |   3.76 KB |
 |                     |            |              |               |            |            |        |           |
 | AsParallelLazyAsync | 10         | 1            |      3.356 us |  0.0483 us |  0.0452 us | 0.6676 |   1.35 KB |
 | AsParallelLazyAsync | 10         | 2            |      7.010 us |  0.1393 us |  0.3597 us | 0.9537 |   1.91 KB |
