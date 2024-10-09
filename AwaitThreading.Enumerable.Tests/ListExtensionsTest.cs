@@ -79,6 +79,7 @@ public class ListExtensionsTest
         }
     }
 
+    [TestCase(10, 1)]
     [TestCase(10, 2)]
     [TestCase(10, 3)]
     [TestCase(100, 2)]

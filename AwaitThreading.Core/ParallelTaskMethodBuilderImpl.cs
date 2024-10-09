@@ -14,6 +14,8 @@ internal static class ParallelTaskMethodBuilderImpl
         where TAwaiter : INotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
+        ParallelContext.ClearCachedId();
+
         if (awaiter is IParallelNotifyCompletion parallelAwaiter)
         {
             if (parallelAwaiter.RequireContinuationToBeSetBeforeResult)
@@ -36,6 +38,8 @@ internal static class ParallelTaskMethodBuilderImpl
         where TAwaiter : ICriticalNotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
+        ParallelContext.ClearCachedId();
+
         if (awaiter is IParallelNotifyCompletion parallelAwaiter)
         {
             if (parallelAwaiter.RequireContinuationToBeSetBeforeResult)
@@ -82,7 +86,6 @@ internal static class ParallelTaskMethodBuilderImpl
         }
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
     private static void AwaitUnsafeOnCompletedInternal<TAwaiter, TStateMachine>(ref TAwaiter awaiter, TStateMachine stateMachine)
         where TAwaiter : ICriticalNotifyCompletion
         where TStateMachine : IAsyncStateMachine

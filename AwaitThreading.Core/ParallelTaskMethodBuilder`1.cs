@@ -50,7 +50,15 @@ public readonly struct ParallelTaskMethodBuilder<T>
         ParallelTaskMethodBuilderImpl.AwaitUnsafeOnCompleted(ref awaiter, ref stateMachine, ref parallelTaskImpl);
     }
 
-    public void SetResult(T result) => Task.SetResult(result);
+    public void SetResult(T result)
+    {
+        ParallelContext.ClearCachedId();
+        Task.SetResult(result);
+    }
 
-    public void SetException(Exception exception) => Task.SetException(exception);
+    public void SetException(Exception exception)
+    {
+        ParallelContext.ClearCachedId();
+        Task.SetException(exception);
+    }
 }

@@ -2,7 +2,6 @@
 // Copyright (c) 2024 Saltuk Konstantin
 // See the LICENSE file in the project root for more information.
 
-using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 
 namespace AwaitThreading.Core;
@@ -13,11 +12,11 @@ namespace AwaitThreading.Core;
 /// <remarks>
 /// Usage flow: ParallelLocal needs to be created before forking,
 /// then, forking should be performed using the <see cref="InitializeAndFork"/> method.
-/// After that, each thread can get and set it's local value
+/// After that, each thread can get and set its local value
 /// </remarks>
 public sealed class ParallelLocal<T> //TODO: it can be a mutable struct, can't it?
 {
-    private T[]? _slots;
+    private T?[]? _slots;
 
     [MustUseReturnValue]
     public ForkingTask InitializeAndFork(int threadsCount)
@@ -29,24 +28,17 @@ public sealed class ParallelLocal<T> //TODO: it can be a mutable struct, can't i
         return new ForkingTask(threadsCount);
     }
 
-    [MaybeNull]
-    public T Value
+    public bool IsInitialized => _slots is not null;
+
+    public ref T? Value
     {
         get
         {
             if (_slots is null)
-                return default;
-
-            var id = ParallelContext.GetCurrentFrame().Id;
-            return _slots[id];
-        }
-        set
-        {
-            if (_slots is null)
                 Assertion.ThrowInvalidParallelLocalUsage();
 
-            var id = ParallelContext.GetCurrentFrame().Id;
-            _slots[id] = value;
+            var id = ParallelContext.Id;
+            return ref _slots[id];
         }
     }
 }

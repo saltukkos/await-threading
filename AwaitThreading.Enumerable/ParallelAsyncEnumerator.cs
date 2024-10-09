@@ -10,28 +10,31 @@ namespace AwaitThreading.Enumerable;
 public struct ChunkEnumerator<T>
 {
     private readonly List<T> _list;
-    private readonly int _maxIndex;
-    private int _currentIndex;
+    private RangeWorker _rangeWorker;
+    private int _fromInclusive;
+    private int _toExclusive;
 
-    public ChunkEnumerator(List<T> list, int startIndex, int endIndex)
+    internal ChunkEnumerator(List<T> list, RangeWorker rangeWorker)
     {
         _list = list;
-        _maxIndex = endIndex - 1;
-        _currentIndex = startIndex - 1;
+        _rangeWorker = rangeWorker;
+        _fromInclusive = 0;
+        _toExclusive = 0;
     }
 
     public SyncTask<bool> MoveNextAsync()
     {
-        if (_currentIndex >= _maxIndex)
-            return new SyncTask<bool>(false);
+        if (_fromInclusive++ >= _toExclusive - 1)
+        {
+            return new SyncTask<bool>(_rangeWorker.FindNewWork(out _fromInclusive, out _toExclusive));
+        }
 
-        _currentIndex++;
         return new SyncTask<bool>(true);
     }
 
-    public T Current => _list[_currentIndex];
+    public T Current => _list[_fromInclusive];
 
-    [UsedImplicitly] //TODO: R# bug?
+    [UsedImplicitly] //TODO: detect in usage analysis
     public JoiningTask DisposeAsync()
     {
         return new JoiningTask();

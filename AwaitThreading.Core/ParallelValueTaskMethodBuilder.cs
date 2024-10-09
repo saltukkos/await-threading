@@ -58,6 +58,8 @@ public struct ParallelValueTaskMethodBuilder<T>
 
     public void SetResult(T result)
     {
+        ParallelContext.ClearCachedId();
+
         if (_parallelTaskImpl is null)
         {
             _result = result;
@@ -71,6 +73,8 @@ public struct ParallelValueTaskMethodBuilder<T>
 
     public void SetException(Exception exception)
     {
+        ParallelContext.ClearCachedId();
+
         _parallelTaskImpl ??= new ParallelTaskImpl<T>();
         _parallelTaskImpl.SetResult(new ParallelTaskResult<T>(ExceptionDispatchInfo.Capture(exception)));
     }
