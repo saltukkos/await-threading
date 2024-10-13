@@ -17,11 +17,6 @@ public readonly struct ParallelTask
         Implementation = new ParallelTaskImpl<Unit>();
     }
 
-    internal void MarkAsRequireContinuationToBeSetBeforeResult()
-    {
-        Implementation.RequireContinuationToBeSetBeforeResult = true;
-    }
-
     internal void SetResult() => Implementation.SetResult(default);
 
     internal void SetException(Exception e) =>
