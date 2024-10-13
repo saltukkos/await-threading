@@ -10,8 +10,8 @@ using NUnit.Framework.Legacy;
 namespace AwaitThreading.Enumerable.Tests;
 
 [TestFixture]
-[TestOf(typeof(ListExtensions))]
-public class ListExtensionsTest
+[TestOf(typeof(CollectionParallelExtensions))]
+public class CollectionParallelExtensionsTest
 {
     [Test]
     public async Task AsParallelAsync_WithOneThread_IteratesOverAllElementsInNaturalOrder()
@@ -70,7 +70,7 @@ public class ListExtensionsTest
         {
             var list = System.Linq.Enumerable.Range(0, 10).ToList();
             var result = new List<int>();
-            await foreach (var i in list.AsParallel(1))
+            await foreach (var i in list.AsAsyncParallel(1))
             {
                 result.Add(i);
             }
@@ -99,7 +99,7 @@ public class ListExtensionsTest
         {
             var list = System.Linq.Enumerable.Range(0, itemsCount).ToList();
             var result = new ConcurrentBag<int>();
-            await foreach (var i in list.AsParallel(threadsCount))
+            await foreach (var i in list.AsAsyncParallel(threadsCount))
             {
                 result.Add(i);
             }
