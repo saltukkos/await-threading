@@ -11,29 +11,31 @@ namespace Benchmarks;
 
 [MemoryDiagnoser]
 [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByMethod)]
+// [DisassemblyDiagnoser(printSource: true)]
 public class ParallelForeachBenchmark
 {
-    private List<int> _data = null!;
+    private int[] _data = null!;
 
     [Params(
-        10
+        // 10
         // , 100
         // , 1000
-        , 10000
+        // , 10000
         // , 20000
         // , 40000
         // , 80000
-        , 160000
+        //,
+        160000
         )] 
     public int ListLength;
 
-    [Params(1, 2, 4, 8)]
-    public int ThreadsCount;
+//    [Params(1, 2, 4, 8)]
+    public int ThreadsCount = 2;
 
     [GlobalSetup]
     public void Setup()
     {
-        _data = Enumerable.Range(0, ListLength).ToList();
+        _data = Enumerable.Range(0, ListLength).ToArray();
     }
 
     class Calculator
@@ -106,7 +108,7 @@ public class ParallelForeachBenchmark
         async ParallelTask<bool> DoAsync()
         {
             var calculator = new Calculator();
-            await foreach (var i in _data.AsParallel(ThreadsCount))
+            await foreach (var i in _data.AsAsyncParallel(ThreadsCount))
             {
                 calculator.Calculate(i);
             }
@@ -178,4 +180,44 @@ Apple M1, 1 CPU, 8 logical and 8 physical cores
 | AsParallelLazyAsync | 160000     | 4            |  5,374.254 us | 34.9108 us | 32.6556 us |      - |   3.22 KB |
 | AsParallelLazyAsync | 160000     | 8            |  3,932.218 us | 29.3498 us | 27.4538 us |      - |   5.72 KB |
 
+
+
+Threads=2
+    Original:
+   | Method              | ListLength | Mean     | Error     | StdDev    | Allocated |
+   |-------------------- |----------- |---------:|----------:|----------:|----------:|
+   | AsParallelLazyAsync | 160000     | 8.333 ms | 0.0086 ms | 0.0076 ms |      2 KB |
+   
+   | Method              | ListLength | Mean     | Error     | StdDev    | Allocated |
+   |-------------------- |----------- |---------:|----------:|----------:|----------:|
+   | AsParallelAsync     | 160000     | 7.026 ms | 0.0279 ms | 0.0261 ms |   1.57 KB |
+   |                     |            |          |           |           |           |
+   | AsParallelLazyAsync | 160000     | 8.372 ms | 0.0065 ms | 0.0055 ms |      2 KB |
+   
+   With IReadOnlyList:
+    | Method              | ListLength | Mean     | Error     | StdDev    | Allocated |
+    |-------------------- |----------- |---------:|----------:|----------:|----------:|
+    | AsParallelAsync     | 160000     | 6.860 ms | 0.0044 ms | 0.0041 ms |   1.57 KB |
+    |                     |            |          |           |           |           |
+    | AsParallelLazyAsync | 160000     | 8.340 ms | 0.0086 ms | 0.0080 ms |      2 KB |
+   | Method              | ListLength | Mean     | Error     | StdDev    | Allocated |
+   |-------------------- |----------- |---------:|----------:|----------:|----------:|
+   | AsParallelAsync     | 160000     | 6.863 ms | 0.0035 ms | 0.0031 ms |   1.57 KB |
+   |                     |            |          |           |           |           |
+   | AsParallelLazyAsync | 160000     | 8.361 ms | 0.0065 ms | 0.0060 ms |      2 KB |
+   
+   array as IROList:
+   | Method              | ListLength | Mean     | Error     | StdDev    | Allocated |
+   |-------------------- |----------- |---------:|----------:|----------:|----------:|
+   | AsParallelAsync     | 160000     | 6.827 ms | 0.0058 ms | 0.0051 ms |   1.57 KB |
+   |                     |            |          |           |           |           |
+   | AsParallelLazyAsync | 160000     | 8.383 ms | 0.0076 ms | 0.0067 ms |      2 KB |
+   
+   array as array:
+   | Method              | ListLength | Mean     | Error     | StdDev    | Allocated |
+   |-------------------- |----------- |---------:|----------:|----------:|----------:|
+   | AsParallelAsync     | 160000     | 6.869 ms | 0.0054 ms | 0.0050 ms |   1.57 KB |
+   |                     |            |          |           |           |           |
+   | AsParallelLazyAsync | 160000     | 8.397 ms | 0.0078 ms | 0.0073 ms |      2 KB |
+   
 */

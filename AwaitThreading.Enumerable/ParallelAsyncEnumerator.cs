@@ -7,14 +7,14 @@ using JetBrains.Annotations;
 
 namespace AwaitThreading.Enumerable;
 
-public struct ChunkEnumerator<T>
+public struct ParallelAsyncEnumerator<T>
 {
-    private readonly List<T> _list;
+    private readonly IReadOnlyList<T> _list;
     private RangeWorker _rangeWorker;
     private int _fromInclusive;
     private int _toExclusive;
 
-    internal ChunkEnumerator(List<T> list, RangeWorker rangeWorker)
+    internal ParallelAsyncEnumerator(IReadOnlyList<T> list, RangeWorker rangeWorker)
     {
         _list = list;
         _rangeWorker = rangeWorker;
