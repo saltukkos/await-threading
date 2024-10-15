@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using AwaitThreading.Core;
 using NUnit.Framework;
 using NUnit.Framework.Legacy;
@@ -98,6 +99,106 @@ public class CollectionParallelExtensionsTest
         async ParallelTask TestBody()
         {
             var list = System.Linq.Enumerable.Range(0, itemsCount).ToList();
+            var result = new ConcurrentBag<int>();
+            await foreach (var i in list.AsAsyncParallel(threadsCount))
+            {
+                result.Add(i);
+            }
+
+            CollectionAssert.AreEquivalent(list, result);
+        }
+    }
+
+    [Test]
+    [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
+    public async Task AsParallelAsyncEnumerable_WithOneThread_IteratesOverAllElementsInNaturalOrder()
+    {
+        await TestBody();
+        return;
+
+        async ParallelTask TestBody()
+        {
+            var list = System.Linq.Enumerable.Range(0, 10);
+            var result = new List<int>();
+            await foreach (var i in await list.AsParallelAsync(1))
+            {
+                result.Add(i);
+            }
+
+            CollectionAssert.AreEquivalent(list, result);
+        }
+    }
+
+    [TestCase(10, 1)]
+    [TestCase(10, 2)]
+    [TestCase(10, 3)]
+    [TestCase(100, 2)]
+    [TestCase(100, 3)]
+    [TestCase(100, 4)]
+    [TestCase(100, 5)]
+    [TestCase(1, 2)]
+    [TestCase(0, 2)]
+    [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
+    public async Task AsParallelAsyncEnumerable_WithDifferentThreadCount_IteratesOverAllElementsOnce(
+        int itemsCount,
+        int threadsCount)
+    {
+        await TestBody();
+        return;
+
+        async ParallelTask TestBody()
+        {
+            var list = System.Linq.Enumerable.Range(0, itemsCount);
+            var result = new ConcurrentBag<int>();
+            await foreach (var i in await list.AsParallelAsync(threadsCount))
+            {
+                result.Add(i);
+            }
+
+            CollectionAssert.AreEquivalent(list, result);
+        }
+    }
+
+    [Test]
+    [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
+    public async Task AsAsyncParallelEnumerable_WithOneThread_IteratesOverAllElementsInNaturalOrder()
+    {
+        await TestBody();
+        return;
+
+        async ParallelTask TestBody()
+        {
+            var list = System.Linq.Enumerable.Range(0, 10);
+            var result = new List<int>();
+            await foreach (var i in list.AsAsyncParallel(1))
+            {
+                result.Add(i);
+            }
+
+            CollectionAssert.AreEquivalent(list, result);
+        }
+    }
+
+    [TestCase(10, 1)]
+    [TestCase(10, 2)]
+    [TestCase(10, 3)]
+    [TestCase(100, 2)]
+    [TestCase(100, 3)]
+    [TestCase(100, 4)]
+    [TestCase(100, 5)]
+    [TestCase(1, 2)]
+    [TestCase(0, 2)]
+    [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
+    public async Task AsAsyncParallelEnumerable_WithDifferentThreadCount_IteratesOverAllElementsOnce(
+        int itemsCount,
+        int threadsCount)
+    {
+        await TestBody();
+        return;
+
+        async ParallelTask TestBody()
+        {
+            var list = System.Linq.Enumerable.Range(0, itemsCount);
             var result = new ConcurrentBag<int>();
             await foreach (var i in list.AsAsyncParallel(threadsCount))
             {

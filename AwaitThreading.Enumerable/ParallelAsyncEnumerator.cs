@@ -3,11 +3,10 @@
 //See the LICENSE file in the project root for more information.
 
 using AwaitThreading.Core;
-using JetBrains.Annotations;
 
 namespace AwaitThreading.Enumerable;
 
-public struct ParallelAsyncEnumerator<T>
+public struct ParallelAsyncEnumerator<T> : IParallelAsyncEnumerator<T>
 {
     private readonly IReadOnlyList<T> _list;
     private RangeWorker _rangeWorker;
@@ -34,7 +33,6 @@ public struct ParallelAsyncEnumerator<T>
 
     public T Current => _list[_fromInclusive];
 
-    [UsedImplicitly] //TODO: detect in usage analysis
     public JoiningTask DisposeAsync()
     {
         return new JoiningTask();

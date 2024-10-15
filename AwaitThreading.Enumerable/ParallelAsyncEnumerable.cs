@@ -4,7 +4,7 @@
 
 namespace AwaitThreading.Enumerable;
 
-public readonly struct ParallelAsyncEnumerable<T>
+public readonly struct ParallelAsyncEnumerable<T> : IParallelAsyncEnumerable<T>
 {
     private readonly IReadOnlyList<T> _list;
     private readonly RangeWorker _rangeWorker;
@@ -14,7 +14,12 @@ public readonly struct ParallelAsyncEnumerable<T>
         _list = list;
         _rangeWorker = rangeWorker;
     }
-    
+
+    IParallelAsyncEnumerator<T> IParallelAsyncEnumerable<T>.GetAsyncEnumerator()
+    {
+        return GetAsyncEnumerator();
+    }
+
     public ParallelAsyncEnumerator<T> GetAsyncEnumerator()
     {
         return new ParallelAsyncEnumerator<T>(_list, _rangeWorker);

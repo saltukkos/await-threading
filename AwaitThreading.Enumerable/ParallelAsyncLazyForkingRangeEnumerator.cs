@@ -7,7 +7,7 @@ using JetBrains.Annotations;
 
 namespace AwaitThreading.Enumerable;
 
-public readonly struct ParallelAsyncLazyForkingEnumerator<T>
+public readonly struct ParallelAsyncLazyForkingRangeEnumerator<T> : IParallelAsyncLazyForkingEnumerator<T>
 {
     private class RangeEnumerator
     {
@@ -41,7 +41,7 @@ public readonly struct ParallelAsyncLazyForkingEnumerator<T>
     // executed on the copy of a struct, so we have to store the data somewhere else.
     private readonly ParallelLocal<RangeEnumerator> _chunkIndexer = new();
 
-    public ParallelAsyncLazyForkingEnumerator(IReadOnlyList<T> list, int threadsCount)
+    public ParallelAsyncLazyForkingRangeEnumerator(IReadOnlyList<T> list, int threadsCount)
     {
         _threadsCount = threadsCount;
         _list = list;
