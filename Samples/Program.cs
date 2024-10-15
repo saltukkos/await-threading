@@ -19,7 +19,7 @@ async ParallelTask AsParallelAsync()
 async ParallelTask AsParallel()
 {
     var list = Enumerable.Range(1, 10).ToList();
-    await foreach (var item in list.AsParallel(3))
+    await foreach (var item in list.AsAsyncParallel(3))
     {
         Console.Out.WriteLine($"Processing element {item}");
         await Task.Delay(10); //simulate some workload

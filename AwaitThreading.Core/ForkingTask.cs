@@ -35,9 +35,7 @@ public sealed class ForkingTask
                         ((ForkingClosure<TStateMachine>)args!).StartNewThread();
                     },
                     forkingClosure,
-                    CancellationToken.None,
-                    TaskCreationOptions.DenyChildAttach | TaskCreationOptions.RunContinuationsAsynchronously,
-                    TaskScheduler.Default);
+                    TaskCreationOptions.DenyChildAttach);
             }
         }
 

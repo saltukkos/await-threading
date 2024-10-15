@@ -24,7 +24,7 @@ async ParallelTask NormalForkAndJoin(int threadsCount)
     Console.Out.WriteLine("Before fork: single thread");
 
     await new ForkingTask(threadsCount);
-    var id = ParallelContext.GetCurrentFrame().Id;
+    var id = ParallelContext.Id;
     Console.Out.WriteLine($"Hello world from {id}"); //executed on two different threads
 
     await new JoiningTask();
@@ -48,7 +48,7 @@ async ParallelTask CompositionExample(int threadsCount)
 async ParallelTask<int> ForkAndGetId(int threadsCount)
 {
     await new ForkingTask(threadsCount);
-    return ParallelContext.GetCurrentFrame().Id;
+    return ParallelContext.Id;
 }
 
 async ParallelTask JoinInsideMethod()

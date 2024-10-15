@@ -7,9 +7,9 @@ namespace AwaitThreading.Enumerable.Experimental;
 public static class ListExperimentalExtensions
 {
   //[Experimental]
-  public static ParallelLazyAsyncEnumerator<T> GetAsyncEnumerator<T>(this List<T> list)
+  public static ParallelAsyncLazyForkingRangeEnumerator<T> GetAsyncEnumerator<T>(this IReadOnlyList<T> list)
   {
-    return new ParallelLazyAsyncEnumerator<T>(list, Environment.ProcessorCount);
+    return new ParallelAsyncLazyForkingRangeEnumerator<T>(list, Environment.ProcessorCount);
   }
 
 }

@@ -4,19 +4,24 @@
 
 namespace AwaitThreading.Enumerable;
 
-public readonly struct ChunkEnumerable<T>
+public readonly struct ParallelAsyncEnumerable<T> : IParallelAsyncEnumerable<T>
 {
-    private readonly List<T> _list;
+    private readonly IReadOnlyList<T> _list;
     private readonly RangeWorker _rangeWorker;
 
-    internal ChunkEnumerable(List<T> list, RangeWorker rangeWorker)
+    internal ParallelAsyncEnumerable(IReadOnlyList<T> list, RangeWorker rangeWorker)
     {
         _list = list;
         _rangeWorker = rangeWorker;
     }
-    
-    public ChunkEnumerator<T> GetAsyncEnumerator()
+
+    IParallelAsyncEnumerator<T> IParallelAsyncEnumerable<T>.GetAsyncEnumerator()
     {
-        return new ChunkEnumerator<T>(_list, _rangeWorker);
+        return GetAsyncEnumerator();
+    }
+
+    public ParallelAsyncEnumerator<T> GetAsyncEnumerator()
+    {
+        return new ParallelAsyncEnumerator<T>(_list, _rangeWorker);
     }
 }

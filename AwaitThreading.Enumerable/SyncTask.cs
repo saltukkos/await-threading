@@ -18,6 +18,7 @@ public readonly struct SyncTask<T> : INotifyCompletion
         _result = result;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public SyncTask<T> GetAwaiter() => this;
 
     public bool IsCompleted

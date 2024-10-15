@@ -11,6 +11,7 @@ namespace Benchmarks;
 
 [MemoryDiagnoser]
 [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByMethod)]
+// [DisassemblyDiagnoser(printSource: true)]
 public class ParallelForeachBenchmark
 {
     private List<int> _data = null!;
@@ -106,7 +107,7 @@ public class ParallelForeachBenchmark
         async ParallelTask<bool> DoAsync()
         {
             var calculator = new Calculator();
-            await foreach (var i in _data.AsParallel(ThreadsCount))
+            await foreach (var i in _data.AsAsyncParallel(ThreadsCount))
             {
                 calculator.Calculate(i);
             }

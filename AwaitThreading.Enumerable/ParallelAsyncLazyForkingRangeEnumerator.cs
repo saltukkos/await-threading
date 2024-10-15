@@ -7,15 +7,15 @@ using JetBrains.Annotations;
 
 namespace AwaitThreading.Enumerable;
 
-public readonly struct ParallelLazyAsyncEnumerator<T>
+public readonly struct ParallelAsyncLazyForkingRangeEnumerator<T> : IParallelAsyncLazyForkingEnumerator<T>
 {
-    private class ChunkIndexer
+    private class RangeEnumerator
     {
         private RangeWorker _rangeWorker;
         private int _fromInclusive;
         private int _toExclusive;
 
-        public ChunkIndexer(RangeWorker rangeWorker)
+        public RangeEnumerator(RangeWorker rangeWorker)
         {
             _rangeWorker = rangeWorker;
         }
@@ -30,18 +30,18 @@ public readonly struct ParallelLazyAsyncEnumerator<T>
             return true;
         }
 
-        public T GetItem(List<T> list) => list[_fromInclusive];
+        public T GetItem(IReadOnlyList<T> list) => list[_fromInclusive];
     }
     
-    private readonly List<T> _list;
+    private readonly IReadOnlyList<T> _list;
     private readonly int _threadsCount;
 
     // In ideal world we would be able to store enumerator for our chunk in struct field,
     // but any changes to the state of this struct will be lost since async methods are
     // executed on the copy of a struct, so we have to store the data somewhere else.
-    private readonly ParallelLocal<ChunkIndexer> _chunkIndexer = new();
+    private readonly ParallelLocal<RangeEnumerator> _chunkIndexer = new();
 
-    public ParallelLazyAsyncEnumerator(List<T> list, int threadsCount)
+    public ParallelAsyncLazyForkingRangeEnumerator(IReadOnlyList<T> list, int threadsCount)
     {
         _threadsCount = threadsCount;
         _list = list;
@@ -66,7 +66,7 @@ public readonly struct ParallelLazyAsyncEnumerator<T>
     {
         var rangeManager = new RangeManager(0, _list.Count, 1, _threadsCount);
         await _chunkIndexer.InitializeAndFork(_threadsCount);
-        var indexer = new ChunkIndexer(rangeManager.RegisterNewWorker());
+        var indexer = new RangeEnumerator(rangeManager.RegisterNewWorker());
         var returnResult = indexer.MoveNext();
         _chunkIndexer.Value = indexer;
         return returnResult;

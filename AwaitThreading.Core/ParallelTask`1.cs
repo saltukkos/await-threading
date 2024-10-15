@@ -18,6 +18,7 @@ public readonly struct ParallelTask<T>
     }
 
     internal void SetResult(T result) => Implementation.SetResult(new ParallelTaskResult<T>(result));
+
     internal void SetException(Exception e) =>
         Implementation.SetResult(new ParallelTaskResult<T>(ExceptionDispatchInfo.Capture(e)));
 
