@@ -209,11 +209,28 @@ public class CollectionParallelExtensionsTest
         }
     }
 
-    // [Test]
-    // public void AsParallelAsync_WithZeroThreads_ThrowsException()
-    // {
-    //     var list = System.Linq.Enumerable.Range(0, 10).ToList();
-    //
-    //     Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => list.AsParallelAsync(0));
-    // }
+    [Test]
+    public async Task AsParallelAsync_WithZeroThreads_ThrowsException()
+    {
+        await TestBody();
+        return;
+
+        async ParallelTask TestBody()
+        {
+            var gotException = false;
+            try
+            {
+                var list = System.Linq.Enumerable.Range(0, 10).ToList();
+                await foreach (var unused in await list.AsParallelAsync(0))
+                {
+                }
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                gotException = true;
+            }
+
+            Assert.That(gotException, Is.True);
+        }
+    }
 }

@@ -3,7 +3,6 @@
 //See the LICENSE file in the project root for more information.
 
 using AwaitThreading.Core;
-using JetBrains.Annotations;
 
 namespace AwaitThreading.Enumerable;
 
@@ -74,7 +73,6 @@ public readonly struct ParallelAsyncLazyForkingRangeEnumerator<T> : IParallelAsy
 
     public T Current => _chunkIndexer.Value!.GetItem(_list);
 
-    [UsedImplicitly] //TODO: detect in usage analysis
     public async ParallelTask DisposeAsync()
     {
         if (_chunkIndexer.IsInitialized)

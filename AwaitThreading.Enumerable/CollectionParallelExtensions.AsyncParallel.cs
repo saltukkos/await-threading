@@ -15,7 +15,6 @@ public static partial class CollectionParallelExtensions
         return new ParallelAsyncLazyForkingRangeEnumerable<T>(list, threadsCount);
     }
 
-    // TODO: test with custom partitioner where SupportsDynamicPartitions is false
     public static ParallelAsyncLazyForkingPartitionEnumerable<T> AsAsyncParallel<T>(
         this Partitioner<T> partitioner,
         int threadsCount)

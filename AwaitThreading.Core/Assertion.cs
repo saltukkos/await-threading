@@ -18,7 +18,7 @@ internal static class Assertion
     public static void ThrowBadAwait() => throw new InvalidOperationException(BadAwaitMessage);
 
     [DoesNotReturn]
-    public static void ThrowInvalidTasksCount() => throw new NotSupportedException("Threads count should be greater than zero");
+    public static void ThrowInvalidTasksCount() => throw new InvalidOperationException("Fork should have positive number of threads.");
 
     [DoesNotReturn]
     public static void ThrowInvalidDirectGetResultCall() => throw new NotSupportedException($"Do not call .GetResult() directly on ParallelTask, use .{nameof(ParallelTaskExtensions.AsTask)}().Wait()");

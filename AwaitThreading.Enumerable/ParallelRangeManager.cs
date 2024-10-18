@@ -212,6 +212,11 @@ namespace System.Threading.Tasks
         /// </summary>
         internal RangeManager(long nFromInclusive, long nToExclusive, long nStep, int nNumExpectedWorkers)
         {
+            if (nNumExpectedWorkers <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(nNumExpectedWorkers), $"{nameof(nNumExpectedWorkers)} must be positive");
+            }
+
             _nCurrentIndexRangeToAssign = 0;
             _nStep = nStep;
 
