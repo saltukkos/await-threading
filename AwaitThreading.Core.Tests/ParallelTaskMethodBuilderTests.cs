@@ -8,7 +8,7 @@ namespace AwaitThreading.Core.Tests;
 [TestFixture]
 [TestOf(typeof(ParallelTaskMethodBuilder))]
 [TestOf(typeof(ParallelTaskMethodBuilder<>))]
-public class ParallelTaskMethodBuilderTests
+public class ParallelTaskMethodBuilderTests : BaseClassWithParallelContextValidation
 {
     [Test]
     public async Task Await_VoidResultSetSync_ResultReturned()

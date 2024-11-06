@@ -75,12 +75,14 @@ public class ForkingClosure<TStateMachine>
     private readonly TStateMachine _stateMachine;
     private readonly ExecutionContext? _executionContext;
     private readonly SingleWaiterBarrier _barrier;
+    private readonly ParallelContext _parallelContext;
     private int _myThreadId = -1;
 
     public ForkingClosure(TStateMachine stateMachine, int threadsCount)
     {
         _executionContext = ExecutionContext.Capture();
         _stateMachine = stateMachine.MakeCopy();
+        _parallelContext = ParallelContext.Capture();
         _barrier = new SingleWaiterBarrier(threadsCount);
     }
 
@@ -90,6 +92,8 @@ public class ForkingClosure<TStateMachine>
         {
             ExecutionContext.Restore(_executionContext);
         }
+
+        ParallelContext.Restore(_parallelContext);
 
         ParallelContext.PushFrame(new ParallelFrame(Interlocked.Increment(ref _myThreadId), _barrier.Count, _barrier));
         Logger.Log("Task started");

@@ -117,26 +117,32 @@ internal sealed class ParallelTaskImpl<T>
 
     private sealed class RegularContinuationInvokerWithFrameProtection : IContinuationInvoker
     {
-        private readonly Action _action;
-        private readonly ParallelFrame? _frameBeforeAwait;
+        private Action? _action;
+        private readonly ParallelContext _contextBeforeAwait;
+
         public RegularContinuationInvokerWithFrameProtection(Action action)
         {
-            _frameBeforeAwait = ParallelContext.GetCurrentFrameSafe();
+            _contextBeforeAwait = ParallelContext.GetCurrentContext();
             _action = action;
         }
 
         public void Invoke()
         {
-            var currentFrameAfterAwait = ParallelContext.GetCurrentFrameSafe();
-            if (currentFrameAfterAwait?.ForkIdentity != _frameBeforeAwait?.ForkIdentity)
+            if (!ParallelContext.GetCurrentContext().Equals(_contextBeforeAwait))
             {
                 // note: we can be here only after parallel operations,
                 // so RequireContinuationToBeSetBeforeResult is true, and we can use the `_parallelResult`
 
                 _parallelResult = new ParallelTaskResult<T>(Assertion.BadAwaitExceptionDispatchInfo);
+                ParallelContext.RestoreNoVerification(_contextBeforeAwait);
             }
 
-            _action.Invoke();
+            var action = _action;
+            if (action is not null)
+            {
+                // note: only call continuation once, regular Tasks can't handle multiple SetResult invocations
+                Interlocked.CompareExchange(ref _action, null, action)?.Invoke();
+            }
         }
     }
 }

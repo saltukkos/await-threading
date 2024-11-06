@@ -6,7 +6,7 @@
 namespace AwaitThreading.Core.Tests;
 
 [TestFixture]
-public class TaskOverParallelTaskTests
+public class TaskOverParallelTaskTests : BaseClassWithParallelContextValidation
 {
     [Test]
     public async Task Await_ParallelTaskIsSimple_Success()
@@ -132,6 +132,36 @@ public class TaskOverParallelTaskTests
         {
             await new ForkingTask(2);
             await StandardTaskMethod();
+        }
+
+        async Task StandardTaskMethod()
+        {
+            await Task.Yield();
+            await InnerParallelTaskBody();
+        }
+
+        async ParallelTask InnerParallelTaskBody()
+        {
+            await new JoiningTask();
+        }
+    }
+
+    [Test]
+    public async Task Await_ParallelTaskHasUnpairedJoin_InvalidOperationExceptionIsThrows_2()
+    {
+        await AssertEx.CheckThrowsAsync<InvalidOperationException>(TestBody);
+        return;
+
+        async Task TestBody()
+        {
+            await ParallelTaskBody();
+        }
+
+        async ParallelTask ParallelTaskBody()
+        {
+            await new ForkingTask(2);
+            await StandardTaskMethod();
+            await new JoiningTask();
         }
 
         async Task StandardTaskMethod()

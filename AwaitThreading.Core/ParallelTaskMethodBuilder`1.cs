@@ -52,13 +52,11 @@ public readonly struct ParallelTaskMethodBuilder<T>
 
     public void SetResult(T result)
     {
-        ParallelContext.ClearCachedId();
         Task.SetResult(result);
     }
 
     public void SetException(Exception exception)
     {
-        ParallelContext.ClearCachedId();
         Task.SetException(exception);
     }
 }

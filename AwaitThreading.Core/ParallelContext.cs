@@ -3,6 +3,7 @@
 //See the LICENSE file in the project root for more information.
 
 using System.Collections.Immutable;
+using System.Diagnostics;
 
 namespace AwaitThreading.Core;
 
@@ -22,46 +23,34 @@ public readonly struct ParallelFrame
     public object ForkIdentity => JoinBarrier;
 }
 
-public readonly struct ParallelContext
+public readonly struct ParallelContext : IEquatable<ParallelContext>
 {
     private readonly ImmutableStack<ParallelFrame>? _stack;
 
-    private static readonly AsyncLocal<ParallelContext> CurrentThreadContext = new();
-
     [ThreadStatic]
-    private static int _cachedId; // note: stores ID + 1. 0 means no Id is set  
+    private static ParallelContext _currentThreadContext;
 
     private ParallelContext(ImmutableStack<ParallelFrame> stack)
     {
         _stack = stack;
     }
 
-    public static int Id
-    {
-        get
-        {
-            var cachedId = _cachedId;
-            if (cachedId > 0)
-                return cachedId - 1;
-
-            var id = GetCurrentFrame().Id;
-            _cachedId = id + 1;
-            return id;
-        }
-    }
+    public static int Id => GetCurrentFrame().Id;
 
     private static ParallelFrame GetCurrentFrame()
     {
-        var currentContextStack = CurrentThreadContext.Value._stack;
-        if (currentContextStack is null)
+        var currentContextStack = _currentThreadContext._stack;
+        if (currentContextStack is null || currentContextStack.IsEmpty)
+        {
             throw new InvalidOperationException("Stack is empty");
+        }
 
         return currentContextStack.Peek();
     }
 
     public static ParallelFrame? GetCurrentFrameSafe()
     {
-        var currentContextStack = CurrentThreadContext.Value._stack;
+        var currentContextStack = _currentThreadContext._stack;
         if (currentContextStack is null || currentContextStack.IsEmpty)
         {
             return null;
@@ -70,40 +59,85 @@ public readonly struct ParallelContext
         return currentContextStack.Peek();
     }
 
+    public static ParallelContext GetCurrentContext()
+    {
+        return _currentThreadContext;
+    }
+
     public static void PushFrame(ParallelFrame frame)
     {
-        var currentContext = CurrentThreadContext.Value;
+        var currentContext = _currentThreadContext;
         var newStack = (currentContext._stack ?? ImmutableStack<ParallelFrame>.Empty).Push(frame);
-        CurrentThreadContext.Value = new ParallelContext(newStack);
-        _cachedId = frame.Id + 1;
+        _currentThreadContext = new ParallelContext(newStack);
     }
 
     public static ParallelFrame PopFrame()
     {
-        var currentContext = CurrentThreadContext.Value;
+        var currentContext = _currentThreadContext;
         var currentContextStack = currentContext._stack;
         if (currentContextStack is null)
+        {
             throw new InvalidOperationException("Stack is empty");
+        }
 
         var newStack = currentContextStack.Pop(out var poppedFrame);
-        CurrentThreadContext.Value = new ParallelContext(newStack);
-        ClearCachedId();
+        _currentThreadContext = newStack.IsEmpty ? default : new ParallelContext(newStack);
         return poppedFrame;
     }
 
-    internal static void ClearCachedId()
+    internal static ParallelContext CaptureAndClear()
     {
-        _cachedId = 0;
+        var currentContext = _currentThreadContext;
+        _currentThreadContext = default;
+        return currentContext;
+    }
+
+    internal static ParallelContext Capture()
+    {
+        return _currentThreadContext;
+    }
+
+    internal static void Restore(ParallelContext context)
+    {
+        VerifyContextIsEmpty();
+        _currentThreadContext = context;
+    }
+
+    internal static void RestoreNoVerification(ParallelContext context)
+    {
+        _currentThreadContext = context;
+    }
+
+    [Conditional("DEBUG")]
+    private static void VerifyContextIsEmpty()
+    {
+        if (_currentThreadContext._stack is not null)
+            throw new InvalidOperationException("Context is already exists");
     }
 
     internal static string GetCurrentContexts()
     {
-        var stack = CurrentThreadContext.Value._stack;
+        var stack = _currentThreadContext._stack;
         if (stack is null)
         {
             return "empty";
         }
 
         return string.Join(", ", stack.Select(t => $"({t.Id} out of {t.Count})"));
+    }
+
+    public bool Equals(ParallelContext other)
+    {
+        return Equals(_stack, other._stack);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is ParallelContext other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        return _stack != null ? _stack.GetHashCode() : 0;
     }
 }

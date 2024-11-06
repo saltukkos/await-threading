@@ -5,7 +5,7 @@
 namespace AwaitThreading.Core.Tests;
 
 [TestFixture]
-public class ConcurrencyTests
+public class ConcurrencyTests : BaseClassWithParallelContextValidation
 {
     [Test(
         Description = @"

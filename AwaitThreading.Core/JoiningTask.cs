@@ -23,6 +23,10 @@ public readonly struct JoiningTask
             {
                 stateMachine.MoveNext();
             }
+            else
+            {
+             //   ParallelContext.CaptureAndClear();
+            }
         }
 
         public void OnCompleted(Action continuation)

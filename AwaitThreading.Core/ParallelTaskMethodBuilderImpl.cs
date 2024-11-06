@@ -14,8 +14,6 @@ internal static class ParallelTaskMethodBuilderImpl
         where TAwaiter : INotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
-        ParallelContext.ClearCachedId();
-
         if (awaiter is IParallelNotifyCompletion parallelAwaiter)
         {
             if (parallelAwaiter.RequireContinuationToBeSetBeforeResult)
@@ -38,8 +36,6 @@ internal static class ParallelTaskMethodBuilderImpl
         where TAwaiter : ICriticalNotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
-        ParallelContext.ClearCachedId();
-
         if (awaiter is IParallelNotifyCompletion parallelAwaiter)
         {
             if (parallelAwaiter.RequireContinuationToBeSetBeforeResult)
@@ -64,6 +60,7 @@ internal static class ParallelTaskMethodBuilderImpl
     {
         // TODO: we need to restore ExecutionContext and reimplement ParallelLazyAsyncEnumerator
         parallelAwaiter.ParallelOnCompleted(stateMachine);
+        ParallelContext.CaptureAndClear();
     }
 
     private static void AwaitOnCompletedInternal<TAwaiter, TStateMachine>(ref TAwaiter awaiter, TStateMachine stateMachine)
@@ -71,16 +68,22 @@ internal static class ParallelTaskMethodBuilderImpl
         where TStateMachine : IAsyncStateMachine
     {
         var executionContext = ExecutionContext.Capture();
+        var parallelContext = ParallelContext.CaptureAndClear();
 
         if (executionContext is null)
         {
-            awaiter.OnCompleted(() => { stateMachine.MoveNext(); });
+            awaiter.OnCompleted(() =>
+            {
+                ParallelContext.Restore(parallelContext);
+                stateMachine.MoveNext();
+            });
         }
         else
         {
             awaiter.OnCompleted(() =>
             {
                 ExecutionContext.Restore(executionContext); //TODO: custom closure class instead of lambda
+                ParallelContext.Restore(parallelContext);
                 stateMachine.MoveNext();
             });
         }
@@ -91,16 +94,22 @@ internal static class ParallelTaskMethodBuilderImpl
         where TStateMachine : IAsyncStateMachine
     {
         var executionContext = ExecutionContext.Capture();
+        var parallelContext = ParallelContext.CaptureAndClear();
 
         if (executionContext is null)
         {
-            awaiter.UnsafeOnCompleted(() => { stateMachine.MoveNext(); });
+            awaiter.UnsafeOnCompleted(() =>
+            {
+                ParallelContext.Restore(parallelContext);
+                stateMachine.MoveNext();
+            });
         }
         else
         {
             awaiter.UnsafeOnCompleted(() =>
             {
                 ExecutionContext.Restore(executionContext);
+                ParallelContext.Restore(parallelContext);
                 stateMachine.MoveNext();
             });
         }

@@ -7,7 +7,7 @@ namespace AwaitThreading.Core.Tests;
 [TestFixture]
 [TestOf(typeof(ForkingTask))]
 [TestOf(typeof(JoiningTask))]
-public class CoreOperationsTests
+public class CoreOperationsTests : BaseClassWithParallelContextValidation
 {
     [Test]
     [TestCase(1)]
