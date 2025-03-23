@@ -21,11 +21,12 @@ public readonly struct JoiningTask
 
             if (context.JoinBarrier.Finish())
             {
+                //TODO: schedule later
                 stateMachine.MoveNext();
             }
             else
             {
-             //   ParallelContext.CaptureAndClear();
+                ParallelContext.CaptureAndClear();
             }
         }
 

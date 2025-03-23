@@ -42,7 +42,7 @@ public class CoreOperationsTests : BaseClassWithParallelContextValidation
         async ParallelTask TestBody()
         {
             await new ForkingTask(n);
-            await NestedFork();
+            await new ForkingTask(n);
             counter.Increment();
             await new JoiningTask();
             await new JoiningTask();

@@ -23,7 +23,7 @@ public readonly struct ParallelTaskMethodBuilder
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Start<TStateMachine>(ref TStateMachine stateMachine) where TStateMachine : IAsyncStateMachine
     {
-        stateMachine.MoveNext();
+        // Note: do nothing, parallel tasks are 'cold'
     }
 
     public void SetStateMachine(IAsyncStateMachine stateMachine)

@@ -16,12 +16,6 @@ internal static class ParallelTaskMethodBuilderImpl
     {
         if (awaiter is IParallelNotifyCompletion parallelAwaiter)
         {
-            if (parallelAwaiter.RequireContinuationToBeSetBeforeResult)
-            {
-                taskImpl ??= new ParallelTaskImpl<TResult>();
-                taskImpl.RequireContinuationToBeSetBeforeResult = true;
-            }
-
             AwaitParallelOnCompletedInternal(ref parallelAwaiter, stateMachine);
         }
         else
@@ -38,12 +32,7 @@ internal static class ParallelTaskMethodBuilderImpl
     {
         if (awaiter is IParallelNotifyCompletion parallelAwaiter)
         {
-            if (parallelAwaiter.RequireContinuationToBeSetBeforeResult)
-            {
-                taskImpl ??= new ParallelTaskImpl<TResult>();
-                taskImpl.RequireContinuationToBeSetBeforeResult = true;
-            }
-
+            // TODO: Unsafe
             AwaitParallelOnCompletedInternal(ref parallelAwaiter, stateMachine);
         }
         else
@@ -60,7 +49,7 @@ internal static class ParallelTaskMethodBuilderImpl
     {
         // TODO: we need to restore ExecutionContext and reimplement ParallelLazyAsyncEnumerator
         parallelAwaiter.ParallelOnCompleted(stateMachine);
-        ParallelContext.CaptureAndClear();
+        ParallelContext.CaptureAndClear(); // note: let's say we're performing fork: we set the continuation for forked threads and then return, effectively returning the thread to thread pool
     }
 
     private static void AwaitOnCompletedInternal<TAwaiter, TStateMachine>(ref TAwaiter awaiter, TStateMachine stateMachine)
