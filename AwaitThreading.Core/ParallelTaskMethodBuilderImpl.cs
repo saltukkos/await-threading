@@ -9,21 +9,13 @@ namespace AwaitThreading.Core;
 internal static class ParallelTaskMethodBuilderImpl
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void AwaitOnCompleted<TAwaiter, TStateMachine, TResult>(
-        ref TAwaiter awaiter, ref TStateMachine stateMachine, ref ParallelTaskImpl<TResult>? taskImpl)
+    public static void AwaitOnCompleted<TAwaiter, TStateMachine>(
+        ref TAwaiter awaiter, ref TStateMachine stateMachine)
         where TAwaiter : INotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
-        ParallelContext.ClearCachedId();
-
         if (awaiter is IParallelNotifyCompletion parallelAwaiter)
         {
-            if (parallelAwaiter.RequireContinuationToBeSetBeforeResult)
-            {
-                taskImpl ??= new ParallelTaskImpl<TResult>();
-                taskImpl.RequireContinuationToBeSetBeforeResult = true;
-            }
-
             AwaitParallelOnCompletedInternal(ref parallelAwaiter, stateMachine);
         }
         else
@@ -33,21 +25,13 @@ internal static class ParallelTaskMethodBuilderImpl
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine, TResult>(
-        ref TAwaiter awaiter, ref TStateMachine stateMachine, ref ParallelTaskImpl<TResult>? taskImpl)
+    public static void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>(
+        ref TAwaiter awaiter, ref TStateMachine stateMachine)
         where TAwaiter : ICriticalNotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
-        ParallelContext.ClearCachedId();
-
         if (awaiter is IParallelNotifyCompletion parallelAwaiter)
         {
-            if (parallelAwaiter.RequireContinuationToBeSetBeforeResult)
-            {
-                taskImpl ??= new ParallelTaskImpl<TResult>();
-                taskImpl.RequireContinuationToBeSetBeforeResult = true;
-            }
-
             AwaitParallelOnCompletedInternal(ref parallelAwaiter, stateMachine);
         }
         else
@@ -62,7 +46,6 @@ internal static class ParallelTaskMethodBuilderImpl
         where TAwaiter : IParallelNotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
-        // TODO: we need to restore ExecutionContext and reimplement ParallelLazyAsyncEnumerator
         parallelAwaiter.ParallelOnCompleted(stateMachine);
     }
 

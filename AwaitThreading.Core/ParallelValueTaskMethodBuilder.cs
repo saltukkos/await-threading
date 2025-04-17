@@ -12,23 +12,15 @@ namespace AwaitThreading.Core;
 [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
 public struct ParallelValueTaskMethodBuilder<T>
 {
-    private static readonly ParallelTaskImpl<T> SyncReturnFlag = new();
-    private T _result;
-    private ParallelTaskImpl<T>? _parallelTaskImpl;
+    private readonly ParallelTaskImpl<T> _parallelTaskImpl = new();
 
-    public static ParallelValueTaskMethodBuilder<T> Create() => default;
-
-    public ParallelValueTask<T> Task
+    public ParallelValueTaskMethodBuilder()
     {
-        get
-        {
-            if (ReferenceEquals(_parallelTaskImpl, SyncReturnFlag))
-                return new ParallelValueTask<T>(_result);
-
-            _parallelTaskImpl ??= new ParallelTaskImpl<T>();
-            return new ParallelValueTask<T>(_parallelTaskImpl);
-        }
     }
+
+    public static ParallelValueTaskMethodBuilder<T> Create() => new();
+
+    public ParallelValueTask<T> Task => new(_parallelTaskImpl);
 
     [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -45,7 +37,7 @@ public struct ParallelValueTaskMethodBuilder<T>
         where TAwaiter : INotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
-        ParallelTaskMethodBuilderImpl.AwaitOnCompleted(ref awaiter, ref stateMachine, ref _parallelTaskImpl);
+        ParallelTaskMethodBuilderImpl.AwaitOnCompleted(ref awaiter, ref stateMachine);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -53,29 +45,16 @@ public struct ParallelValueTaskMethodBuilder<T>
         where TAwaiter : ICriticalNotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
-        ParallelTaskMethodBuilderImpl.AwaitUnsafeOnCompleted(ref awaiter, ref stateMachine, ref _parallelTaskImpl);
+        ParallelTaskMethodBuilderImpl.AwaitUnsafeOnCompleted(ref awaiter, ref stateMachine);
     }
 
     public void SetResult(T result)
     {
-        ParallelContext.ClearCachedId();
-
-        if (_parallelTaskImpl is null)
-        {
-            _result = result;
-            _parallelTaskImpl = SyncReturnFlag;
-            return;
-        }
-
-        _parallelTaskImpl ??= new ParallelTaskImpl<T>();
         _parallelTaskImpl.SetResult(new ParallelTaskResult<T>(result));
     }
 
     public void SetException(Exception exception)
     {
-        ParallelContext.ClearCachedId();
-
-        _parallelTaskImpl ??= new ParallelTaskImpl<T>();
         _parallelTaskImpl.SetResult(new ParallelTaskResult<T>(ExceptionDispatchInfo.Capture(exception)));
     }
 }

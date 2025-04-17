@@ -18,33 +18,7 @@ public readonly struct ParallelValueTaskAwaiter<T> : ICriticalNotifyCompletion, 
     public bool IsCompleted
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get
-        {
-            var implementation = _valueTask.Implementation;
-            if (implementation is null)
-            {
-                // return true in this case, sync return with result
-                return true;
-            }
-
-            return implementation.IsCompleted;
-        }
-    }
-
-    public bool RequireContinuationToBeSetBeforeResult
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get
-        {
-            var implementation = _valueTask.Implementation;
-            if (implementation == null)
-            {
-                // return false in this case. If we return synchronously, then there is no forking inside 
-                return false;
-            }
-
-            return implementation.RequireContinuationToBeSetBeforeResult;
-        }
+        get => _valueTask.Implementation is null;
     }
 
     public void ParallelOnCompleted<TStateMachine>(TStateMachine stateMachine)
@@ -53,6 +27,8 @@ public readonly struct ParallelValueTaskAwaiter<T> : ICriticalNotifyCompletion, 
         var implementation = _valueTask.Implementation;
         if (implementation == null)
         {
+            // Note: this should not happen within compiler-generated code,
+            // sync return valueTasks have IsCompleted = true, call MoveNext just to be on a safe side.
             stateMachine.MoveNext();
             return;
         }

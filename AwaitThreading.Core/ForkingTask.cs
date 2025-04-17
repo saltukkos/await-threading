@@ -19,8 +19,6 @@ public sealed class ForkingTask
 
         public bool IsCompleted => false;
 
-        public bool RequireContinuationToBeSetBeforeResult => true;
-
         public void ParallelOnCompleted<TStateMachine>(TStateMachine stateMachine)
             where TStateMachine : IAsyncStateMachine
         {
@@ -35,7 +33,7 @@ public sealed class ForkingTask
                         ((ForkingClosure<TStateMachine>)args!).StartNewThread();
                     },
                     forkingClosure,
-                    TaskCreationOptions.DenyChildAttach);
+                    TaskCreationOptions.DenyChildAttach); //TODO: DenyChildAttach?
             }
         }
 
@@ -73,12 +71,14 @@ public class ForkingClosure<TStateMachine>
     private readonly TStateMachine _stateMachine;
     private readonly ExecutionContext? _executionContext;
     private readonly SingleWaiterBarrier _barrier;
+    private readonly ParallelContext _parallelContext;
     private int _myThreadId = -1;
 
     public ForkingClosure(TStateMachine stateMachine, int threadsCount)
     {
         _executionContext = ExecutionContext.Capture();
         _stateMachine = stateMachine.MakeCopy();
+        _parallelContext = ParallelContext.Capture();
         _barrier = new SingleWaiterBarrier(threadsCount);
     }
 
@@ -89,6 +89,7 @@ public class ForkingClosure<TStateMachine>
             ExecutionContext.Restore(_executionContext);
         }
 
+        ParallelContext.Restore(_parallelContext); //TODO: can avoid second set
         ParallelContext.PushFrame(new ParallelFrame(Interlocked.Increment(ref _myThreadId), _barrier.Count, _barrier));
         Logger.Log("Task started");
         _stateMachine.MakeCopy().MoveNext();

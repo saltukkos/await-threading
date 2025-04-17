@@ -22,5 +22,8 @@ public readonly struct ParallelTask
     internal void SetException(Exception e) =>
         Implementation.SetResult(new ParallelTaskResult<Unit>(ExceptionDispatchInfo.Capture(e)));
 
+    internal void SetStateMachine<TStateMachine>(ref TStateMachine stateMachine) where TStateMachine : IAsyncStateMachine
+        => Implementation.SetStateMachine(ref stateMachine);
+
     public ParallelTaskAwaiter GetAwaiter() => new(Implementation);
 }

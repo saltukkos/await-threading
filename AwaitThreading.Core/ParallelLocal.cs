@@ -14,7 +14,7 @@ namespace AwaitThreading.Core;
 /// then, forking should be performed using the <see cref="InitializeAndFork"/> method.
 /// After that, each thread can get and set its local value
 /// </remarks>
-public sealed class ParallelLocal<T> //TODO: it can be a mutable struct, can't it?
+public class ParallelLocal<T>
 {
     private T?[]? _slots;
 

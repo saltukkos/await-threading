@@ -15,6 +15,9 @@ internal static class Assertion
         ExceptionDispatchInfo.Capture(new InvalidOperationException(BadAwaitMessage));
 
     [DoesNotReturn]
+    public static void Fail(string message) => throw new InvalidOperationException(message);
+
+    [DoesNotReturn]
     public static void ThrowBadAwait() => throw new InvalidOperationException(BadAwaitMessage);
 
     [DoesNotReturn]
@@ -22,6 +25,9 @@ internal static class Assertion
 
     [DoesNotReturn]
     public static void ThrowInvalidDirectGetResultCall() => throw new NotSupportedException($"Do not call .GetResult() directly on ParallelTask, use .{nameof(ParallelTaskExtensions.AsTask)}().Wait()");
+
+    [DoesNotReturn]
+    public static void ThrowInvalidSecondAwaitOfParallelTask() => throw new InvalidOperationException("Parallel task can't be awaited twice");
 
     [DoesNotReturn]
     public static void ThrowInvalidParallelLocalUsage() => throw new InvalidOperationException("ParallelLocal should be initialized while forking");

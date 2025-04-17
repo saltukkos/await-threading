@@ -12,8 +12,6 @@ public readonly struct JoiningTask
     {
         public bool IsCompleted => false;
 
-        public bool RequireContinuationToBeSetBeforeResult => false;
-
         public void ParallelOnCompleted<TStateMachine>(TStateMachine stateMachine)
             where TStateMachine : IAsyncStateMachine
         {

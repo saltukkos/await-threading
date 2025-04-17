@@ -23,7 +23,8 @@ public readonly struct ParallelTaskMethodBuilder
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Start<TStateMachine>(ref TStateMachine stateMachine) where TStateMachine : IAsyncStateMachine
     {
-        stateMachine.MoveNext();
+        // Do not run! Tasks are 'cold'
+        Task.SetStateMachine(ref stateMachine);
     }
 
     public void SetStateMachine(IAsyncStateMachine stateMachine)
@@ -34,8 +35,7 @@ public readonly struct ParallelTaskMethodBuilder
         where TAwaiter : INotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
-        var parallelTaskImpl = Task.Implementation;
-        ParallelTaskMethodBuilderImpl.AwaitOnCompleted(ref awaiter, ref stateMachine, ref parallelTaskImpl);
+        ParallelTaskMethodBuilderImpl.AwaitOnCompleted(ref awaiter, ref stateMachine);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -43,19 +43,16 @@ public readonly struct ParallelTaskMethodBuilder
         where TAwaiter : ICriticalNotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
-        var parallelTaskImpl = Task.Implementation;
-        ParallelTaskMethodBuilderImpl.AwaitUnsafeOnCompleted(ref awaiter, ref stateMachine, ref parallelTaskImpl);
+        ParallelTaskMethodBuilderImpl.AwaitUnsafeOnCompleted(ref awaiter, ref stateMachine);
     }
 
     public void SetResult()
     {
-        ParallelContext.ClearCachedId();
         Task.SetResult();
     }
 
     public void SetException(Exception exception)
     {
-        ParallelContext.ClearCachedId();
         Task.SetException(exception);
     }
 }

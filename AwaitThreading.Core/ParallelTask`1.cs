@@ -17,10 +17,14 @@ public readonly struct ParallelTask<T>
         Implementation = new ParallelTaskImpl<T>();
     }
 
-    internal void SetResult(T result) => Implementation.SetResult(new ParallelTaskResult<T>(result));
+    internal void SetResult(T result) =>
+        Implementation.SetResult(new ParallelTaskResult<T>(result));
 
     internal void SetException(Exception e) =>
         Implementation.SetResult(new ParallelTaskResult<T>(ExceptionDispatchInfo.Capture(e)));
+
+    internal void SetStateMachine<TStateMachine>(ref TStateMachine stateMachine) where TStateMachine : IAsyncStateMachine =>
+        Implementation.SetStateMachine(ref stateMachine); 
 
     public ParallelTaskAwaiter<T> GetAwaiter() => new(Implementation);
 }

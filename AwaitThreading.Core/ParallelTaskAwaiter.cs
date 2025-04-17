@@ -15,9 +15,7 @@ public readonly struct ParallelTaskAwaiter : ICriticalNotifyCompletion, IParalle
         _taskImpl = taskImpl;
     }
 
-    public bool IsCompleted => _taskImpl.IsCompleted;
-
-    public bool RequireContinuationToBeSetBeforeResult => _taskImpl.RequireContinuationToBeSetBeforeResult;
+    public bool IsCompleted => false;
 
     public void ParallelOnCompleted<TStateMachine>(TStateMachine stateMachine) 
         where TStateMachine : IAsyncStateMachine
