@@ -11,7 +11,6 @@ public readonly struct TargetedJoiningTask
     public struct TargetedJoiningTaskAwaiter : ICriticalNotifyCompletion, IParallelNotifyCompletion
     {
         public bool IsCompleted => false;
-        public bool RequireContinuationToBeSetBeforeResult => false;
 
         public void ParallelOnCompleted<TStateMachine>(TStateMachine stateMachine)
             where TStateMachine : IAsyncStateMachine

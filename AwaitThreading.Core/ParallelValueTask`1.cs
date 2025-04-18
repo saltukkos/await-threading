@@ -9,6 +9,8 @@ namespace AwaitThreading.Core;
 [AsyncMethodBuilder(typeof(ParallelValueTaskMethodBuilder<>))]
 public readonly struct ParallelValueTask<T>
 {
+    // Note: we could implement a sync exception workload, but ParallelValueTask is implemented only
+    // for performance optimizations and exceptions are not a priority here. 
     internal readonly T? Result;
     internal readonly ParallelTaskImpl<T>? Implementation;
 

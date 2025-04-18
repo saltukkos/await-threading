@@ -9,6 +9,7 @@ public class ConcurrencyTests
 {
     [Test(
         Description = @"
+UPD: RequireContinuationToBeSetBeforeResult is no longer needed, and now the issue should not be possible, but still check.
 Tests that there is no race conditions when tasks inside `MethodThatForks` finish
 before the calling methods have set the continuation in the corresponding task.
 This test should fail if there is an issue with tracking of `RequireContinuationToBeSetBeforeResult` flag.

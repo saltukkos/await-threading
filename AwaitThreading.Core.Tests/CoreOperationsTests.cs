@@ -153,7 +153,7 @@ public class CoreOperationsTests
     }
 
     [Test]
-    public async Task SharedStateWithTargeredJoin_ReferencesCreatedAfterFork_ReferenceFromThread0IsAvailableAfterJoin()
+    public async Task SharedStateWithTargetedJoin_ReferencesCreatedAfterFork_ReferenceFromThread0IsAvailableAfterJoin()
     {
         var res = await TestBody().AsTask();
         Assert.That(res.SharedArray[0], Is.SameAs(res.ValueAfterJoin));

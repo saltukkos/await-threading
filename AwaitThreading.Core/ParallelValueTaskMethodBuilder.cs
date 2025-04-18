@@ -10,7 +10,7 @@ using JetBrains.Annotations;
 namespace AwaitThreading.Core;
 
 [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
-public struct ParallelValueTaskMethodBuilder<T>
+public readonly struct ParallelValueTaskMethodBuilder<T>
 {
     private readonly ParallelTaskImpl<T> _parallelTaskImpl = new();
 
@@ -26,7 +26,7 @@ public struct ParallelValueTaskMethodBuilder<T>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Start<TStateMachine>(ref TStateMachine stateMachine) where TStateMachine : IAsyncStateMachine
     {
-        stateMachine.MoveNext();
+        _parallelTaskImpl.SetStateMachine(ref stateMachine);
     }
 
     public void SetStateMachine(IAsyncStateMachine stateMachine)

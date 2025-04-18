@@ -15,6 +15,7 @@ public readonly struct JoiningTask
         public void ParallelOnCompleted<TStateMachine>(TStateMachine stateMachine)
             where TStateMachine : IAsyncStateMachine
         {
+            Logger.Log("Start joining");
             var context = ParallelContext.PopFrame();
 
             if (context.JoinBarrier.Finish())

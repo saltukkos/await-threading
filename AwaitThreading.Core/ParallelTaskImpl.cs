@@ -82,23 +82,23 @@ internal sealed class ParallelTaskImpl<T>
 
     public void UnsafeOnCompleted(Action continuation)
     {
-        // TODO: do we need a proper implementation?
+        // TODO: we need a proper implementation: one restores the execution context and another one doesn't
         OnCompleted(continuation);
     }
 
     private void OnCompletedInternal(Action continuation)
     {
-        var parallelContext = ParallelContext.GetCurrentContext();
-        var continuationInvoker = new RegularContinuationInvokerWithFrameProtection(continuation, parallelContext);
-
         var onDemandStartAction = Interlocked.Exchange(ref _onDemandStartAction, null);
         if (onDemandStartAction is null)
         {
-            ParallelContext.Restore(parallelContext);
             Assertion.ThrowInvalidSecondAwaitOfParallelTask();
         }
 
-        ParallelContext.CaptureAndClear();
+        // Note: in general it should be empty, except when we get to the await ParallelMethod() in the syn part
+        // of a regular async Task method.
+        var parallelContext = ParallelContext.CaptureAndClear();  
+        var continuationInvoker = new RegularContinuationInvokerWithFrameProtection(continuation, parallelContext);
+
         _continuation = continuationInvoker;
         onDemandStartAction.Invoke();
 
@@ -131,7 +131,7 @@ internal sealed class ParallelTaskImpl<T>
             {
                 // Note: it works, but we rely on the fact that the same thread will run the continuation.
                 // It's required for the forking workload, but it can be changed for cases when normal task
-                // awaits ParallelTask (with frame protection)
+                // awaits ParallelTask, so the continuation can be re-scheduled
                 _parallelResult = new ParallelTaskResult<T>(Assertion.BadAwaitExceptionDispatchInfo);
                 
             }
