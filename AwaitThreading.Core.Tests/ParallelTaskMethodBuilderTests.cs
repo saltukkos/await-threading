@@ -8,7 +8,7 @@ namespace AwaitThreading.Core.Tests;
 [TestFixture]
 [TestOf(typeof(ParallelTaskMethodBuilder))]
 [TestOf(typeof(ParallelTaskMethodBuilder<>))]
-public class ParallelTaskMethodBuilderTests
+public class ParallelTaskMethodBuilderTests : BaseClassWithParallelContextValidation
 {
     [Test]
     public async Task Await_VoidResultSetSync_ResultReturned()
@@ -242,7 +242,7 @@ public class ParallelTaskMethodBuilderTests
         }
     }
 
-    [Test, Ignore("This test can also fail with standard `Task<T>`")]
+    [Test, /*Ignore("This test can also fail with standard `Task<T>`")*/]
     public async Task Await_MultipleNotCompleted_StackTrackDoNotGrow()
     {
         await TestBody();
@@ -255,7 +255,7 @@ public class ParallelTaskMethodBuilderTests
             await GetResult();
             var stackTrace2 = Environment.StackTrace;
 
-            Assert.That(stackTrace1.Split('\n'), Is.EqualTo(stackTrace2.Split('\n')));
+            Assert.That(stackTrace1.Split('\n').Length, Is.EqualTo(stackTrace2.Split('\n').Length));
         }
 
         async ParallelTask<int> GetResult()

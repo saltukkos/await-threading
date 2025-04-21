@@ -2,6 +2,7 @@
 // Copyright (c) 2023 Saltuk Konstantin
 // See the LICENSE file in the project root for more information.
 
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace AwaitThreading.Core;
@@ -71,8 +72,26 @@ internal sealed class ParallelTaskImpl<T>
             Assertion.ThrowInvalidSecondAwaitOfParallelTask();
         }
 
+        // continuation: should run with the same context as onDemandStartAction finishes with (it can contain fork or join)
         _continuation = new ParallelContinuationInvoker<TStateMachine>(stateMachine);
-        onDemandStartAction.Invoke();
+
+        var parallelContext = ParallelContext.CaptureAndClear();  
+
+        // onDemandStartAction should have the same parallelContext as we have at the moment of awaiting,
+        // so if we run it via Task.run, we should pass the context  
+        Task.Run(
+            () =>
+            {
+                ParallelContext.Restore(parallelContext);
+                try
+                {
+                    onDemandStartAction.Invoke();
+                }
+                finally
+                {
+                    ParallelContext.CaptureAndClear(); // note: just in case, probably can get rid of it and write an assertion
+                }
+            });
     }
 
     public void OnCompleted(Action continuation)
@@ -93,14 +112,28 @@ internal sealed class ParallelTaskImpl<T>
         {
             Assertion.ThrowInvalidSecondAwaitOfParallelTask();
         }
+        
+        // TODO: continuationInvoker should check that context is empty after onDemandStartAction finishes.
+        //  onDemandStartAction should start running with empty context
 
-        // Note: in general it should be empty, except when we get to the await ParallelMethod() in the syn part
+        // Note: in general it should be empty, except when we get to the await ParallelMethod() in the sync part
         // of a regular async Task method.
-        var parallelContext = ParallelContext.CaptureAndClear();  
+        var parallelContext = ParallelContext.GetCurrentContext();  
         var continuationInvoker = new RegularContinuationInvokerWithFrameProtection(continuation, parallelContext);
 
         _continuation = continuationInvoker;
-        onDemandStartAction.Invoke();
+        Task.Run(
+            () =>
+            {
+                try
+                {
+                    onDemandStartAction.Invoke();
+                }
+                finally
+                {
+                    ParallelContext.CaptureAndClear(); // note: just in case, probably can get rid of it and write an assertion
+                }
+            });
 
         // _shouldSupportStandardBehaviour = true;
         //
@@ -116,7 +149,7 @@ internal sealed class ParallelTaskImpl<T>
 
     private sealed class RegularContinuationInvokerWithFrameProtection : IContinuationInvoker
     {
-        private readonly Action _action;
+        private Action? _action;
         private readonly ParallelContext _contextBeforeAwait;
         public RegularContinuationInvokerWithFrameProtection(Action action, ParallelContext contextBeforeAwait)
         {
@@ -126,6 +159,17 @@ internal sealed class ParallelTaskImpl<T>
 
         public void Invoke()
         {
+            var action = Interlocked.Exchange(ref _action, null);
+            if (action is null)
+            {
+                // Already invoked action once. Continuation in standard async Task method builder can't be 
+                // called twice, so we need to just return (unless we want to break the thread pool thread with 
+                // an exception). But it can only happen when we've got a ParallelContext and, therefore, already
+                // notified the continuation with 'BadAwaitExceptionDispatchInfo'
+                Debug.Assert(ParallelContext.GetCurrentFrameSafe() != null);
+                return;
+            }
+
             if (ParallelContext.GetCurrentFrameSafe() != null)
             // if (!ParallelContext.GetCurrentContext().Equals(_contextBeforeAwait))
             {
@@ -137,7 +181,7 @@ internal sealed class ParallelTaskImpl<T>
             }
 
             ParallelContext.RestoreNoVerification(_contextBeforeAwait); //TODO: is it legal in case of BadAwaitExceptionDispatchInfo? Don't we get some unrecoverable side effects
-            _action.Invoke();
+            action.Invoke();
         }
     }
 

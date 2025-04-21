@@ -7,7 +7,7 @@ namespace AwaitThreading.Core.Tests;
 [TestFixture]
 [TestOf(typeof(ForkingTask))]
 [TestOf(typeof(JoiningTask))]
-public class CoreOperationsTests
+public class CoreOperationsTests : BaseClassWithParallelContextValidation
 {
     [Test]
     [TestCase(1)]
@@ -44,6 +44,7 @@ public class CoreOperationsTests
             await new ForkingTask(n);
             await NestedFork();
             counter.Increment();
+            Logger.Log("I'm incrementing");
             await new JoiningTask();
             await new JoiningTask();
         }

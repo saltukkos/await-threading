@@ -30,7 +30,14 @@ public sealed class ForkingTask
                 Task.Factory.StartNew(
                     static args =>
                     {
-                        ((ForkingClosure<TStateMachine>)args!).StartNewThread();
+                        try
+                        {
+                            ((ForkingClosure<TStateMachine>)args!).StartNewThread();
+                        }
+                        finally
+                        {
+                            ParallelContext.CaptureAndClear();
+                        }
                     },
                     forkingClosure,
                     TaskCreationOptions.DenyChildAttach); //TODO: DenyChildAttach?

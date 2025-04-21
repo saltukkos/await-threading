@@ -4,23 +4,54 @@
 
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace AwaitThreading.Core;
 
-public readonly struct ParallelFrame
+public readonly struct ParallelFrame : IEquatable<ParallelFrame>
 {
     public readonly int Id;
     public readonly int Count;
     public readonly SingleWaiterBarrier JoinBarrier;
+
+#if DEBUG
+    public readonly string CreationStackTrace;
+#endif
 
     public ParallelFrame(int id, int count, SingleWaiterBarrier joinBarrier)
     {
         Id = id;
         Count = count;
         JoinBarrier = joinBarrier;
+#if DEBUG
+        CreationStackTrace = Environment.StackTrace;
+#endif
     }
 
     public object ForkIdentity => JoinBarrier;
+
+    // [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool Equals(ParallelFrame other)
+    {
+        return 
+            Id == other.Id
+            //    &&
+            // Count == other.Count
+               // &&
+               // JoinBarrier.Equals(other.JoinBarrier)
+               &&
+               CreationStackTrace == other.CreationStackTrace;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is ParallelFrame other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Id, Count, JoinBarrier, CreationStackTrace);
+    }
 }
 
 public readonly struct ParallelContext : IEquatable<ParallelContext>
@@ -69,6 +100,7 @@ public readonly struct ParallelContext : IEquatable<ParallelContext>
         var currentContext = _currentThreadContext;
         var newStack = (currentContext._stack ?? ImmutableStack<ParallelFrame>.Empty).Push(frame);
         _currentThreadContext = new ParallelContext(newStack);
+        Logger.Log("Frame pushed");
     }
 
     public static ParallelFrame PopFrame()
@@ -82,6 +114,7 @@ public readonly struct ParallelContext : IEquatable<ParallelContext>
 
         var newStack = currentContextStack.Pop(out var poppedFrame);
         _currentThreadContext = newStack.IsEmpty ? default : new ParallelContext(newStack);
+        Logger.Log("Frame popped");
         return poppedFrame;
     }
 
@@ -89,6 +122,7 @@ public readonly struct ParallelContext : IEquatable<ParallelContext>
     {
         var currentContext = _currentThreadContext;
         _currentThreadContext = default;
+        Logger.Log("Context cleared");
         return currentContext;
     }
 
@@ -101,23 +135,31 @@ public readonly struct ParallelContext : IEquatable<ParallelContext>
     {
         VerifyContextIsEmpty();
         _currentThreadContext = context;
+        Logger.Log("Context restored");
     }
 
     internal static void RestoreNoVerification(ParallelContext context)
     {
         _currentThreadContext = context;
+        Logger.Log("Context restored (no verification)");
     }
 
     [Conditional("DEBUG")]
     private static void VerifyContextIsEmpty()
     {
         if (_currentThreadContext._stack is not null)
-            throw new InvalidOperationException("Context is already exists");
+            throw new InvalidOperationException("Context already exists");
     }
 
     internal static string GetCurrentContexts()
     {
-        var stack = _currentThreadContext._stack;
+        return _currentThreadContext.GetCurrentContexts2();
+    }
+
+    // TODO: normal methods
+    internal string GetCurrentContexts2()
+    {
+        var stack = _stack;
         if (stack is null)
         {
             return "empty";
@@ -125,6 +167,8 @@ public readonly struct ParallelContext : IEquatable<ParallelContext>
 
         return string.Join(", ", stack.Select(t => $"({t.Id} out of {t.Count})"));
     }
+
+    public bool IsEmpty => _stack is null || _stack.IsEmpty;
 
     public bool Equals(ParallelContext other)
     {

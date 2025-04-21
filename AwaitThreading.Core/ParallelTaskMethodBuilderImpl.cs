@@ -74,17 +74,27 @@ internal static class ParallelTaskMethodBuilderImpl
         where TStateMachine : IAsyncStateMachine
     {
         var executionContext = ExecutionContext.Capture();
-
+        var parallelContext = ParallelContext.CaptureAndClear();
+    
         if (executionContext is null)
         {
-            awaiter.UnsafeOnCompleted(() => { stateMachine.MoveNext(); });
+            awaiter.UnsafeOnCompleted(() =>
+            {
+                // TODO: Can we actually fall into sync continuation here? If yes, can Restore throw since continuation exists?
+                ParallelContext.Restore(parallelContext);
+                stateMachine.MoveNext();
+                // TODO: Should we clear the context here? It is possible, that 'stateMachine.MoveNext()' will just return and not clear the context?
+                ParallelContext.CaptureAndClear();
+            });
         }
         else
         {
             awaiter.UnsafeOnCompleted(() =>
             {
                 ExecutionContext.Restore(executionContext);
+                ParallelContext.Restore(parallelContext);
                 stateMachine.MoveNext();
+                ParallelContext.CaptureAndClear();
             });
         }
     }

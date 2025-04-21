@@ -25,6 +25,7 @@ public readonly struct TargetedJoiningTask
             else
             {
                 context.JoinBarrier.Signal();
+                //ParallelContext.CaptureAndClear();
             }
         }
 

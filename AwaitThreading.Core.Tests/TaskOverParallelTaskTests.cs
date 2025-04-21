@@ -2,11 +2,13 @@
 // Copyright (c) 2024 Saltuk Konstantin
 // See the LICENSE file in the project root for more information.
 
+using System.Diagnostics;
+
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 namespace AwaitThreading.Core.Tests;
 
 [TestFixture]
-public class TaskOverParallelTaskTests
+public class TaskOverParallelTaskTests : BaseClassWithParallelContextValidation
 {
     [Test]
     public async Task Await_ParallelTaskIsSimple_Success()
@@ -128,19 +130,64 @@ public class TaskOverParallelTaskTests
             await ParallelTaskBody();
         }
 
-        async ParallelTask ParallelTaskBody()
+        async ParallelTask<int> ParallelTaskBody()
         {
+            if (ParallelContext.GetCurrentFrameSafe() is not null)
+            {
+                Environment.Exit(5);
+            }
+
             await new ForkingTask(2);
+            
+            if (ParallelContext.GetCurrentFrameSafe() is null)
+            {
+                Environment.Exit(4);
+            }
+
             await StandardTaskMethod();
+
+            if (ParallelContext.GetCurrentFrameSafe() is null)
+            {
+                Environment.Exit(43);
+            }
+
+            return 1;
         }
 
         async Task StandardTaskMethod()
         {
-            await InnerParallelTaskBody();
+            if (ParallelContext.GetCurrentFrameSafe() is not {} originalFrame)
+            {
+                Environment.Exit(6);
+                return;
+            }
+            Logger.Log("Before parallel await in regular task");
+
+            try
+            {
+                await InnerParallelTaskBody();
+
+            }
+            finally
+            {
+                Logger.Log("After parallel await in regular task");
+
+                if (ParallelContext.GetCurrentFrameSafe() is not {} frameAfterAwait 
+                    // || !frameAfterAwait.Equals(originalFrame)
+                    )
+                {
+                    Environment.Exit(7);
+                }
+
+            }
         }
 
         async ParallelTask InnerParallelTaskBody()
         {
+            if (ParallelContext.GetCurrentFrameSafe() is not null)
+            {
+                Environment.Exit(3);
+            }
             await new JoiningTask();
         }
     }
