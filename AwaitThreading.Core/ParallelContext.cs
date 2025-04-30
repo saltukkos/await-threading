@@ -4,6 +4,7 @@
 
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
 
 namespace AwaitThreading.Core;
@@ -68,6 +69,7 @@ public readonly struct ParallelContext : IEquatable<ParallelContext>
 
     public static int Id => GetCurrentFrame().Id;
 
+    [Pure]
     private static ParallelFrame GetCurrentFrame()
     {
         var currentContextStack = _currentThreadContext._stack;
@@ -79,6 +81,7 @@ public readonly struct ParallelContext : IEquatable<ParallelContext>
         return currentContextStack.Peek();
     }
 
+    [Pure]
     public static ParallelFrame? GetCurrentFrameSafe()
     {
         var currentContextStack = _currentThreadContext._stack;
@@ -90,6 +93,7 @@ public readonly struct ParallelContext : IEquatable<ParallelContext>
         return currentContextStack.Peek();
     }
 
+    [Pure]
     public static ParallelContext GetCurrentContext()
     {
         return _currentThreadContext;
@@ -151,12 +155,14 @@ public readonly struct ParallelContext : IEquatable<ParallelContext>
             throw new InvalidOperationException("Context already exists");
     }
 
+    [Pure]
     internal static string GetCurrentContexts()
     {
         return _currentThreadContext.GetCurrentContexts2();
     }
 
     // TODO: normal methods
+    [Pure]
     internal string GetCurrentContexts2()
     {
         var stack = _stack;

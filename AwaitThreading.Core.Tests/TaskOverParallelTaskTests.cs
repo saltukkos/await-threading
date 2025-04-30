@@ -191,4 +191,34 @@ public class TaskOverParallelTaskTests : BaseClassWithParallelContextValidation
             await new JoiningTask();
         }
     }
+
+    [TestCase(1)]
+    [TestCase(2)]
+    public async Task Await_RegularTaskIsAwaited_ContextIsClearedAndRestored(int threadsCount)
+    {
+        await TestBody();
+
+        async ParallelTask TestBody()
+        {
+            await new ForkingTask(threadsCount);
+            var regularAsyncMethod = RegularAsyncMethod();
+            await regularAsyncMethod;
+
+            Assert.That(ParallelContext.GetCurrentContext().IsEmpty, Is.False);
+            await new JoiningTask();
+        }
+
+        async Task RegularAsyncMethod()
+        {
+            // Note: just explicitly check current behavior. In general, it's not a problem,
+            // and we would like to have an empty context here, but it's not possible, since we
+            // do not have a control over sync execution 
+            Assert.That(ParallelContext.GetCurrentContext().IsEmpty, Is.False);
+
+            await Task.Yield(); // just does not work
+            await Task.Delay(1); // ?! System.InvalidOperationException : Regular async methods do not support forking. Use ParallelTask as a method's return value.
+
+            Assert.That(ParallelContext.GetCurrentContext().IsEmpty, Is.True);
+        }
+    }
 }
