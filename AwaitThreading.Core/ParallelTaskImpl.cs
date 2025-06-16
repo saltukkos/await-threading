@@ -116,10 +116,7 @@ internal sealed class ParallelTaskImpl<T>
         // TODO: continuationInvoker should check that context is empty after onDemandStartAction finishes.
         //  onDemandStartAction should start running with empty context
 
-        // Note: in general it should be empty, except when we get to the await ParallelMethod() in the sync part
-        // of a regular async Task method.
-        var parallelContext = ParallelContext.GetCurrentContext();  
-        var continuationInvoker = new RegularContinuationInvokerWithFrameProtection(continuation, parallelContext);
+        var continuationInvoker = new RegularContinuationInvokerWithFrameProtection(continuation);
 
         _continuation = continuationInvoker;
         Task.Run(
@@ -131,7 +128,7 @@ internal sealed class ParallelTaskImpl<T>
                 }
                 finally
                 {
-                    ParallelContext.CaptureAndClear(); // note: just in case, probably can get rid of it and write an assertion
+                    ParallelContext.ClearButNotExpected();
                 }
             });
 
@@ -150,15 +147,19 @@ internal sealed class ParallelTaskImpl<T>
     private sealed class RegularContinuationInvokerWithFrameProtection : IContinuationInvoker
     {
         private Action? _action;
-        private readonly ParallelContext _contextBeforeAwait;
-        public RegularContinuationInvokerWithFrameProtection(Action action, ParallelContext contextBeforeAwait)
+        public RegularContinuationInvokerWithFrameProtection(Action action)
         {
-            _contextBeforeAwait = contextBeforeAwait;
             _action = action;
         }
 
         public void Invoke()
         {
+            // Note: in general, original context (at the moment we are awaiting the `Task` method should be empty,
+            // except when we are in the sync part of async Task method.
+            // But fo continuation, we are going to clear it anyway. This behaviour is shown and explained in
+            // Await_ParallelTaskHasUnpairedJoin_InvalidOperationExceptionIsThrows
+            var parallelContext = ParallelContext.CaptureAndClear();
+
             var action = Interlocked.Exchange(ref _action, null);
             if (action is null)
             {
@@ -166,21 +167,19 @@ internal sealed class ParallelTaskImpl<T>
                 // called twice, so we need to just return (unless we want to break the thread pool thread with 
                 // an exception). But it can only happen when we've got a ParallelContext and, therefore, already
                 // notified the continuation with 'BadAwaitExceptionDispatchInfo'
-                Debug.Assert(ParallelContext.GetCurrentFrameSafe() != null);
+                Debug.Assert(!parallelContext.IsEmpty);
                 return;
             }
 
-            if (ParallelContext.GetCurrentFrameSafe() != null)
+            if (!parallelContext.IsEmpty)
             // if (!ParallelContext.GetCurrentContext().Equals(_contextBeforeAwait))
             {
                 // Note: it works, but we rely on the fact that the same thread will run the continuation.
                 // It's required for the forking workload, but it can be changed for cases when normal task
                 // awaits ParallelTask, so the continuation can be re-scheduled
                 _parallelResult = new ParallelTaskResult<T>(Assertion.BadAwaitExceptionDispatchInfo);
-                
             }
 
-            ParallelContext.RestoreNoVerification(_contextBeforeAwait); //TODO: is it legal in case of BadAwaitExceptionDispatchInfo? Don't we get some unrecoverable side effects
             action.Invoke();
         }
     }

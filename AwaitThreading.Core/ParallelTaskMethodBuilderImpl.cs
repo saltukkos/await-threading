@@ -80,11 +80,9 @@ internal static class ParallelTaskMethodBuilderImpl
         {
             awaiter.UnsafeOnCompleted(() =>
             {
-                // TODO: Can we actually fall into sync continuation here? If yes, can Restore throw since continuation exists?
                 ParallelContext.Restore(parallelContext);
                 stateMachine.MoveNext();
-                // TODO: Should we clear the context here? It is possible, that 'stateMachine.MoveNext()' will just return and not clear the context?
-                ParallelContext.CaptureAndClear();
+                ParallelContext.ClearButNotExpected();
             });
         }
         else
@@ -94,7 +92,7 @@ internal static class ParallelTaskMethodBuilderImpl
                 ExecutionContext.Restore(executionContext);
                 ParallelContext.Restore(parallelContext);
                 stateMachine.MoveNext();
-                ParallelContext.CaptureAndClear();
+                ParallelContext.ClearButNotExpected();
             });
         }
     }

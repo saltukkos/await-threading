@@ -3,6 +3,8 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 namespace AwaitThreading.Core.Tests.Helpers;
 
@@ -34,5 +36,12 @@ public class BaseClassWithParallelContextValidation
 
         Task.WaitAll(tasks);
         Assert.That(threadsWithParallelContext, Is.Empty);
+    }
+
+    [DoesNotReturn]
+    protected void FailFast([CallerLineNumber] int lineNumber = 0)
+    {
+        Logger.Log($"Failing at line number {lineNumber}");
+        Environment.Exit(lineNumber);
     }
 }

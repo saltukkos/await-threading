@@ -2,8 +2,6 @@
 // Copyright (c) 2024 Saltuk Konstantin
 // See the LICENSE file in the project root for more information.
 
-using System.Diagnostics;
-
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 namespace AwaitThreading.Core.Tests;
 
@@ -55,14 +53,20 @@ public class TaskOverParallelTaskTests : BaseClassWithParallelContextValidation
         }
     }
 
-    [Test]
-    public async Task Await_ParallelTaskHasUnpairedFork_InvalidOperationExceptionIsThrows()
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task Await_ParallelTaskHasUnpairedFork_InvalidOperationExceptionIsThrows(bool inSyncPart)
     {
         await AssertEx.CheckThrowsAsync<InvalidOperationException>(TestBody);
         return;
 
         async Task TestBody()
         {
+            if (!inSyncPart)
+            {
+                await Task.Yield();
+            }
+
             await TestBodyInner();
         }
 
@@ -134,21 +138,27 @@ public class TaskOverParallelTaskTests : BaseClassWithParallelContextValidation
         {
             if (ParallelContext.GetCurrentFrameSafe() is not null)
             {
-                Environment.Exit(5);
+                FailFast();
             }
 
             await new ForkingTask(2);
             
             if (ParallelContext.GetCurrentFrameSafe() is null)
             {
-                Environment.Exit(4);
+                FailFast();
             }
 
-            await StandardTaskMethod();
-
-            if (ParallelContext.GetCurrentFrameSafe() is null)
+            var standardTaskMethod = StandardTaskMethod();
+            try
             {
-                Environment.Exit(43);
+                await standardTaskMethod;
+            }
+            finally
+            {
+                if (ParallelContext.GetCurrentFrameSafe() is null)
+                {
+                    FailFast();
+                }
             }
 
             return 1;
@@ -156,29 +166,27 @@ public class TaskOverParallelTaskTests : BaseClassWithParallelContextValidation
 
         async Task StandardTaskMethod()
         {
-            if (ParallelContext.GetCurrentFrameSafe() is not {} originalFrame)
+            // Note: just explicitly check current behavior. In general, we would like to have an empty context here,
+            // but it's not possible, since we do not have a control over sync execution 
+            if (ParallelContext.GetCurrentFrameSafe() is null)
             {
-                Environment.Exit(6);
-                return;
+                FailFast();
             }
-            Logger.Log("Before parallel await in regular task");
 
             try
             {
-                await InnerParallelTaskBody();
-
+                var innerParallelTaskBody = InnerParallelTaskBody();
+                await innerParallelTaskBody;
             }
             finally
             {
-                Logger.Log("After parallel await in regular task");
-
-                if (ParallelContext.GetCurrentFrameSafe() is not {} frameAfterAwait 
-                    // || !frameAfterAwait.Equals(originalFrame)
-                    )
+                // NOTE: here we need to have an EMPTY context. Otherwise, standard TaskMethodBuilder can return
+                // the thread with ParallelContext to the thread pool, since continuation is likely to be executed
+                // on another thread, and we have no more control after over it.  
+                if (ParallelContext.GetCurrentFrameSafe() is not null)
                 {
-                    Environment.Exit(7);
+                    FailFast();
                 }
-
             }
         }
 
@@ -186,15 +194,16 @@ public class TaskOverParallelTaskTests : BaseClassWithParallelContextValidation
         {
             if (ParallelContext.GetCurrentFrameSafe() is not null)
             {
-                Environment.Exit(3);
+                FailFast();
             }
+
             await new JoiningTask();
         }
     }
 
     [TestCase(1)]
     [TestCase(2)]
-    public async Task Await_RegularTaskIsAwaited_ContextIsClearedAndRestored(int threadsCount)
+    public async Task Await_RegularTaskIsAwaited_ContextIsClearedAndRestored1(int threadsCount)
     {
         await TestBody();
 
@@ -210,15 +219,129 @@ public class TaskOverParallelTaskTests : BaseClassWithParallelContextValidation
 
         async Task RegularAsyncMethod()
         {
-            // Note: just explicitly check current behavior. In general, it's not a problem,
-            // and we would like to have an empty context here, but it's not possible, since we
-            // do not have a control over sync execution 
+            // Note: just explicitly check current behavior. In general, we would like to have an empty context here,
+            // but it's not possible, since we do not have a control over sync execution 
             Assert.That(ParallelContext.GetCurrentContext().IsEmpty, Is.False);
 
-            await Task.Yield(); // just does not work
-            await Task.Delay(1); // ?! System.InvalidOperationException : Regular async methods do not support forking. Use ParallelTask as a method's return value.
+            await Task.Yield();
 
             Assert.That(ParallelContext.GetCurrentContext().IsEmpty, Is.True);
+        }
+    }
+
+    [TestCase(1)]
+    [TestCase(2)]
+    public async Task Await_RegularTaskIsAwaited_ContextIsClearedAndRestored2(int threadsCount)
+    {
+        await TestBody();
+
+        async ParallelTask TestBody()
+        {
+            await new ForkingTask(threadsCount);
+            var regularAsyncMethod = RegularAsyncMethod();
+            await regularAsyncMethod;
+
+            Assert.That(ParallelContext.GetCurrentContext().IsEmpty, Is.False);
+            await new JoiningTask();
+        }
+
+        async Task RegularAsyncMethod()
+        {
+            // Note: just explicitly check current behavior. In general, we would like to have an empty context here,
+            // but it's not possible, since we do not have a control over sync execution 
+            Assert.That(ParallelContext.GetCurrentContext().IsEmpty, Is.False);
+
+            await ParallelMethod();
+
+            Assert.That(ParallelContext.GetCurrentContext().IsEmpty, Is.True);
+        }
+
+        async ParallelTask ParallelMethod()
+        {
+            await new ForkingTask(threadsCount);
+            await new JoiningTask();
+        }
+    }
+
+    [TestCase(1)]
+    [TestCase(2)]
+    public async Task Await_RegularTaskIsAwaited_ContextIsClearedAndRestored3(int threadsCount)
+    {
+        await TestBody();
+
+        async ParallelTask TestBody()
+        {
+            await new ForkingTask(threadsCount);
+            var regularAsyncMethod = RegularAsyncMethod();
+            await regularAsyncMethod;
+
+            Assert.That(ParallelContext.GetCurrentContext().IsEmpty, Is.False);
+            await new JoiningTask();
+        }
+
+        async Task RegularAsyncMethod()
+        {
+            // Note: just explicitly check current behavior. In general, we would like to have an empty context here,
+            // but it's not possible, since we do not have a control over sync execution 
+            Assert.That(ParallelContext.GetCurrentContext().IsEmpty, Is.False);
+
+            await ParallelMethod();
+
+            Assert.That(ParallelContext.GetCurrentContext().IsEmpty, Is.True);
+        }
+
+        async ParallelTask ParallelMethod()
+        {
+            await new ForkingTask(threadsCount);
+            await new JoiningTask();
+
+            try
+            {
+                await new JoiningTask();
+            }
+            catch (InvalidOperationException)
+            {
+            }
+        }
+    }
+
+    [TestCase(1)]
+    [TestCase(2)]
+    public async Task Await_RegularTaskIsAwaited_ContextIsClearedAndRestored4(int threadsCount)
+    {
+        await TestBody();
+
+        async ParallelTask TestBody()
+        {
+            await new ForkingTask(threadsCount);
+            var regularAsyncMethod = RegularAsyncMethod();
+            await regularAsyncMethod;
+
+            Assert.That(ParallelContext.GetCurrentContext().IsEmpty, Is.False);
+            await new JoiningTask();
+        }
+
+        async Task RegularAsyncMethod()
+        {
+            // Note: just explicitly check current behavior. In general, we would like to have an empty context here,
+            // but it's not possible, since we do not have a control over sync execution 
+            Assert.That(ParallelContext.GetCurrentContext().IsEmpty, Is.False);
+
+            
+            try
+            {
+                await ParallelMethod();
+            }
+            catch (InvalidOperationException)
+            {
+            }
+
+            Assert.That(ParallelContext.GetCurrentContext().IsEmpty, Is.True);
+        }
+
+        async ParallelTask ParallelMethod()
+        {
+            await new ForkingTask(threadsCount);
         }
     }
 }

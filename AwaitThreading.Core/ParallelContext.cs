@@ -130,6 +130,12 @@ public readonly struct ParallelContext : IEquatable<ParallelContext>
         return currentContext;
     }
 
+    internal static void ClearButNotExpected()
+    {
+        VerifyContextIsEmpty();
+        _currentThreadContext = default;
+    }
+
     internal static ParallelContext Capture()
     {
         return _currentThreadContext;
@@ -152,7 +158,7 @@ public readonly struct ParallelContext : IEquatable<ParallelContext>
     private static void VerifyContextIsEmpty()
     {
         if (_currentThreadContext._stack is not null)
-            throw new InvalidOperationException("Context already exists");
+            Debug.Fail("Context already exists");
     }
 
     [Pure]

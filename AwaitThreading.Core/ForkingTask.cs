@@ -22,7 +22,7 @@ public sealed class ForkingTask
         public void ParallelOnCompleted<TStateMachine>(TStateMachine stateMachine)
             where TStateMachine : IAsyncStateMachine
         {
-            var forkingClosure = new ForkingClosure<TStateMachine>(stateMachine, _threadsCount);
+            var forkingClosure = new ForkingClosure<TStateMachine>(stateMachine, _threadsCount, ParallelContext.CaptureAndClear());
 
             for (var i = 0; i < _threadsCount; ++i)
             {
@@ -36,7 +36,7 @@ public sealed class ForkingTask
                         }
                         finally
                         {
-                            ParallelContext.CaptureAndClear();
+                            ParallelContext.ClearButNotExpected();
                         }
                     },
                     forkingClosure,
@@ -81,11 +81,11 @@ public class ForkingClosure<TStateMachine>
     private readonly ParallelContext _parallelContext;
     private int _myThreadId = -1;
 
-    public ForkingClosure(TStateMachine stateMachine, int threadsCount)
+    public ForkingClosure(TStateMachine stateMachine, int threadsCount, ParallelContext parallelContext)
     {
         _executionContext = ExecutionContext.Capture();
         _stateMachine = stateMachine.MakeCopy();
-        _parallelContext = ParallelContext.Capture();
+        _parallelContext = parallelContext;
         _barrier = new SingleWaiterBarrier(threadsCount);
     }
 
