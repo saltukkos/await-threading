@@ -4,6 +4,7 @@
 
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using AwaitThreading.Core.Context;
 
 namespace AwaitThreading.Core;
 
@@ -12,55 +13,30 @@ internal sealed class ParallelTaskImpl<T>
     [ThreadStatic] // TODO: clear?
     private static ParallelTaskResult<T>? _parallelResult;
 
-    //private ParallelTaskResult<T>? _syncResult;
-
     // note: volatile is not required
     private IContinuationInvoker? _continuation;
-    //private bool _shouldSupportStandardBehaviour;
 
     private Action? _onDemandStartAction;
 
     public void SetResult(ParallelTaskResult<T> result)
     {
-        // if (_shouldSupportStandardBehaviour)
-        // {
-        //     _syncResult = result;
-        //
-        //     var oldValue = Interlocked.CompareExchange(ref _continuation, TaskFinishedMarker.Instance, null);
-        //     if (oldValue != null)
-        //     {
-        //         Debug.Assert(!ReferenceEquals(oldValue, TaskFinishedMarker.Instance));
-        //         oldValue.Invoke();
-        //     }
-        // }
-
         _parallelResult = result;
-        if (_continuation is null)
+        if (_continuation is not { } continuation)
         {
-            Assertion.Fail("Continuation should be set before result in parallel behaviour");
+            throw new InvalidOperationException("Continuation should be set before result in parallel behaviour");
         }
 
-        _continuation.Invoke();
+        continuation.Invoke();
     }
 
     internal ParallelTaskResult<T> GetResult()
     {
-        // if (!_shouldSupportStandardBehaviour)
+        if (_continuation is null || !_parallelResult.HasValue)
         {
-            if (_continuation is null || !_parallelResult.HasValue)
-            {
-                Assertion.ThrowInvalidDirectGetResultCall();
-            }
-
-            return _parallelResult.Value;
+            Assertion.ThrowInvalidDirectGetResultCall();
         }
 
-        // if (!_syncResult.HasValue)
-        // {
-        //     Assertion.ThrowInvalidDirectGetResultCall();
-        // }
-        //
-        // return _syncResult.Value;
+        return _parallelResult.Value;
     }
 
     public void ParallelOnCompleted<TStateMachine>(TStateMachine stateMachine) 
@@ -72,24 +48,25 @@ internal sealed class ParallelTaskImpl<T>
             Assertion.ThrowInvalidSecondAwaitOfParallelTask();
         }
 
-        // continuation: should run with the same context as onDemandStartAction finishes with (it can contain fork or join)
+        // continuation should run with the same context as onDemandStartAction finishes with (it can contain fork or join)
         _continuation = new ParallelContinuationInvoker<TStateMachine>(stateMachine);
 
-        var parallelContext = ParallelContext.CaptureAndClear();  
+        // clear the parallel context here since the thread will go to the thread pool after this method 
+        var parallelContext = ParallelContextStorage.CaptureAndClear();  
 
         // onDemandStartAction should have the same parallelContext as we have at the moment of awaiting,
-        // so if we run it via Task.run, we should pass the context  
+        // and since we run it via Task.Run, we should pass the context  
         Task.Run(
             () =>
             {
-                ParallelContext.Restore(parallelContext);
+                ParallelContextStorage.Restore(parallelContext);
                 try
                 {
                     onDemandStartAction.Invoke();
                 }
                 finally
                 {
-                    ParallelContext.CaptureAndClear(); // note: just in case, probably can get rid of it and write an assertion
+                    ParallelContextStorage.ClearButNotExpected();
                 }
             });
     }
@@ -113,9 +90,6 @@ internal sealed class ParallelTaskImpl<T>
             Assertion.ThrowInvalidSecondAwaitOfParallelTask();
         }
         
-        // TODO: continuationInvoker should check that context is empty after onDemandStartAction finishes.
-        //  onDemandStartAction should start running with empty context
-
         var continuationInvoker = new RegularContinuationInvokerWithFrameProtection(continuation);
 
         _continuation = continuationInvoker;
@@ -128,20 +102,9 @@ internal sealed class ParallelTaskImpl<T>
                 }
                 finally
                 {
-                    ParallelContext.ClearButNotExpected();
+                    ParallelContextStorage.ClearButNotExpected();
                 }
             });
-
-        // _shouldSupportStandardBehaviour = true;
-        //
-        // var oldContinuation = Interlocked.CompareExchange(ref _continuation, continuationInvoker, null);
-        // if (oldContinuation == null)
-        // {
-        //     return;
-        // }
-        //
-        // Debug.Assert(ReferenceEquals(oldContinuation, TaskFinishedMarker.Instance));
-        // continuationInvoker.Invoke();
     }
 
     private sealed class RegularContinuationInvokerWithFrameProtection : IContinuationInvoker
@@ -154,11 +117,18 @@ internal sealed class ParallelTaskImpl<T>
 
         public void Invoke()
         {
-            // Note: in general, original context (at the moment we are awaiting the `Task` method should be empty,
-            // except when we are in the sync part of async Task method.
-            // But fo continuation, we are going to clear it anyway. This behaviour is shown and explained in
-            // Await_ParallelTaskHasUnpairedJoin_InvalidOperationExceptionIsThrows
-            var parallelContext = ParallelContext.CaptureAndClear();
+            // Note: in general, original context (at the moment we are awaiting the `Task` method) should be empty,
+            // except when we are in the sync part of async Task method. But even if it's not, we are clearing it before
+            // yielding to async continuation of regular Task, since we can't afford ParallelContext to be passed to the 
+            // regular Task method and therefore allow `await ParallelTask (fork) -> await Task -> await ParallelTask (join)`.
+            // Otherwise, after exiting the `ParallelTask (join)`, we'll pass the control flow to the standard Task
+            // method builder, and it can schedule the continuation on other thread and return the thread to the Thread
+            // pool with ParallelContext set.
+            // So, we always guarantee that nested ParallelTask method is executed with empty ParallelContext
+            // at the beginning. When the nested ParallelTask method nevertheless finishes with some ParallelContext
+            // (e.g. it contains fork), context will be cleared and only one thread will proceed,
+            // raising `BadAwaitExceptionDispatchInfo` to the awaiter.
+            var parallelContext = ParallelContextStorage.CaptureAndClear();
 
             var action = Interlocked.Exchange(ref _action, null);
             if (action is null)
@@ -166,17 +136,16 @@ internal sealed class ParallelTaskImpl<T>
                 // Already invoked action once. Continuation in standard async Task method builder can't be 
                 // called twice, so we need to just return (unless we want to break the thread pool thread with 
                 // an exception). But it can only happen when we've got a ParallelContext and, therefore, already
-                // notified the continuation with 'BadAwaitExceptionDispatchInfo'
+                // notified the continuation with 'BadAwaitExceptionDispatchInfo' in other thread.
                 Debug.Assert(!parallelContext.IsEmpty);
                 return;
             }
 
             if (!parallelContext.IsEmpty)
-            // if (!ParallelContext.GetCurrentContext().Equals(_contextBeforeAwait))
             {
                 // Note: it works, but we rely on the fact that the same thread will run the continuation.
-                // It's required for the forking workload, but it can be changed for cases when normal task
-                // awaits ParallelTask, so the continuation can be re-scheduled
+                // It's required for the forking workload, but it can be changed in the future for cases
+                // when normal task awaits ParallelTask, so the continuation can be re-scheduled.
                 _parallelResult = new ParallelTaskResult<T>(Assertion.BadAwaitExceptionDispatchInfo);
             }
 
@@ -192,6 +161,6 @@ internal sealed class ParallelTaskImpl<T>
     public void SetStateMachine<TStateMachine>(ref TStateMachine stateMachine) where TStateMachine : IAsyncStateMachine
     {
         var stateMachineLocal = stateMachine;
-        _onDemandStartAction = () => stateMachineLocal.MoveNext();
+        _onDemandStartAction = () => stateMachineLocal.MoveNext(); //TODO: optimize allocations?
     }
 }

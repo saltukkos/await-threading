@@ -4,6 +4,7 @@
 
 using System.Collections.Concurrent;
 using AwaitThreading.Core;
+using AwaitThreading.Core.Context;
 
 namespace AwaitThreading.Enumerable;
 
@@ -50,7 +51,7 @@ public readonly struct ParallelAsyncLazyForkingPartitionEnumerator<T> : IParalle
         var partitions = partitioner.GetPartitions(_threadsCount);
         await _chunkIndexer.InitializeAndFork(_threadsCount);
 
-        var enumerator = partitions[ParallelContext.CurrentThreadContext.GetCurrentFrame().Id];
+        var enumerator = partitions[ParallelContextStorage.GetTopFrameId()];
         _chunkIndexer.Value = enumerator;
         return enumerator.MoveNext();
     }

@@ -3,6 +3,7 @@
 //See the LICENSE file in the project root for more information.
 
 using System.Runtime.CompilerServices;
+using AwaitThreading.Core.Context;
 
 namespace AwaitThreading.Core;
 
@@ -22,7 +23,10 @@ public sealed class ForkingTask
         public void ParallelOnCompleted<TStateMachine>(TStateMachine stateMachine)
             where TStateMachine : IAsyncStateMachine
         {
-            var forkingClosure = new ForkingClosure<TStateMachine>(stateMachine, _threadsCount, ParallelContext.CaptureAndClear());
+            var forkingClosure = new ForkingClosure<TStateMachine>(
+                stateMachine,
+                _threadsCount,
+                ParallelContextStorage.CaptureAndClear());
 
             for (var i = 0; i < _threadsCount; ++i)
             {
@@ -36,7 +40,7 @@ public sealed class ForkingTask
                         }
                         finally
                         {
-                            ParallelContext.ClearButNotExpected();
+                            ParallelContextStorage.ClearButNotExpected();
                         }
                     },
                     forkingClosure,
@@ -99,7 +103,7 @@ public class ForkingClosure<TStateMachine>
         // TODO: is race possible? Let's say some threads didn't start yet but one thread is already at 'await Join'.
         //  Do we need to read _barrier.Count before starting any threads? (closure will become larger :( )
         var newFrame = new ParallelFrame(Interlocked.Increment(ref _myThreadId), _barrier.Count, _barrier);
-        ParallelContext.CurrentThreadContext = _parallelContext.PushFrame(newFrame);
+        ParallelContextStorage.CurrentThreadContext = _parallelContext.PushFrame(newFrame);
         Logger.Log("Task started");
         _stateMachine.MakeCopy().MoveNext();
     }

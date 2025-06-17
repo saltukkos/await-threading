@@ -4,6 +4,7 @@
 
 using System.Collections.Concurrent;
 using AwaitThreading.Core;
+using AwaitThreading.Core.Context;
 
 namespace AwaitThreading.Enumerable;
 
@@ -38,7 +39,7 @@ public static partial class CollectionParallelExtensions
             await new ForkingTask(threadsCount);
             forked = true;
 
-            return new ParallelAsyncDelegatingEnumerable<T>(partitions[ParallelContext.CurrentThreadContext.GetCurrentFrame().Id]);
+            return new ParallelAsyncDelegatingEnumerable<T>(partitions[ParallelContextStorage.GetTopFrameId()]);
         }
         catch
         {

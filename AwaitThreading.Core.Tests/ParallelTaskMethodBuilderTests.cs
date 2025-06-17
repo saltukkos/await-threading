@@ -2,6 +2,8 @@
 // Copyright (c) 2024 Saltuk Konstantin
 // See the LICENSE file in the project root for more information.
 
+using AwaitThreading.Core.Context;
+
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 namespace AwaitThreading.Core.Tests;
 
@@ -102,7 +104,7 @@ public class ParallelTaskMethodBuilderTests : BaseClassWithParallelContextValida
         async ParallelTask<int> ForkAndGetResult()
         {
             await new ForkingTask(2);
-            return ParallelContext.CurrentThreadContext.GetCurrentFrame().Id == 0 ? 1 : 2;
+            return ParallelContextStorage.GetTopFrameId() == 0 ? 1 : 2;
         }
     }
 

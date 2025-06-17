@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Runtime.CompilerServices;
+using AwaitThreading.Core.Context;
 
 namespace AwaitThreading.Core;
 
@@ -15,7 +16,7 @@ public readonly struct TargetedJoiningTask
         public void ParallelOnCompleted<TStateMachine>(TStateMachine stateMachine)
             where TStateMachine : IAsyncStateMachine
         {
-            var context = ParallelContext.PopFrame();
+            var context = ParallelContextStorage.PopFrame();
 
             if (context.Id == 0)
             {
@@ -25,7 +26,7 @@ public readonly struct TargetedJoiningTask
             else
             {
                 context.JoinBarrier.Signal();
-                ParallelContext.CaptureAndClear();
+                ParallelContextStorage.CaptureAndClear();
             }
         }
 

@@ -5,6 +5,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using AwaitThreading.Core.Context;
 
 namespace AwaitThreading.Core.Tests.Helpers;
 
@@ -22,7 +23,7 @@ public class BaseClassWithParallelContextValidation
             tasks[i] = Task.Run(
                 () =>
                 {
-                    var lastContext = ParallelContext.CaptureAndClear();
+                    var lastContext = ParallelContextStorage.CaptureAndClear();
                     if (!lastContext.IsEmpty)
                     {
                         Logger.Log($"Non empty context was detected: {lastContext.StackToString()}");

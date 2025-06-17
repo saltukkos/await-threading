@@ -2,6 +2,8 @@
 // Copyright (c) 2024 Saltuk Konstantin
 // See the LICENSE file in the project root for more information.
 
+using AwaitThreading.Core.Context;
+
 namespace AwaitThreading.Core.Tests;
 
 [TestFixture]
@@ -129,7 +131,7 @@ public class CoreOperationsTests : BaseClassWithParallelContextValidation
         {
             var sharedArray = new int[2];
             await new ForkingTask(2);
-            sharedArray[ParallelContext.CurrentThreadContext.GetCurrentFrame().Id] = 1;
+            sharedArray[ParallelContextStorage.GetTopFrameId()] = 1;
             await new JoiningTask();
             return sharedArray;
         }
@@ -147,7 +149,7 @@ public class CoreOperationsTests : BaseClassWithParallelContextValidation
             var sharedArray = new object[2];
             await new ForkingTask(2);
             var localObject = new object();
-            sharedArray[ParallelContext.CurrentThreadContext.GetCurrentFrame().Id] = localObject;
+            sharedArray[ParallelContextStorage.GetTopFrameId()] = localObject;
             await new JoiningTask();
             return sharedArray;
         }
@@ -165,7 +167,7 @@ public class CoreOperationsTests : BaseClassWithParallelContextValidation
             var sharedArray = new object[2];
             await new ForkingTask(2);
             var localObject = new object();
-            sharedArray[ParallelContext.CurrentThreadContext.GetCurrentFrame().Id] = localObject;
+            sharedArray[ParallelContextStorage.GetTopFrameId()] = localObject;
             await new TargetedJoiningTask();
             return (sharedArray, localObject);
         }
@@ -187,7 +189,7 @@ public class CoreOperationsTests : BaseClassWithParallelContextValidation
 
             await new ForkingTask(2);
             var incrementedValue = Interlocked.Increment(ref sharedInt);
-            sharedArray[ParallelContext.CurrentThreadContext.GetCurrentFrame().Id] = incrementedValue;
+            sharedArray[ParallelContextStorage.GetTopFrameId()] = incrementedValue;
             await new JoiningTask();
             
             return (sharedArray, sharedInt);

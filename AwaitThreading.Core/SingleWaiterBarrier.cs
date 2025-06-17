@@ -4,7 +4,7 @@
 
 namespace AwaitThreading.Core;
 
-public sealed class SingleWaiterBarrier
+internal sealed class SingleWaiterBarrier
 {
     internal int Count; 
 

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Runtime.CompilerServices;
+using AwaitThreading.Core.Context;
 
 namespace AwaitThreading.Core;
 
@@ -49,7 +50,9 @@ internal static class ParallelTaskMethodBuilderImpl
         parallelAwaiter.ParallelOnCompleted(stateMachine);
     }
 
-    private static void AwaitOnCompletedInternal<TAwaiter, TStateMachine>(ref TAwaiter awaiter, TStateMachine stateMachine)
+    private static void AwaitOnCompletedInternal<TAwaiter, TStateMachine>(
+        ref TAwaiter awaiter,
+        TStateMachine stateMachine)
         where TAwaiter : INotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
@@ -69,20 +72,22 @@ internal static class ParallelTaskMethodBuilderImpl
         }
     }
 
-    private static void AwaitUnsafeOnCompletedInternal<TAwaiter, TStateMachine>(ref TAwaiter awaiter, TStateMachine stateMachine)
+    private static void AwaitUnsafeOnCompletedInternal<TAwaiter, TStateMachine>(
+        ref TAwaiter awaiter,
+        TStateMachine stateMachine)
         where TAwaiter : ICriticalNotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
         var executionContext = ExecutionContext.Capture();
-        var parallelContext = ParallelContext.CaptureAndClear();
+        var parallelContext = ParallelContextStorage.CaptureAndClear();
     
         if (executionContext is null)
         {
             awaiter.UnsafeOnCompleted(() =>
             {
-                ParallelContext.Restore(parallelContext);
+                ParallelContextStorage.Restore(parallelContext);
                 stateMachine.MoveNext();
-                ParallelContext.ClearButNotExpected();
+                ParallelContextStorage.ClearButNotExpected();
             });
         }
         else
@@ -90,9 +95,9 @@ internal static class ParallelTaskMethodBuilderImpl
             awaiter.UnsafeOnCompleted(() =>
             {
                 ExecutionContext.Restore(executionContext);
-                ParallelContext.Restore(parallelContext);
+                ParallelContextStorage.Restore(parallelContext);
                 stateMachine.MoveNext();
-                ParallelContext.ClearButNotExpected();
+                ParallelContextStorage.ClearButNotExpected();
             });
         }
     }

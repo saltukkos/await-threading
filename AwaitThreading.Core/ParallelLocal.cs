@@ -2,6 +2,7 @@
 // Copyright (c) 2024 Saltuk Konstantin
 // See the LICENSE file in the project root for more information.
 
+using AwaitThreading.Core.Context;
 using JetBrains.Annotations;
 
 namespace AwaitThreading.Core;
@@ -37,7 +38,7 @@ public class ParallelLocal<T>
             if (_slots is null)
                 Assertion.ThrowInvalidParallelLocalUsage();
 
-            var id = ParallelContext.CurrentThreadContext.GetCurrentFrame().Id;
+            var id = ParallelContextStorage.GetTopFrameId();
             return ref _slots[id];
         }
     }

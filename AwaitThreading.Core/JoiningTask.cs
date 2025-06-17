@@ -3,12 +3,13 @@
 //See the LICENSE file in the project root for more information.
 
 using System.Runtime.CompilerServices;
+using AwaitThreading.Core.Context;
 
 namespace AwaitThreading.Core;
 
 public readonly struct JoiningTask
 {
-    public struct JoiningTaskAwaiter : ICriticalNotifyCompletion, IParallelNotifyCompletion
+    public readonly struct JoiningTaskAwaiter : ICriticalNotifyCompletion, IParallelNotifyCompletion
     {
         public bool IsCompleted => false;
 
@@ -16,7 +17,7 @@ public readonly struct JoiningTask
             where TStateMachine : IAsyncStateMachine
         {
             Logger.Log("Start joining");
-            var context = ParallelContext.PopFrame();
+            var context = ParallelContextStorage.PopFrame();
 
             if (context.JoinBarrier.Finish())
             {
@@ -24,7 +25,7 @@ public readonly struct JoiningTask
             }
             else
             {
-                ParallelContext.CaptureAndClear();
+                ParallelContextStorage.CaptureAndClear();
             }
         }
 

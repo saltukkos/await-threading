@@ -15,9 +15,6 @@ internal static class Assertion
         ExceptionDispatchInfo.Capture(new InvalidOperationException(BadAwaitMessage));
 
     [DoesNotReturn]
-    public static void Fail(string message) => throw new InvalidOperationException(message);
-
-    [DoesNotReturn]
     public static void ThrowBadAwait() => throw new InvalidOperationException(BadAwaitMessage);
 
     [DoesNotReturn]
