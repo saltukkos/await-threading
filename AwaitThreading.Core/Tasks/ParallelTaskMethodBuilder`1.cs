@@ -1,39 +1,39 @@
-// MIT License
-// Copyright (c) 2024 Saltuk Konstantin
-// See the LICENSE file in the project root for more information.
+//MIT License
+//Copyright (c) 2023 Saltuk Konstantin
+//See the LICENSE file in the project root for more information.
 
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Runtime.ExceptionServices;
 using JetBrains.Annotations;
 
-namespace AwaitThreading.Core;
+namespace AwaitThreading.Core.Tasks;
 
 [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
-public readonly struct ParallelValueTaskMethodBuilder<T>
+public readonly struct ParallelTaskMethodBuilder<T>
 {
-    private readonly ParallelTaskImpl<T> _parallelTaskImpl = new();
-
-    public ParallelValueTaskMethodBuilder()
+    public ParallelTaskMethodBuilder()
     {
     }
 
-    public static ParallelValueTaskMethodBuilder<T> Create() => new();
+    public static ParallelTaskMethodBuilder<T> Create() => new();
 
-    public ParallelValueTask<T> Task => new(_parallelTaskImpl);
+    public ParallelTask<T> Task { [MethodImpl(MethodImplOptions.AggressiveInlining)] get; } = new();
 
     [DebuggerStepThrough]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Start<TStateMachine>(ref TStateMachine stateMachine) where TStateMachine : IAsyncStateMachine
     {
-        _parallelTaskImpl.SetStateMachine(ref stateMachine);
+        // Do not run! Tasks are 'cold'
+        Task.SetStateMachine(ref stateMachine);
     }
 
     public void SetStateMachine(IAsyncStateMachine stateMachine)
     {
     }
 
-    public void AwaitOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, ref TStateMachine stateMachine)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void AwaitOnCompleted<TAwaiter, TStateMachine>(
+        ref TAwaiter awaiter, ref TStateMachine stateMachine)
         where TAwaiter : INotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
@@ -41,7 +41,8 @@ public readonly struct ParallelValueTaskMethodBuilder<T>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, ref TStateMachine stateMachine)
+    public void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>(
+        ref TAwaiter awaiter, ref TStateMachine stateMachine)
         where TAwaiter : ICriticalNotifyCompletion
         where TStateMachine : IAsyncStateMachine
     {
@@ -50,11 +51,11 @@ public readonly struct ParallelValueTaskMethodBuilder<T>
 
     public void SetResult(T result)
     {
-        _parallelTaskImpl.SetResult(new ParallelTaskResult<T>(result));
+        Task.SetResult(result);
     }
 
     public void SetException(Exception exception)
     {
-        _parallelTaskImpl.SetResult(new ParallelTaskResult<T>(ExceptionDispatchInfo.Capture(exception)));
+        Task.SetException(exception);
     }
 }

@@ -5,7 +5,7 @@
 using System.Runtime.CompilerServices;
 using AwaitThreading.Core.Context;
 
-namespace AwaitThreading.Core;
+namespace AwaitThreading.Core.Tasks;
 
 internal static class ParallelTaskMethodBuilderImpl
 {

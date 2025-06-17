@@ -4,8 +4,9 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.ExceptionServices;
+using AwaitThreading.Core.Tasks;
 
-namespace AwaitThreading.Core;
+namespace AwaitThreading.Core.Diagnostics;
 
 internal static class Assertion
 {

@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 
-namespace AwaitThreading.Core;
+namespace AwaitThreading.Core.Tasks;
 
 [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
 public readonly struct ParallelTaskMethodBuilder

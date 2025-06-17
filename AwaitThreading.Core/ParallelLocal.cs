@@ -3,6 +3,8 @@
 // See the LICENSE file in the project root for more information.
 
 using AwaitThreading.Core.Context;
+using AwaitThreading.Core.Diagnostics;
+using AwaitThreading.Core.Operations;
 using JetBrains.Annotations;
 
 namespace AwaitThreading.Core;

@@ -2,7 +2,7 @@
 // Copyright (c) 2023 Saltuk Konstantin
 // See the LICENSE file in the project root for more information.
 
-namespace AwaitThreading.Core;
+namespace AwaitThreading.Core.Tasks;
 
 public static class ParallelTaskExtensions
 {
@@ -15,4 +15,6 @@ public static class ParallelTaskExtensions
     {
         return await parallelTask;
     }
+    
+    //TODO: AsValueTask for ParallelValueTask
 }

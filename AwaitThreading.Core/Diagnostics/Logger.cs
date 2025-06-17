@@ -5,7 +5,7 @@
 using System.Diagnostics;
 using AwaitThreading.Core.Context;
 
-namespace AwaitThreading.Core;
+namespace AwaitThreading.Core.Diagnostics;
 
 public static class Logger
 {

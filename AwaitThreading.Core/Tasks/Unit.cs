@@ -4,7 +4,7 @@
 
 using System.Runtime.InteropServices;
 
-namespace AwaitThreading.Core;
+namespace AwaitThreading.Core.Tasks;
 
 [StructLayout(LayoutKind.Sequential, Size = 1)]
 internal struct Unit

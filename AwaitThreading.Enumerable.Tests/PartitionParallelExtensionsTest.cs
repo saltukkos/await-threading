@@ -3,7 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Concurrent;
-using AwaitThreading.Core;
+using AwaitThreading.Core.Tasks;
 using NUnit.Framework;
 using NUnit.Framework.Legacy;
 

@@ -5,6 +5,8 @@
 using System.Collections.Concurrent;
 using AwaitThreading.Core;
 using AwaitThreading.Core.Context;
+using AwaitThreading.Core.Operations;
+using AwaitThreading.Core.Tasks;
 
 namespace AwaitThreading.Enumerable;
 

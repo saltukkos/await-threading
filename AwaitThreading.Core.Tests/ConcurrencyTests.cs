@@ -2,6 +2,9 @@
 // Copyright (c) 2024 Saltuk Konstantin
 // See the LICENSE file in the project root for more information.
 
+using AwaitThreading.Core.Operations;
+using AwaitThreading.Core.Tasks;
+
 namespace AwaitThreading.Core.Tests;
 
 [TestFixture]

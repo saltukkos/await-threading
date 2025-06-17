@@ -5,9 +5,9 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.ExceptionServices;
 
-namespace AwaitThreading.Core;
+namespace AwaitThreading.Core.Tasks;
 
-public readonly struct ParallelTaskResult<T>
+internal readonly struct ParallelTaskResult<T>
 {
     public ParallelTaskResult(T result)
     {

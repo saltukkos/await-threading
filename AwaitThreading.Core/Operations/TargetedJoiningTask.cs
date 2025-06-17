@@ -4,8 +4,10 @@
 
 using System.Runtime.CompilerServices;
 using AwaitThreading.Core.Context;
+using AwaitThreading.Core.Diagnostics;
+using AwaitThreading.Core.Tasks;
 
-namespace AwaitThreading.Core;
+namespace AwaitThreading.Core.Operations;
 
 public readonly struct TargetedJoiningTask
 {

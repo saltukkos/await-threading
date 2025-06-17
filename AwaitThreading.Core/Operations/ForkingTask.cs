@@ -4,8 +4,12 @@
 
 using System.Runtime.CompilerServices;
 using AwaitThreading.Core.Context;
+using AwaitThreading.Core.Diagnostics;
+using AwaitThreading.Core.Tasks;
 
-namespace AwaitThreading.Core;
+namespace AwaitThreading.Core.Operations;
+
+// TODO: user-friendly class like 'int ParallelOperations.Fork(N)'
 
 public sealed class ForkingTask
 {

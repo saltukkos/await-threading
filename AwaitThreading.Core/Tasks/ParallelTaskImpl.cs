@@ -5,8 +5,9 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using AwaitThreading.Core.Context;
+using AwaitThreading.Core.Diagnostics;
 
-namespace AwaitThreading.Core;
+namespace AwaitThreading.Core.Tasks;
 
 internal sealed class ParallelTaskImpl<T>
 {

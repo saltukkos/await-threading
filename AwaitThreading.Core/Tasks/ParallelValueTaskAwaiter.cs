@@ -4,7 +4,7 @@
 
 using System.Runtime.CompilerServices;
 
-namespace AwaitThreading.Core;
+namespace AwaitThreading.Core.Tasks;
 
 public readonly struct ParallelValueTaskAwaiter<T> : ICriticalNotifyCompletion, IParallelNotifyCompletion
 {

@@ -2,7 +2,7 @@
 //Copyright (c) 2023 Saltuk Konstantin
 //See the LICENSE file in the project root for more information.
 
-using AwaitThreading.Core;
+using AwaitThreading.Core.Operations;
 
 namespace AwaitThreading.Enumerable;
 

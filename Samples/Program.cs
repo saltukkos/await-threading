@@ -1,4 +1,4 @@
-using AwaitThreading.Core;
+using AwaitThreading.Core.Tasks;
 using AwaitThreading.Enumerable;
 using AwaitThreading.Enumerable.Experimental;
 

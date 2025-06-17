@@ -5,7 +5,7 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-namespace AwaitThreading.Core;
+namespace AwaitThreading.Core.Tasks;
 
 internal static class StateMachineExtensions
 {

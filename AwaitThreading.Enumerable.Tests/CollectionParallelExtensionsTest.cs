@@ -4,7 +4,7 @@
 
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
-using AwaitThreading.Core;
+using AwaitThreading.Core.Tasks;
 using NUnit.Framework;
 using NUnit.Framework.Legacy;
 

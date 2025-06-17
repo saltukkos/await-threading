@@ -4,6 +4,7 @@
 
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using AwaitThreading.Core.Diagnostics;
 
 namespace AwaitThreading.Core.Context;
 

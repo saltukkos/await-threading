@@ -3,6 +3,8 @@
 // See the LICENSE file in the project root for more information.
 
 using AwaitThreading.Core.Context;
+using AwaitThreading.Core.Operations;
+using AwaitThreading.Core.Tasks;
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 namespace AwaitThreading.Core.Tests;

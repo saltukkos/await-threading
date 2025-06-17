@@ -3,6 +3,8 @@
 //See the LICENSE file in the project root for more information.
 
 using AwaitThreading.Core;
+using AwaitThreading.Core.Operations;
+using AwaitThreading.Core.Tasks;
 
 namespace AwaitThreading.Enumerable;
 

@@ -4,7 +4,7 @@
 
 using System.Runtime.CompilerServices;
 
-namespace AwaitThreading.Core;
+namespace AwaitThreading.Core.Tasks;
 
 [AsyncMethodBuilder(typeof(ParallelValueTaskMethodBuilder<>))]
 public readonly struct ParallelValueTask<T>

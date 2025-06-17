@@ -5,7 +5,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 
-namespace AwaitThreading.Core;
+namespace AwaitThreading.Core.Tasks;
 
 [AsyncMethodBuilder(typeof(ParallelTaskMethodBuilder<>))]
 public readonly struct ParallelTask<T>
