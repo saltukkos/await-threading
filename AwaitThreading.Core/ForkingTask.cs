@@ -84,7 +84,7 @@ public class ForkingClosure<TStateMachine>
     public ForkingClosure(TStateMachine stateMachine, int threadsCount, ParallelContext parallelContext)
     {
         _executionContext = ExecutionContext.Capture();
-        _stateMachine = stateMachine.MakeCopy();
+        _stateMachine = stateMachine.MakeCopy(); //TODO: redundant?
         _parallelContext = parallelContext;
         _barrier = new SingleWaiterBarrier(threadsCount);
     }
@@ -96,8 +96,10 @@ public class ForkingClosure<TStateMachine>
             ExecutionContext.Restore(_executionContext);
         }
 
-        ParallelContext.Restore(_parallelContext); //TODO: can avoid second set
-        ParallelContext.PushFrame(new ParallelFrame(Interlocked.Increment(ref _myThreadId), _barrier.Count, _barrier));
+        // TODO: is race possible? Let's say some threads didn't start yet but one thread is already at 'await Join'.
+        //  Do we need to read _barrier.Count before starting any threads? (closure will become larger :( )
+        var newFrame = new ParallelFrame(Interlocked.Increment(ref _myThreadId), _barrier.Count, _barrier);
+        ParallelContext.CurrentThreadContext = _parallelContext.PushFrame(newFrame);
         Logger.Log("Task started");
         _stateMachine.MakeCopy().MoveNext();
     }

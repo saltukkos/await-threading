@@ -37,7 +37,7 @@ public class ParallelLocal<T>
             if (_slots is null)
                 Assertion.ThrowInvalidParallelLocalUsage();
 
-            var id = ParallelContext.Id;
+            var id = ParallelContext.CurrentThreadContext.GetCurrentFrame().Id;
             return ref _slots[id];
         }
     }

@@ -38,7 +38,7 @@ public static partial class CollectionParallelExtensions
             await new ForkingTask(threadsCount);
             forked = true;
 
-            return new ParallelAsyncDelegatingEnumerable<T>(partitions[ParallelContext.Id]);
+            return new ParallelAsyncDelegatingEnumerable<T>(partitions[ParallelContext.CurrentThreadContext.GetCurrentFrame().Id]);
         }
         catch
         {

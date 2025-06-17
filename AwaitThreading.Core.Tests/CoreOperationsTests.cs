@@ -129,7 +129,7 @@ public class CoreOperationsTests : BaseClassWithParallelContextValidation
         {
             var sharedArray = new int[2];
             await new ForkingTask(2);
-            sharedArray[ParallelContext.Id] = 1;
+            sharedArray[ParallelContext.CurrentThreadContext.GetCurrentFrame().Id] = 1;
             await new JoiningTask();
             return sharedArray;
         }
@@ -147,7 +147,7 @@ public class CoreOperationsTests : BaseClassWithParallelContextValidation
             var sharedArray = new object[2];
             await new ForkingTask(2);
             var localObject = new object();
-            sharedArray[ParallelContext.Id] = localObject;
+            sharedArray[ParallelContext.CurrentThreadContext.GetCurrentFrame().Id] = localObject;
             await new JoiningTask();
             return sharedArray;
         }
@@ -165,7 +165,7 @@ public class CoreOperationsTests : BaseClassWithParallelContextValidation
             var sharedArray = new object[2];
             await new ForkingTask(2);
             var localObject = new object();
-            sharedArray[ParallelContext.Id] = localObject;
+            sharedArray[ParallelContext.CurrentThreadContext.GetCurrentFrame().Id] = localObject;
             await new TargetedJoiningTask();
             return (sharedArray, localObject);
         }
@@ -187,7 +187,7 @@ public class CoreOperationsTests : BaseClassWithParallelContextValidation
 
             await new ForkingTask(2);
             var incrementedValue = Interlocked.Increment(ref sharedInt);
-            sharedArray[ParallelContext.Id] = incrementedValue;
+            sharedArray[ParallelContext.CurrentThreadContext.GetCurrentFrame().Id] = incrementedValue;
             await new JoiningTask();
             
             return (sharedArray, sharedInt);

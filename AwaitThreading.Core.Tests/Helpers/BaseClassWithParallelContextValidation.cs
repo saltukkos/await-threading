@@ -25,7 +25,7 @@ public class BaseClassWithParallelContextValidation
                     var lastContext = ParallelContext.CaptureAndClear();
                     if (!lastContext.IsEmpty)
                     {
-                        Logger.Log($"Non empty context was detected: {lastContext.GetCurrentContexts2()}");
+                        Logger.Log($"Non empty context was detected: {lastContext.StackToString()}");
                         threadsWithParallelContext.Add(Thread.CurrentThread.ManagedThreadId);
                     }
                     

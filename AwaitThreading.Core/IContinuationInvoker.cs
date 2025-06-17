@@ -27,15 +27,15 @@ internal sealed class ParallelContinuationInvoker<TStateMachine> : IContinuation
     }
 }
 
-internal sealed class TaskFinishedMarker : IContinuationInvoker
-{
-    public static readonly TaskFinishedMarker Instance = new();
-
-    private TaskFinishedMarker()
-    {
-    }
-
-    public void Invoke()
-    {
-    }
-}
+// internal sealed class TaskFinishedMarker : IContinuationInvoker
+// {
+//     public static readonly TaskFinishedMarker Instance = new();
+//
+//     private TaskFinishedMarker()
+//     {
+//     }
+//
+//     public void Invoke()
+//     {
+//     }
+// }
