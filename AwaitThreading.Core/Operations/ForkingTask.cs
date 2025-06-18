@@ -33,7 +33,7 @@ public sealed class ForkingTask
             for (var i = 0; i < _threadCount; ++i)
             {
                 Logger.Log("Scheduling task " + i);
-                Task.Factory.StartNew(
+                var task = new Task(
                     static args =>
                     {
                         try
@@ -45,8 +45,9 @@ public sealed class ForkingTask
                             ParallelContextStorage.ClearButNotExpected();
                         }
                     },
-                    forkingClosure,
-                    TaskCreationOptions.DenyChildAttach); //TODO: DenyChildAttach?
+                    forkingClosure);
+
+                task.Start();
             }
         }
 
