@@ -95,7 +95,7 @@ public class ForkingClosure<TStateMachine>
     public ForkingClosure(TStateMachine stateMachine, int threadCount, ParallelContext parallelContext)
     {
         _executionContext = ExecutionContext.Capture();
-        _stateMachine = stateMachine.MakeCopy(); //TODO: redundant?
+        _stateMachine = stateMachine;
         _parallelContext = parallelContext;
         _barrier = new SingleWaiterBarrier(threadCount);
     }
