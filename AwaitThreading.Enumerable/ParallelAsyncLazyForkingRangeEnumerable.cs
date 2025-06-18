@@ -9,13 +9,13 @@ namespace AwaitThreading.Enumerable;
 public sealed class ParallelAsyncLazyForkingRangeEnumerable<T> : IParallelAsyncLazyForkingEnumerable<T>
 {
     private readonly IReadOnlyList<T> _list;
-    private readonly int _threadsCount;
+    private readonly int _threadCount;
     private readonly ForkingOptions? _forkingOptions;
 
-    public ParallelAsyncLazyForkingRangeEnumerable(IReadOnlyList<T> list, int threadsCount, ForkingOptions? forkingOptions)
+    public ParallelAsyncLazyForkingRangeEnumerable(IReadOnlyList<T> list, int threadCount, ForkingOptions? forkingOptions)
     {
         _list = list;
-        _threadsCount = threadsCount;
+        _threadCount = threadCount;
         _forkingOptions = forkingOptions;
     }
 
@@ -26,6 +26,6 @@ public sealed class ParallelAsyncLazyForkingRangeEnumerable<T> : IParallelAsyncL
 
     public ParallelAsyncLazyForkingRangeEnumerator<T> GetAsyncEnumerator()
     {
-        return new ParallelAsyncLazyForkingRangeEnumerator<T>(_list, _threadsCount, _forkingOptions);
+        return new ParallelAsyncLazyForkingRangeEnumerator<T>(_list, _threadCount, _forkingOptions);
     }
 }

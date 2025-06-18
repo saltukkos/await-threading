@@ -13,7 +13,7 @@ namespace AwaitThreading.Enumerable;
 public readonly struct ParallelAsyncLazyForkingPartitionEnumerator<T> : IParallelAsyncLazyForkingEnumerator<T>
 {
     private readonly Partitioner<T> _partitioner;
-    private readonly int _threadsCount;
+    private readonly int _threadCount;
     private readonly ForkingOptions? _forkingOptions;
 
     // In ideal world we would be able to store enumerator for our chunk in struct field,
@@ -21,10 +21,10 @@ public readonly struct ParallelAsyncLazyForkingPartitionEnumerator<T> : IParalle
     // executed on the copy of a struct, so we have to store the data somewhere else.
     private readonly ParallelLocal<IEnumerator<T>> _chunkIndexer = new();
 
-    public ParallelAsyncLazyForkingPartitionEnumerator(Partitioner<T> partitioner, int threadsCount, ForkingOptions? forkingOptions)
+    public ParallelAsyncLazyForkingPartitionEnumerator(Partitioner<T> partitioner, int threadCount, ForkingOptions? forkingOptions)
     {
         _partitioner = partitioner;
-        _threadsCount = threadsCount;
+        _threadCount = threadCount;
         _forkingOptions = forkingOptions;
     }
 
@@ -44,7 +44,7 @@ public readonly struct ParallelAsyncLazyForkingPartitionEnumerator<T> : IParalle
         if (partitioner.SupportsDynamicPartitions)
         {
             var dynamicPartitions = partitioner.GetDynamicPartitions();
-            await _chunkIndexer.InitializeAndFork(_threadsCount, _forkingOptions);
+            await _chunkIndexer.InitializeAndFork(_threadCount, _forkingOptions);
 
             // ReSharper disable once GenericEnumeratorNotDisposed
             var dynamicEnumerator = dynamicPartitions.GetEnumerator();
@@ -52,8 +52,8 @@ public readonly struct ParallelAsyncLazyForkingPartitionEnumerator<T> : IParalle
             return dynamicEnumerator.MoveNext();
         }
 
-        var partitions = partitioner.GetPartitions(_threadsCount);
-        await _chunkIndexer.InitializeAndFork(_threadsCount, _forkingOptions);
+        var partitions = partitioner.GetPartitions(_threadCount);
+        await _chunkIndexer.InitializeAndFork(_threadCount, _forkingOptions);
 
         var enumerator = partitions[ParallelContextStorage.GetTopFrameId()];
         _chunkIndexer.Value = enumerator;

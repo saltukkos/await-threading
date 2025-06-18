@@ -35,7 +35,7 @@ public readonly struct ParallelAsyncLazyForkingRangeEnumerator<T> : IParallelAsy
     }
     
     private readonly IReadOnlyList<T> _list;
-    private readonly int _threadsCount;
+    private readonly int _threadCount;
     private readonly ForkingOptions? _forkingOptions;
 
     // In ideal world we would be able to store enumerator for our chunk in struct field,
@@ -43,9 +43,9 @@ public readonly struct ParallelAsyncLazyForkingRangeEnumerator<T> : IParallelAsy
     // executed on the copy of a struct, so we have to store the data somewhere else.
     private readonly ParallelLocal<RangeEnumerator> _chunkIndexer = new();
 
-    public ParallelAsyncLazyForkingRangeEnumerator(IReadOnlyList<T> list, int threadsCount, ForkingOptions? forkingOptions)
+    public ParallelAsyncLazyForkingRangeEnumerator(IReadOnlyList<T> list, int threadCount, ForkingOptions? forkingOptions)
     {
-        _threadsCount = threadsCount;
+        _threadCount = threadCount;
         _forkingOptions = forkingOptions;
         _list = list;
     }
@@ -67,8 +67,8 @@ public readonly struct ParallelAsyncLazyForkingRangeEnumerator<T> : IParallelAsy
 
     private async ParallelValueTask<bool> ForkAndMoveNextAsync()
     {
-        var rangeManager = new RangeManager(0, _list.Count, 1, _threadsCount);
-        await _chunkIndexer.InitializeAndFork(_threadsCount, _forkingOptions);
+        var rangeManager = new RangeManager(0, _list.Count, 1, _threadCount);
+        await _chunkIndexer.InitializeAndFork(_threadCount, _forkingOptions);
         var indexer = new RangeEnumerator(rangeManager.RegisterNewWorker());
         var returnResult = indexer.MoveNext();
         _chunkIndexer.Value = indexer;

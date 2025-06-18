@@ -13,17 +13,17 @@ public static partial class CollectionParallelExtensions
 {
     public static async ParallelTask<ParallelAsyncEnumerable<T>> AsParallelAsync<T>(
         this IReadOnlyList<T> list,
-        int threadsCount,
+        int threadCount,
         ForkingOptions? forkingOptions = null)
     {
-        var rangeManager = new RangeManager(0, list.Count, 1, threadsCount);
-        await new ForkingTask(threadsCount, forkingOptions);
+        var rangeManager = new RangeManager(0, list.Count, 1, threadCount);
+        await new ForkingTask(threadCount, forkingOptions);
         return new ParallelAsyncEnumerable<T>(list, rangeManager.RegisterNewWorker());
     }
 
     public static async ParallelTask<IParallelAsyncEnumerable<T>> AsParallelAsync<T>(
         this Partitioner<T> partitioner,
-        int threadsCount,
+        int threadCount,
         ForkingOptions? forkingOptions = null)
     {
         var forked = false;
@@ -32,14 +32,14 @@ public static partial class CollectionParallelExtensions
             if (partitioner.SupportsDynamicPartitions)
             {
                 var dynamicPartitions = partitioner.GetDynamicPartitions();
-                await new ForkingTask(threadsCount, forkingOptions);
+                await new ForkingTask(threadCount, forkingOptions);
                 forked = true;
 
                 return new ParallelAsyncDelegatingEnumerable<T>(dynamicPartitions.GetEnumerator());
             }
 
-            var partitions = partitioner.GetPartitions(threadsCount);
-            await new ForkingTask(threadsCount, forkingOptions);
+            var partitions = partitioner.GetPartitions(threadCount);
+            await new ForkingTask(threadCount, forkingOptions);
             forked = true;
 
             return new ParallelAsyncDelegatingEnumerable<T>(partitions[ParallelContextStorage.GetTopFrameId()]);
@@ -57,23 +57,23 @@ public static partial class CollectionParallelExtensions
 
     public static ParallelTask<IParallelAsyncEnumerable<T>> AsParallelAsync<T>(
         this IEnumerable<T> enumerable,
-        int threadsCount,
+        int threadCount,
         ForkingOptions? forkingOptions = null)
     {
         return enumerable switch
         {
-            IReadOnlyList<T> list => AsParallelAsyncBoxed(list, threadsCount, forkingOptions),
-            _ => AsParallelAsync(Partitioner.Create(enumerable), threadsCount)
+            IReadOnlyList<T> list => AsParallelAsyncBoxed(list, threadCount, forkingOptions),
+            _ => AsParallelAsync(Partitioner.Create(enumerable), threadCount)
         };
     }
 
     private static async ParallelTask<IParallelAsyncEnumerable<T>> AsParallelAsyncBoxed<T>(
         IReadOnlyList<T> list,
-        int threadsCount,
+        int threadCount,
         ForkingOptions? forkingOptions)
     {
-        var rangeManager = new RangeManager(0, list.Count, 1, threadsCount);
-        await new ForkingTask(threadsCount, forkingOptions);
+        var rangeManager = new RangeManager(0, list.Count, 1, threadCount);
+        await new ForkingTask(threadCount, forkingOptions);
         return new ParallelAsyncEnumerable<T>(list, rangeManager.RegisterNewWorker());
     }
 

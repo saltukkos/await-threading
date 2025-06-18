@@ -207,13 +207,13 @@ public class TaskOverParallelTaskTests : BaseClassWithParallelContextValidation
 
     [TestCase(1)]
     [TestCase(2)]
-    public async Task Await_RegularTaskIsAwaited_ContextIsClearedAndRestored1(int threadsCount)
+    public async Task Await_RegularTaskIsAwaited_ContextIsClearedAndRestored1(int threadCount)
     {
         await TestBody();
 
         async ParallelTask TestBody()
         {
-            await new ForkingTask(threadsCount);
+            await new ForkingTask(threadCount);
             var regularAsyncMethod = RegularAsyncMethod();
             await regularAsyncMethod;
 
@@ -235,13 +235,13 @@ public class TaskOverParallelTaskTests : BaseClassWithParallelContextValidation
 
     [TestCase(1)]
     [TestCase(2)]
-    public async Task Await_RegularTaskIsAwaited_ContextIsClearedAndRestored2(int threadsCount)
+    public async Task Await_RegularTaskIsAwaited_ContextIsClearedAndRestored2(int threadCount)
     {
         await TestBody();
 
         async ParallelTask TestBody()
         {
-            await new ForkingTask(threadsCount);
+            await new ForkingTask(threadCount);
             var regularAsyncMethod = RegularAsyncMethod();
             await regularAsyncMethod;
 
@@ -262,20 +262,20 @@ public class TaskOverParallelTaskTests : BaseClassWithParallelContextValidation
 
         async ParallelTask ParallelMethod()
         {
-            await new ForkingTask(threadsCount);
+            await new ForkingTask(threadCount);
             await new JoiningTask();
         }
     }
 
     [TestCase(1)]
     [TestCase(2)]
-    public async Task Await_RegularTaskIsAwaited_ContextIsClearedAndRestored3(int threadsCount)
+    public async Task Await_RegularTaskIsAwaited_ContextIsClearedAndRestored3(int threadCount)
     {
         await TestBody();
 
         async ParallelTask TestBody()
         {
-            await new ForkingTask(threadsCount);
+            await new ForkingTask(threadCount);
             var regularAsyncMethod = RegularAsyncMethod();
             await regularAsyncMethod;
 
@@ -296,7 +296,7 @@ public class TaskOverParallelTaskTests : BaseClassWithParallelContextValidation
 
         async ParallelTask ParallelMethod()
         {
-            await new ForkingTask(threadsCount);
+            await new ForkingTask(threadCount);
             await new JoiningTask();
 
             try
@@ -311,13 +311,13 @@ public class TaskOverParallelTaskTests : BaseClassWithParallelContextValidation
 
     [TestCase(1)]
     [TestCase(2)]
-    public async Task Await_RegularTaskIsAwaited_ContextIsClearedAndRestored4(int threadsCount)
+    public async Task Await_RegularTaskIsAwaited_ContextIsClearedAndRestored4(int threadCount)
     {
         await TestBody();
 
         async ParallelTask TestBody()
         {
-            await new ForkingTask(threadsCount);
+            await new ForkingTask(threadCount);
             var regularAsyncMethod = RegularAsyncMethod();
             await regularAsyncMethod;
 
@@ -345,7 +345,7 @@ public class TaskOverParallelTaskTests : BaseClassWithParallelContextValidation
 
         async ParallelTask ParallelMethod()
         {
-            await new ForkingTask(threadsCount);
+            await new ForkingTask(threadCount);
         }
     }
 }

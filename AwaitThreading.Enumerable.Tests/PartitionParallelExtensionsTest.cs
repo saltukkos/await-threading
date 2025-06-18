@@ -44,7 +44,7 @@ public class PartitionParallelExtensionsTest
     [TestCase(0, 2)]
     public async Task AsParallelAsync_WithDifferentThreadCount_IteratesOverAllElementsOnce(
         int itemsCount,
-        int threadsCount)
+        int threadCount)
     {
         await TestBody();
         return;
@@ -55,7 +55,7 @@ public class PartitionParallelExtensionsTest
             var result = new ConcurrentBag<int>();
 
             var partitioner = new NotDynamicPartitioner<int>(list);
-            await foreach (var i in await partitioner.AsParallelAsync(threadsCount))
+            await foreach (var i in await partitioner.AsParallelAsync(threadCount))
             {
                 result.Add(i);
             }
@@ -96,7 +96,7 @@ public class PartitionParallelExtensionsTest
     [TestCase(0, 2)]
     public async Task AsAsyncParallel_WithDifferentThreadCount_IteratesOverAllElementsOnce(
         int itemsCount,
-        int threadsCount)
+        int threadCount)
     {
         await TestBody();
         return;
@@ -107,7 +107,7 @@ public class PartitionParallelExtensionsTest
             var result = new ConcurrentBag<int>();
 
             var partitioner = new NotDynamicPartitioner<int>(list);
-            await foreach (var i in partitioner.AsAsyncParallel(threadsCount))
+            await foreach (var i in partitioner.AsAsyncParallel(threadCount))
             {
                 result.Add(i);
             }

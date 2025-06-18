@@ -43,7 +43,7 @@ public class CollectionParallelExtensionsTest
     [TestCase(0, 2)]
     public async Task AsParallelAsync_WithDifferentThreadCount_IteratesOverAllElementsOnce(
         int itemsCount,
-        int threadsCount)
+        int threadCount)
     {
         await TestBody();
         return;
@@ -52,7 +52,7 @@ public class CollectionParallelExtensionsTest
         {
             var list = System.Linq.Enumerable.Range(0, itemsCount).ToList();
             var result = new ConcurrentBag<int>();
-            await foreach (var i in await list.AsParallelAsync(threadsCount))
+            await foreach (var i in await list.AsParallelAsync(threadCount))
             {
                 result.Add(i);
             }
@@ -91,7 +91,7 @@ public class CollectionParallelExtensionsTest
     [TestCase(0, 2)]
     public async Task AsParallelLazyAsync_WithDifferentThreadCount_IteratesOverAllElementsOnce(
         int itemsCount,
-        int threadsCount)
+        int threadCount)
     {
         await TestBody();
         return;
@@ -100,7 +100,7 @@ public class CollectionParallelExtensionsTest
         {
             var list = System.Linq.Enumerable.Range(0, itemsCount).ToList();
             var result = new ConcurrentBag<int>();
-            await foreach (var i in list.AsAsyncParallel(threadsCount))
+            await foreach (var i in list.AsAsyncParallel(threadCount))
             {
                 result.Add(i);
             }
@@ -141,7 +141,7 @@ public class CollectionParallelExtensionsTest
     [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
     public async Task AsParallelAsyncEnumerable_WithDifferentThreadCount_IteratesOverAllElementsOnce(
         int itemsCount,
-        int threadsCount)
+        int threadCount)
     {
         await TestBody();
         return;
@@ -150,7 +150,7 @@ public class CollectionParallelExtensionsTest
         {
             var list = System.Linq.Enumerable.Range(0, itemsCount);
             var result = new ConcurrentBag<int>();
-            await foreach (var i in await list.AsParallelAsync(threadsCount))
+            await foreach (var i in await list.AsParallelAsync(threadCount))
             {
                 result.Add(i);
             }
@@ -191,7 +191,7 @@ public class CollectionParallelExtensionsTest
     [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
     public async Task AsAsyncParallelEnumerable_WithDifferentThreadCount_IteratesOverAllElementsOnce(
         int itemsCount,
-        int threadsCount)
+        int threadCount)
     {
         await TestBody();
         return;
@@ -200,7 +200,7 @@ public class CollectionParallelExtensionsTest
         {
             var list = System.Linq.Enumerable.Range(0, itemsCount);
             var result = new ConcurrentBag<int>();
-            await foreach (var i in list.AsAsyncParallel(threadsCount))
+            await foreach (var i in list.AsAsyncParallel(threadCount))
             {
                 result.Add(i);
             }

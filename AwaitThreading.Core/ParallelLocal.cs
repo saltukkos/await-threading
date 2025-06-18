@@ -22,13 +22,13 @@ public class ParallelLocal<T>
     private T?[]? _slots;
 
     [MustUseReturnValue]
-    public ForkingTask InitializeAndFork(int threadsCount, ForkingOptions? forkingOptions = null)
+    public ForkingTask InitializeAndFork(int threadCount, ForkingOptions? forkingOptions = null)
     {
         if (_slots is not null)
             Assertion.ThrowInvalidParallelLocalUsage();
 
-        _slots = new T[threadsCount];
-        return new ForkingTask(threadsCount, forkingOptions);
+        _slots = new T[threadCount];
+        return new ForkingTask(threadCount, forkingOptions);
     }
 
     public bool IsInitialized => _slots is not null;

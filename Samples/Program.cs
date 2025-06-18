@@ -12,16 +12,16 @@ await AsParallelAsync();
 await AsParallel();
 await AsParallelExperimental();
 
-async ParallelTask CompositionExample(int threadsCount)
+async ParallelTask CompositionExample(int threadCount)
 {
-    var id = await ForkAndGetId(threadsCount);
+    var id = await ForkAndGetId(threadCount);
     Console.Out.WriteLine($"Hello world from {id}");
     await JoinInsideMethod();
 }
 
-async ParallelTask<int> ForkAndGetId(int threadsCount)
+async ParallelTask<int> ForkAndGetId(int threadCount)
 {
-    var id = await ParallelOperations.Fork(threadsCount);
+    var id = await ParallelOperations.Fork(threadCount);
     return id;
 }
 
@@ -31,11 +31,11 @@ async ParallelTask JoinInsideMethod()
 }
 
 
-async ParallelTask NormalForkAndJoin(int threadsCount)
+async ParallelTask NormalForkAndJoin(int threadCount)
 {
     Console.Out.WriteLine("Before fork: single thread");
 
-    var id = await ParallelOperations.Fork(threadsCount);
+    var id = await ParallelOperations.Fork(threadCount);
     Console.Out.WriteLine($"Hello world from {id}"); //executed on two different threads
 
     // any (sync or async) workload

@@ -9,14 +9,14 @@ namespace AwaitThreading.Enumerable;
 
 public sealed class ParallelAsyncLazyForkingPartitionEnumerable<T> : IParallelAsyncLazyForkingEnumerable<T>
 {
-    private readonly int _threadsCount;
+    private readonly int _threadCount;
     private readonly ForkingOptions? _forkingOptions;
     private readonly Partitioner<T> _partitioner;
 
-    public ParallelAsyncLazyForkingPartitionEnumerable(Partitioner<T> partitioner, int threadsCount, ForkingOptions? forkingOptions)
+    public ParallelAsyncLazyForkingPartitionEnumerable(Partitioner<T> partitioner, int threadCount, ForkingOptions? forkingOptions)
     {
         _partitioner = partitioner;
-        _threadsCount = threadsCount;
+        _threadCount = threadCount;
         _forkingOptions = forkingOptions;
     }
 
@@ -27,6 +27,6 @@ public sealed class ParallelAsyncLazyForkingPartitionEnumerable<T> : IParallelAs
 
     public ParallelAsyncLazyForkingPartitionEnumerator<T> GetAsyncEnumerator()
     {
-        return new ParallelAsyncLazyForkingPartitionEnumerator<T>(_partitioner, _threadsCount, _forkingOptions);
+        return new ParallelAsyncLazyForkingPartitionEnumerator<T>(_partitioner, _threadCount, _forkingOptions);
     }
 }

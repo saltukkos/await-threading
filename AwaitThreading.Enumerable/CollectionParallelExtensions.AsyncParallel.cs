@@ -11,29 +11,29 @@ public static partial class CollectionParallelExtensions
 {
     public static ParallelAsyncLazyForkingRangeEnumerable<T> AsAsyncParallel<T>(
         this IReadOnlyList<T> list,
-        int threadsCount,
+        int threadCount,
         ForkingOptions? forkingOptions = null)
     {
-        return new ParallelAsyncLazyForkingRangeEnumerable<T>(list, threadsCount, forkingOptions);
+        return new ParallelAsyncLazyForkingRangeEnumerable<T>(list, threadCount, forkingOptions);
     }
 
     public static ParallelAsyncLazyForkingPartitionEnumerable<T> AsAsyncParallel<T>(
         this Partitioner<T> partitioner,
-        int threadsCount,
+        int threadCount,
         ForkingOptions? forkingOptions = null)
     {
-        return new ParallelAsyncLazyForkingPartitionEnumerable<T>(partitioner, threadsCount, forkingOptions);
+        return new ParallelAsyncLazyForkingPartitionEnumerable<T>(partitioner, threadCount, forkingOptions);
     }
 
     public static IParallelAsyncLazyForkingEnumerable<T> AsAsyncParallel<T>(
         this IEnumerable<T> enumerable,
-        int threadsCount, 
+        int threadCount, 
         ForkingOptions? forkingOptions = null)
     {
         return enumerable switch
         {
-            IReadOnlyList<T> list => new ParallelAsyncLazyForkingRangeEnumerable<T>(list, threadsCount, forkingOptions),
-            _ => new ParallelAsyncLazyForkingPartitionEnumerable<T>(Partitioner.Create(enumerable), threadsCount, forkingOptions)
+            IReadOnlyList<T> list => new ParallelAsyncLazyForkingRangeEnumerable<T>(list, threadCount, forkingOptions),
+            _ => new ParallelAsyncLazyForkingPartitionEnumerable<T>(Partitioner.Create(enumerable), threadCount, forkingOptions)
         };
     }
 }
