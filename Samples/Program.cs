@@ -3,18 +3,45 @@ using AwaitThreading.Core.Tasks;
 using AwaitThreading.Enumerable;
 using AwaitThreading.Enumerable.Experimental;
 
-await MyAsyncMethod();
+await NormalForkAndJoin(5);
+await CompositionExample(5);
+
 await AsParallelAsync();
 await AsParallel();
 await AsParallelExperimental();
 
-async ParallelTask MyAsyncMethod()
+async ParallelTask CompositionExample(int threadsCount)
 {
-    var id = await ParallelOperations.Fork(2);
-    Console.Out.WriteLine($"Hello World from thread {id}");
-    await Task.Delay(100); // any async workload
-    Thread.Sleep(100); //any sync workload
+    var id = await ForkAndGetId(threadsCount);
+    Console.Out.WriteLine($"Hello world from {id}");
+    await JoinInsideMethod();
+}
+
+async ParallelTask<int> ForkAndGetId(int threadsCount)
+{
+    var id = await ParallelOperations.Fork(threadsCount);
+    return id;
+}
+
+async ParallelTask JoinInsideMethod()
+{
     await ParallelOperations.Join();
+}
+
+
+async ParallelTask NormalForkAndJoin(int threadsCount)
+{
+    Console.Out.WriteLine("Before fork: single thread");
+
+    var id = await ParallelOperations.Fork(threadsCount);
+    Console.Out.WriteLine($"Hello world from {id}"); //executed on two different threads
+
+    // any (sync or async) workload
+    await Task.Delay(100);
+    Thread.Sleep(100);
+
+    await ParallelOperations.Join();
+    Console.Out.WriteLine("After join: single thread");
 }
 
 async ParallelTask AsParallelAsync()

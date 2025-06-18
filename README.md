@@ -5,7 +5,7 @@ AwaitThreading is a project dedicated to ease the use of parallel programming us
 ## Structure
 The project consist of two main parts:
 
-- **AwaitThreading.Core:**  This is where the core functionality of the Fork-join model is implemented. It includes `ForkTask` and `JoinTask` that provide the functionality of forking and joining using `await` operator. It utilizes compiler-generated state machine to run parts of async method in parallel. 
+- **AwaitThreading.Core:**  This is where the core functionality of the Fork-join model is implemented. It includes `ForkTask` and `JoinTask` that provide the functionality of forking and joining using `await` operator. It utilizes compiler-generated state machine to run parts of async method in parallel. All operations are also available via `ParallelOperations` class. There are also some helper entities (like `ParallelLocal<T>` or `ParallelContextStorage` with `ParallelContext`).
 
 - Some applications of this concept
   - **AwaitThreading.Enumerable:** Contains extension methods for collections, enabling parallel iteration over collection using a simple foreach loop.
@@ -16,6 +16,7 @@ The project consist of two main parts:
 Basic example:
 ```csharp
 using AwaitThreading.Core;
+using AwaitThreading.Core.Tasks;
 
 await NormalForkAndJoin(5);
 
@@ -23,11 +24,14 @@ async ParallelTask NormalForkAndJoin(int threadsCount)
 {
     Console.Out.WriteLine("Before fork: single thread");
 
-    await new ForkingTask(threadsCount);
-    var id = ParallelContext.Id;
+    var id = await ParallelOperations.Fork(threadsCount);
     Console.Out.WriteLine($"Hello world from {id}"); //executed on two different threads
 
-    await new JoiningTask();
+    // any (sync or async) workload
+    await Task.Delay(100);
+    Thread.Sleep(100);
+
+    await ParallelOperations.Join();
     Console.Out.WriteLine("After join: single thread");
 }
 ```
@@ -35,6 +39,7 @@ async ParallelTask NormalForkAndJoin(int threadsCount)
 Methods composition:
 ```csharp
 using AwaitThreading.Core;
+using AwaitThreading.Core.Tasks;
 
 await CompositionExample(5);
 
@@ -47,13 +52,13 @@ async ParallelTask CompositionExample(int threadsCount)
 
 async ParallelTask<int> ForkAndGetId(int threadsCount)
 {
-    await new ForkingTask(threadsCount);
-    return ParallelContext.Id;
+    var id = await ParallelOperations.Fork(threadsCount);
+    return id;
 }
 
 async ParallelTask JoinInsideMethod()
 {
-    await new JoiningTask();
+    await ParallelOperations.Join();
 }
 ```
 
@@ -61,7 +66,7 @@ async ParallelTask JoinInsideMethod()
 
 There are two main methods: `AsParallel` and `AsParallelAsync`. The key difference is that `AsParallelAsync` performs forking inside it, so after `AsParallelAsync` call caller is already forked, and it requires additional `await` to perform this operation.`AsParallel`, on the other hand, returns `ParallelLazyAsyncEnumerable` and the fork happens inside `ParallelLazyAsyncEnumerator.MoveNextAsync` on the first foreach iteration. This allows caller to not write additional `await` but has slightly more overhead.
 ```csharp
-using AwaitThreading.Core;
+using AwaitThreading.Core.Tasks;
 using AwaitThreading.Enumerable;
 
 await AsParallelAsync();
