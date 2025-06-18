@@ -9,17 +9,15 @@ using AwaitThreading.Core.Tasks;
 
 namespace AwaitThreading.Core.Operations;
 
-// TODO: user-friendly class like 'int ParallelOperations.Fork(N)'
-
 public sealed class ForkingTask
 {
     public readonly struct ForkingAwaiter : ICriticalNotifyCompletion, IParallelNotifyCompletion
     {
-        private readonly int _threadsCount;
+        private readonly int _threadCount;
 
-        public ForkingAwaiter(int threadsCount)
+        public ForkingAwaiter(int threadCount)
         {
-            _threadsCount = threadsCount;
+            _threadCount = threadCount;
         }
 
         public bool IsCompleted => false;
@@ -29,10 +27,10 @@ public sealed class ForkingTask
         {
             var forkingClosure = new ForkingClosure<TStateMachine>(
                 stateMachine,
-                _threadsCount,
+                _threadCount,
                 ParallelContextStorage.CaptureAndClear());
 
-            for (var i = 0; i < _threadsCount; ++i)
+            for (var i = 0; i < _threadCount; ++i)
             {
                 Logger.Log("Scheduling task " + i);
                 Task.Factory.StartNew(
@@ -69,12 +67,12 @@ public sealed class ForkingTask
 
     private readonly ForkingAwaiter _awaiter;
 
-    public ForkingTask(int threadsCount)
+    public ForkingTask(int threadCount)
     {
-        if (threadsCount <= 0)
-            Assertion.ThrowInvalidTasksCount();
+        if (threadCount <= 0)
+            Assertion.ThrowInvalidTasksCount(threadCount);
 
-        _awaiter = new ForkingAwaiter(threadsCount);
+        _awaiter = new ForkingAwaiter(threadCount);
     }
 
     public ForkingAwaiter GetAwaiter() => _awaiter;
@@ -89,12 +87,12 @@ public class ForkingClosure<TStateMachine>
     private readonly ParallelContext _parallelContext;
     private int _myThreadId = -1;
 
-    public ForkingClosure(TStateMachine stateMachine, int threadsCount, ParallelContext parallelContext)
+    public ForkingClosure(TStateMachine stateMachine, int threadCount, ParallelContext parallelContext)
     {
         _executionContext = ExecutionContext.Capture();
         _stateMachine = stateMachine.MakeCopy(); //TODO: redundant?
         _parallelContext = parallelContext;
-        _barrier = new SingleWaiterBarrier(threadsCount);
+        _barrier = new SingleWaiterBarrier(threadCount);
     }
 
     public void StartNewThread()

@@ -1,10 +1,21 @@
+using AwaitThreading.Core;
 using AwaitThreading.Core.Tasks;
 using AwaitThreading.Enumerable;
 using AwaitThreading.Enumerable.Experimental;
 
+await MyAsyncMethod();
 await AsParallelAsync();
 await AsParallel();
 await AsParallelExperimental();
+
+async ParallelTask MyAsyncMethod()
+{
+    var id = await ParallelOperations.Fork(2);
+    Console.Out.WriteLine($"Hello World from thread {id}");
+    await Task.Delay(100); // any async workload
+    Thread.Sleep(100); //any sync workload
+    await ParallelOperations.Join();
+}
 
 async ParallelTask AsParallelAsync()
 {

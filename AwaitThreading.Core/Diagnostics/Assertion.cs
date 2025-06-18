@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using AwaitThreading.Core.Tasks;
 
@@ -19,7 +20,10 @@ internal static class Assertion
     public static void ThrowBadAwait() => throw new InvalidOperationException(BadAwaitMessage);
 
     [DoesNotReturn]
-    public static void ThrowInvalidTasksCount() => throw new InvalidOperationException("Fork should have positive number of threads.");
+    public static void ThrowInvalidTasksCount(int actualCount, [CallerArgumentExpression("actualCount")] string? paramName = null)
+    {
+        throw new ArgumentOutOfRangeException(paramName, actualCount, "Fork should have positive number of threads.");
+    }
 
     [DoesNotReturn]
     public static void ThrowInvalidDirectGetResultCall() => throw new NotSupportedException($"Do not call .GetResult() directly on ParallelTask, use .{nameof(ParallelTaskExtensions.AsTask)}().Wait()");
