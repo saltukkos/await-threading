@@ -18,6 +18,7 @@ public static class ParallelOperations
     /// can also perform Fork operations.
     /// </summary>
     /// <param name="threadCount">Number of threads for Fork operation</param>
+    /// <param name="forkingOptions">Additional options to configure how executor tasks are starting</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="threadCount"/> is zero or negative</exception>
     /// <exception cref="InvalidOperationException">Return type of the calling method is not <see cref="ParallelTask"/>, <see cref="ParallelTask{T}"/> or <see cref="ParallelValueTask"/>-alternative. This exception is thrown during the `await` operation.</exception>
     /// <returns>The id of current thread, from 0 to (<paramref name="threadCount"/> - 1) inclusive</returns>
@@ -33,9 +34,9 @@ public static class ParallelOperations
     /// }
     /// </code>
     /// </example>
-    public static ForkingTaskWithId Fork(int threadCount)
+    public static ForkingTaskWithId Fork(int threadCount, ForkingOptions? forkingOptions = null)
     {
-        return new ForkingTaskWithId(new ForkingTask(threadCount));
+        return new ForkingTaskWithId(new ForkingTask(threadCount, forkingOptions));
     }
 
     /// <summary>

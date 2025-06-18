@@ -9,15 +9,17 @@ using AwaitThreading.Core.Tasks;
 
 namespace AwaitThreading.Core.Operations;
 
-public sealed class ForkingTask
+public readonly struct ForkingTask
 {
     public readonly struct ForkingAwaiter : ICriticalNotifyCompletion, IParallelNotifyCompletion
     {
         private readonly int _threadCount;
+        private readonly ForkingOptions? _options;
 
-        public ForkingAwaiter(int threadCount)
+        public ForkingAwaiter(int threadCount, ForkingOptions? options)
         {
             _threadCount = threadCount;
+            _options = options;
         }
 
         public bool IsCompleted => false;
@@ -33,7 +35,7 @@ public sealed class ForkingTask
             for (var i = 0; i < _threadCount; ++i)
             {
                 Logger.Log("Scheduling task " + i);
-                var task = new Task(
+                Task.Factory.StartNew(
                     static args =>
                     {
                         try
@@ -45,9 +47,11 @@ public sealed class ForkingTask
                             ParallelContextStorage.ClearButNotExpected();
                         }
                     },
-                    forkingClosure);
-
-                task.Start();
+                    forkingClosure,
+                    CancellationToken.None,
+                    _options?.TaskCreationOptions ?? TaskCreationOptions.None,
+                    _options?.TaskScheduler ?? TaskScheduler.Default
+                );
             }
         }
 
@@ -68,12 +72,12 @@ public sealed class ForkingTask
 
     private readonly ForkingAwaiter _awaiter;
 
-    public ForkingTask(int threadCount)
+    public ForkingTask(int threadCount, ForkingOptions? options = null)
     {
         if (threadCount <= 0)
             Assertion.ThrowInvalidTasksCount(threadCount);
 
-        _awaiter = new ForkingAwaiter(threadCount);
+        _awaiter = new ForkingAwaiter(threadCount, options);
     }
 
     public ForkingAwaiter GetAwaiter() => _awaiter;

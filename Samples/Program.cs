@@ -1,10 +1,12 @@
 using AwaitThreading.Core;
+using AwaitThreading.Core.Operations;
 using AwaitThreading.Core.Tasks;
 using AwaitThreading.Enumerable;
 using AwaitThreading.Enumerable.Experimental;
 
 await NormalForkAndJoin(5);
 await CompositionExample(5);
+await CustomOptions();
 
 await AsParallelAsync();
 await AsParallel();
@@ -42,6 +44,13 @@ async ParallelTask NormalForkAndJoin(int threadsCount)
 
     await ParallelOperations.Join();
     Console.Out.WriteLine("After join: single thread");
+}
+
+async ParallelTask CustomOptions()
+{
+    var id = await ParallelOperations.Fork(2, new ForkingOptions{TaskCreationOptions = TaskCreationOptions.PreferFairness, TaskScheduler = TaskScheduler.Default});
+    Console.Out.WriteLine($"Hello world from {id}");
+    await ParallelOperations.JoinOnMainThread();
 }
 
 async ParallelTask AsParallelAsync()

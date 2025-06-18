@@ -14,16 +14,18 @@ public readonly struct ParallelAsyncLazyForkingPartitionEnumerator<T> : IParalle
 {
     private readonly Partitioner<T> _partitioner;
     private readonly int _threadsCount;
+    private readonly ForkingOptions? _forkingOptions;
 
     // In ideal world we would be able to store enumerator for our chunk in struct field,
     // but any changes to the state of this struct will be lost since async methods are
     // executed on the copy of a struct, so we have to store the data somewhere else.
     private readonly ParallelLocal<IEnumerator<T>> _chunkIndexer = new();
 
-    public ParallelAsyncLazyForkingPartitionEnumerator(Partitioner<T> partitioner, int threadsCount)
+    public ParallelAsyncLazyForkingPartitionEnumerator(Partitioner<T> partitioner, int threadsCount, ForkingOptions? forkingOptions)
     {
         _partitioner = partitioner;
         _threadsCount = threadsCount;
+        _forkingOptions = forkingOptions;
     }
 
     public ParallelValueTask<bool> MoveNextAsync()
@@ -42,7 +44,7 @@ public readonly struct ParallelAsyncLazyForkingPartitionEnumerator<T> : IParalle
         if (partitioner.SupportsDynamicPartitions)
         {
             var dynamicPartitions = partitioner.GetDynamicPartitions();
-            await _chunkIndexer.InitializeAndFork(_threadsCount);
+            await _chunkIndexer.InitializeAndFork(_threadsCount, _forkingOptions);
 
             // ReSharper disable once GenericEnumeratorNotDisposed
             var dynamicEnumerator = dynamicPartitions.GetEnumerator();
@@ -51,7 +53,7 @@ public readonly struct ParallelAsyncLazyForkingPartitionEnumerator<T> : IParalle
         }
 
         var partitions = partitioner.GetPartitions(_threadsCount);
-        await _chunkIndexer.InitializeAndFork(_threadsCount);
+        await _chunkIndexer.InitializeAndFork(_threadsCount, _forkingOptions);
 
         var enumerator = partitions[ParallelContextStorage.GetTopFrameId()];
         _chunkIndexer.Value = enumerator;
