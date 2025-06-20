@@ -1,10 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFramework>net6.0</TargetFramework> <!--TODO: backport to netstandard2.0-->
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <DefineConstants>FEATURE_TASKIMPL_THREADSTATIC;FEATURE_DEDICATED_SYNCRESULT</DefineConstants>
     </PropertyGroup>
 
     <ItemGroup>

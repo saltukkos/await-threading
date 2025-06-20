@@ -25,7 +25,6 @@ internal static class StateMachineExtensions
         return (TStateMachine)Copy(stateMachine);
     }
 
-    
     private static object Copy(object originalObject)
     {
         return CloneMethod.Invoke(originalObject, null)!; //TODO to compiled

@@ -20,9 +20,7 @@ internal static class Assertion
     [DoesNotReturn]
     public static void StateCorrupted(string message)
     {
-#if DEBUG
         Debug.Fail(message);
-#endif
         throw new StateCorruptedException(message);
     }
 
@@ -32,9 +30,10 @@ internal static class Assertion
     [DoesNotReturn]
     public static void ThrowInvalidTasksCount(int actualCount, [CallerArgumentExpression("actualCount")] string? paramName = null)
     {
-        throw new ArgumentOutOfRangeException(paramName, actualCount, "Fork should have positive number of threads.");
+        throw new ArgumentOutOfRangeException(paramName, actualCount, "Fork should have positive number of threads");
     }
 
+    // TODO: mark 'GetResult' methods as Obsolete (considering they are not shown in compiler-generated code)?
     [DoesNotReturn]
     public static void ThrowInvalidDirectGetResultCall() => throw new NotSupportedException($"Do not call .GetResult() directly on ParallelTask, use .{nameof(ParallelTaskExtensions.AsTask)}().Wait()");
 
@@ -44,7 +43,7 @@ internal static class Assertion
     [DoesNotReturn]
     public static void ThrowInvalidParallelLocalUsage() => throw new InvalidOperationException("ParallelLocal should be initialized while forking");
 
-    public class StateCorruptedException : Exception
+    private class StateCorruptedException : Exception
     {
         public StateCorruptedException(string message) : base(message) { }
     }

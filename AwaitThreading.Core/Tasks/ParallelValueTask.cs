@@ -6,12 +6,12 @@ using System.Runtime.CompilerServices;
 
 namespace AwaitThreading.Core.Tasks;
 
-
 [AsyncMethodBuilder(typeof(ParallelValueTaskMethodBuilder))]
 public readonly struct ParallelValueTask
 {
+  public static ParallelValueTask CompletedTask => new();
   public static ParallelValueTask<T> FromResult<T>(T result) => new(result);
-  
+
   internal readonly ParallelTaskImpl<Unit>? Implementation;
 
   public ParallelValueTask()
