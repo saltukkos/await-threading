@@ -15,6 +15,11 @@ public static class ParallelTaskExtensions
     {
         return await parallelTask;
     }
-    
-    //TODO: AsValueTask for ParallelValueTask
+
+    public static ValueTask<T> AsValueTask<T>(this ParallelValueTask<T> parallelValueTask)
+    {
+        return parallelValueTask.Implementation is { } implementation 
+            ? new ValueTask<T>(new ParallelTask<T>(implementation).AsTask()) 
+            : ValueTask.FromResult(parallelValueTask.Result!);
+    }
 }

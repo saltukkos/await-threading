@@ -17,6 +17,11 @@ public readonly struct ParallelTask<T>
         Implementation = new ParallelTaskImpl<T>();
     }
 
+    internal ParallelTask(ParallelTaskImpl<T> implementation)
+    {
+        Implementation = implementation;
+    }
+
     internal void SetResult(T result) =>
         Implementation.SetResult(new ParallelTaskResult<T>(result));
 
