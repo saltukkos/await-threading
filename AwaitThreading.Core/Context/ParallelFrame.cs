@@ -7,17 +7,15 @@ namespace AwaitThreading.Core.Context;
 public readonly struct ParallelFrame : IEquatable<ParallelFrame>
 {
     public readonly int Id;
-    public readonly int Count;
     internal readonly SingleWaiterBarrier JoinBarrier;
 
 #if DEBUG
     public readonly string CreationStackTrace;
 #endif
 
-    internal ParallelFrame(int id, int count, SingleWaiterBarrier joinBarrier)
+    internal ParallelFrame(int id, SingleWaiterBarrier joinBarrier)
     {
         Id = id;
-        Count = count;
         JoinBarrier = joinBarrier;
 #if DEBUG
         CreationStackTrace = Environment.StackTrace;

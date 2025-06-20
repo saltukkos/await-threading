@@ -58,7 +58,7 @@ public readonly struct ParallelContext : IEquatable<ParallelContext>
     {
         return _stack is null 
             ? "empty" 
-            : string.Join(", ", _stack.Select(t => $"({t.Id} out of {t.Count})"));
+            : string.Join(", ", _stack.Select(t => $"{t.Id}"));
     }
 
     public bool Equals(ParallelContext other)

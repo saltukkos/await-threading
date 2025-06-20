@@ -2,6 +2,7 @@
 // Copyright (c) 2023 Saltuk Konstantin
 // See the LICENSE file in the project root for more information.
 
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
@@ -15,6 +16,15 @@ internal static class Assertion
 
     public static readonly ExceptionDispatchInfo BadAwaitExceptionDispatchInfo =
         ExceptionDispatchInfo.Capture(new InvalidOperationException(BadAwaitMessage));
+
+    [DoesNotReturn]
+    public static void StateCorrupted(string message)
+    {
+#if DEBUG
+        Debug.Fail(message);
+#endif
+        throw new StateCorruptedException(message);
+    }
 
     [DoesNotReturn]
     public static void ThrowBadAwait() => throw new InvalidOperationException(BadAwaitMessage);
@@ -33,4 +43,9 @@ internal static class Assertion
 
     [DoesNotReturn]
     public static void ThrowInvalidParallelLocalUsage() => throw new InvalidOperationException("ParallelLocal should be initialized while forking");
+
+    public class StateCorruptedException : Exception
+    {
+        public StateCorruptedException(string message) : base(message) { }
+    }
 }

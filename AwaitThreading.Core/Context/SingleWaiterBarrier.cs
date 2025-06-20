@@ -2,6 +2,8 @@
 // Copyright (c) 2023 Saltuk Konstantin
 // See the LICENSE file in the project root for more information.
 
+using AwaitThreading.Core.Diagnostics;
+
 namespace AwaitThreading.Core.Context;
 
 internal sealed class SingleWaiterBarrier
@@ -15,7 +17,13 @@ internal sealed class SingleWaiterBarrier
 
     public bool Finish()
     {
-        return Interlocked.Decrement(ref Count) == 0;
+        var decrementedValue = Interlocked.Decrement(ref Count);
+        if (decrementedValue < 0)
+        {
+            Assertion.StateCorrupted("Too many threads signaled");
+        }
+
+        return decrementedValue == 0;
     }
     
     public void Signal()
@@ -25,7 +33,7 @@ internal sealed class SingleWaiterBarrier
             Count--;
             if (Count < 0)
             {
-                throw new InvalidOperationException("Too many threads signaled");
+                Assertion.StateCorrupted("Too many threads signaled");
             }
 
             if (Count == 0)
@@ -42,7 +50,7 @@ internal sealed class SingleWaiterBarrier
             Count--;
             if (Count < 0)
             {
-                throw new InvalidOperationException("Too many threads signaled");
+                Assertion.StateCorrupted("Too many threads signaled");
             }
 
             while (Count != 0)

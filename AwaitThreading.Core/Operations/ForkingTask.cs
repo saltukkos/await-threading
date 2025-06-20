@@ -107,9 +107,7 @@ public class ForkingClosure<TStateMachine>
             ExecutionContext.Restore(_executionContext);
         }
 
-        // TODO: is race possible? Let's say some threads didn't start yet but one thread is already at 'await Join'.
-        //  Do we need to read _barrier.Count before starting any threads? (closure will become larger :( )
-        var newFrame = new ParallelFrame(Interlocked.Increment(ref _myThreadId), _barrier.Count, _barrier);
+        var newFrame = new ParallelFrame(Interlocked.Increment(ref _myThreadId), _barrier);
         ParallelContextStorage.CurrentThreadContext = _parallelContext.PushFrame(newFrame);
         Logger.Log("Task started");
         _stateMachine.MakeCopy().MoveNext();
